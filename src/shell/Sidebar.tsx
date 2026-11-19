@@ -5,7 +5,7 @@ import { AutoBackupFoot } from './AutoBackup';
 export function Sidebar() {
   const route = useRoute();
   const item = (path: string, glyph: string, name: string, soon = false) => (
-    <button key={path} className="nav-item" aria-current={route === path ? 'page' : undefined} onClick={() => go(path)}>
+    <button key={path} className={soon ? 'nav-item is-soon' : 'nav-item'} aria-current={route === path ? 'page' : undefined} onClick={() => go(path)}>
       <span className="glyph">{glyph}</span>
       {name}
       {soon && <span className="soon">soon</span>}

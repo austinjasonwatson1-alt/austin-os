@@ -60,7 +60,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 /* ---------- shell ---------- */
-.app { position: relative; z-index: 2; display: grid; grid-template-columns: var(--rail) 1fr; min-height: 100%; }
+.app { position: relative; z-index: 2; display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); min-height: 100%; }
 .rail {
   position: sticky; top: 0; height: 100vh; padding: 26px 16px 20px;
   display: flex; flex-direction: column; gap: 6px;
@@ -89,7 +89,8 @@ input, textarea, select { font: inherit; color: inherit; }
 .nav-item .soon { margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--bone-faint); text-transform: uppercase; }
 .rail-foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--line); font-size: 12px; color: var(--bone-faint); }
 
-.main { padding: 38px clamp(22px, 4vw, 56px) 140px; max-width: 1240px; width: 100%; }
+.main { padding: 38px clamp(22px, 4vw, 56px) 140px; max-width: 1240px; width: 100%; min-width: 0; }
+.grid > * { min-width: 0; }
 .page-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--lamp); }
 .page-title { font-family: var(--display); font-weight: 700; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; margin: 8px 0 6px; letter-spacing: -0.01em; }
 .page-lede { color: var(--bone-dim); max-width: 60ch; margin: 0 0 28px; }
@@ -108,10 +109,43 @@ input, textarea, select { font: inherit; color: inherit; }
 .cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 1100px) { .cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 860px) {
-  .app { grid-template-columns: 1fr; }
-  .rail { position: static; height: auto; flex-direction: row; flex-wrap: wrap; padding: 12px; }
-  .brand, .nav-label, .rail-foot { display: none; }
-  .cols-2, .cols-3, .cols-4 { grid-template-columns: 1fr; }
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .cols-2, .cols-3, .cols-4 { grid-template-columns: minmax(0, 1fr); }
+  .main { padding: 24px 16px 120px; }
+
+  /* the rail becomes a slim sticky bar: brand mark, live rooms as pills, backup dot */
+  .rail {
+    position: sticky; top: 0; z-index: 10; height: auto; flex-direction: row; align-items: center; gap: 6px;
+    padding: 10px 12px; overflow-x: auto; scrollbar-width: none;
+    border-right: 0; border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(10, 14, 22, 0.92), rgba(8, 11, 18, 0.82));
+  }
+  .rail::-webkit-scrollbar { display: none; }
+  .brand { padding: 0 4px 0 0; flex: none; }
+  .brand > div:last-child { display: none; }
+  .brand-mark { width: 30px; height: 30px; font-size: 16px; border-radius: 9px; }
+  .nav-label { display: none; }
+  .nav-item { flex: none; width: auto; padding: 6px 12px 6px 10px; gap: 7px; border-radius: 99px; font-size: 13.5px; white-space: nowrap; }
+  .nav-item .glyph { width: auto; font-size: 13px; }
+  .nav-item.is-soon { display: none; }
+  .rail-foot { flex: none; margin: 0 0 0 auto; padding: 0 0 0 6px; border-top: 0; }
+  .foot-status { align-items: center; padding: 7px 10px; border-radius: 99px; border: 1px solid var(--line-strong); white-space: nowrap; }
+  .foot-status .dot { margin-top: 0; }
+  .foot-long { display: none; }
+  .foot-status { padding: 0; width: 32px; height: 32px; justify-content: center; }
+
+  /* stat tiles sit three across as a compact strip instead of three full-width cards */
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px; }
+  .stats > .panel { padding: 14px 12px 13px; }
+  .stats .panel-t { font-size: 9.5px; letter-spacing: 0.14em; }
+  .stats .panel > div { flex-direction: column; align-items: flex-start !important; gap: 5px !important; margin-top: 8px !important; }
+  .stats .big { font-size: clamp(26px, 8vw, 34px) !important; }
+  .stats .mono:not(.panel-t) { font-size: 10px !important; }
+
+  .ab { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .ab-lamp { width: 44px; height: 44px; font-size: 19px; border-radius: 12px; }
+  .ab-body { min-width: 0; }
+  .ab-actions { grid-column: 1 / -1; }
 }
 .btn {
   border: 1px solid var(--line-strong); background: rgba(233, 228, 216, 0.04); border-radius: 9px;

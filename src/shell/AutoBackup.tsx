@@ -115,9 +115,9 @@ export function AutoBackupFoot() {
   const { ab, status } = useStatus();
   const text = !ab.supported || !ab.fileName ? 'Auto-backup off · data lives in this browser' : `Auto-backup · ${status.label.toLowerCase()}`;
   return (
-    <button className="foot-status" onClick={() => go('/home')} title="Auto-backup settings">
+    <button className="foot-status" onClick={() => go('/home')} title={text} aria-label={text}>
       <span className={`dot ${status.tone}${ab.writing ? ' pulse' : ''}`} />
-      <span>{ab.writing ? 'Auto-backup · saving…' : text}</span>
+      <span className="foot-long">{ab.writing ? 'Auto-backup · saving…' : text}</span>
     </button>
   );
 }

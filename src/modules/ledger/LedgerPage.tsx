@@ -32,7 +32,7 @@ export default function LedgerPage() {
       title="Hours toward the book"
       lede="Every minute you give the dream, counted honestly. No zero days."
     >
-      <div className="grid cols-3" style={{ marginBottom: 16 }}>
+      <div className="grid cols-3 stats" style={{ marginBottom: 16 }}>
         <Stat label="Current streak" value={String(streak)} unit={streak === 1 ? 'day' : 'days'} />
         <Stat label={`Days logged · ${new Date().getFullYear()}`} value={String(ys.logged)} unit="days" />
         <Stat label={`Hours · ${new Date().getFullYear()}`} value={fmtMins(ys.minutes)} unit="" />
@@ -191,6 +191,15 @@ function YearWall({ year, setYear, selected, onPick }: { year: number; setYear: 
   const today = todayISO();
   const keys = useMemo(() => daysOfYear(year), [year]);
   const lead = (parseISO(keys[0]).getDay() + 6) % 7;
+  const scroller = useRef<HTMLDivElement>(null);
+  // On narrow screens the wall scrolls sideways; open it on the current month, not January.
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const idx = year === new Date().getFullYear() ? keys.indexOf(today) : keys.length - 1;
+    const col = Math.floor((idx + lead) / 7);
+    el.scrollLeft = Math.max(0, col * 16 - el.clientWidth + 48);
+  }, [year]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section className="panel">
@@ -201,7 +210,7 @@ function YearWall({ year, setYear, selected, onPick }: { year: number; setYear: 
           <button className="btn ghost" aria-label="Next year" onClick={() => setYear(year + 1)} disabled={year >= new Date().getFullYear()}>▶</button>
         </div>
       </div>
-      <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+      <div ref={scroller} style={{ overflowX: 'auto', paddingBottom: 4 }}>
         <div style={{ display: 'grid', gridAutoFlow: 'column', gridTemplateRows: 'repeat(7, 13px)', gridAutoColumns: '13px', gap: 3, width: 'max-content' }}>
           {Array.from({ length: lead }, (_, i) => <span key={`pad${i}`} />)}
           {keys.map((k) => {

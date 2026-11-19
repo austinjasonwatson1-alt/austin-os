@@ -25,7 +25,7 @@ export default function Home() {
 
   return (
     <Page eyebrow={prettyDate(today)} title={`${greeting()}, ${OWNER}.`} lede="Your home base. Start the lamp, put in the minutes.">
-      <div className="grid cols-3" style={{ marginBottom: 16 }}>
+      <div className="grid cols-3 stats" style={{ marginBottom: 16 }}>
         <div className="panel">
           <p className="panel-t">Today</p>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 10 }}>
