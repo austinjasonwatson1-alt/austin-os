@@ -57,6 +57,8 @@ interface AutoBackupState {
   turnOff: () => Promise<void>;
   /** The next write may make the file smaller (the user deliberately restored older data). */
   expectShrink: () => void;
+  /** Read the backup file's current contents (e.g. to restore from it after a wipe). */
+  readFile: () => Promise<{ name: string; text: string } | null>;
 }
 
 let handle: FileHandle | null = null;
@@ -174,6 +176,11 @@ export const useAutoBackup = create<AutoBackupState>((set, get) => {
 
     expectShrink() {
       allowShrink = true;
+    },
+
+    async readFile() {
+      if (!handle) return null;
+      return { name: handle.name, text: await (await handle.getFile()).text() };
     },
 
     async turnOff() {

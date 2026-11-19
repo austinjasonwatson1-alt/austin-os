@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compareDays, currentStreak, dayTotal, gradeOf, mergeDays, monthStats, parseCsvRows, parseLedgerCsv, weekTotal } from './logic';
+import { compareDays, describeLedger, currentStreak, dayTotal, gradeOf, mergeDays, monthStats, parseCsvRows, parseLedgerCsv, weekTotal } from './logic';
 import { DEFAULT_DATA } from './types';
 
 const T = DEFAULT_DATA.thresholds;
@@ -121,5 +121,14 @@ describe('compareDays', () => {
     const now = { '2026-01-01': { writing: 10 }, '2026-01-02': { writing: 20 }, '2026-01-03': { reading: 5 } };
     const snap = { '2026-01-01': { writing: 10 }, '2026-01-02': { writing: 25 }, '2025-12-31': { editing: 30 } };
     expect(compareDays(now, snap)).toEqual({ back: 1, gone: 1, changed: 1, minutes: 30 });
+  });
+});
+
+describe('describeLedger', () => {
+  it('summarises days, time and deadlines, and sizes by days', () => {
+    const v = { days: { '2026-01-01': { writing: 90 }, '2026-01-02': { reading: 30 } }, deadlines: [{ n: 'x', d: '2026-12-31' }] };
+    expect(describeLedger.detail(v)).toBe('2 days · 2h · 1 deadline');
+    expect(describeLedger.size(v)).toBe(2);
+    expect(describeLedger.size(undefined)).toBe(0);
   });
 });

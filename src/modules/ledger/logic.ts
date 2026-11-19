@@ -1,5 +1,6 @@
 import { addDays, daysOfYear, iso, mondayOf, pad } from '../../core/dates';
-import { CATS, type CatKey, type DayEntry, type DayMap, type GradeKey, type Thresholds } from './types';
+import type { Describer } from '../../core/restoreLogic';
+import { CATS, type CatKey, type DayEntry, type DayMap, type GradeKey, type LedgerData, type Thresholds } from './types';
 
 export const dayTotal = (e: DayEntry | undefined): number =>
   e ? CATS.reduce((s, c) => s + (Number(e[c.k]) || 0), 0) : 0;
@@ -209,3 +210,16 @@ export function parseLedgerCsv(text: string): CsvImport | null {
 }
 
 export const isoToday = () => iso(new Date());
+
+/** How the Ledger shows up in a restore preview: compared by days logged. */
+export const describeLedger: Describer = {
+  name: 'The Ledger',
+  size: (v) => Object.keys((v as Partial<LedgerData> | undefined)?.days ?? {}).length,
+  detail: (v) => {
+    const d = (v ?? {}) as Partial<LedgerData>;
+    const days = d.days ?? {};
+    const mins = Object.values(days).reduce((t, e) => t + dayTotal(e), 0);
+    const dl = d.deadlines?.length ?? 0;
+    return `${Object.keys(days).length} days · ${fmtMins(mins)} · ${dl} deadline${dl === 1 ? '' : 's'}`;
+  },
+};

@@ -18,6 +18,7 @@ React 19 + TypeScript (strict) + Vite + Zustand. No router library (tiny hash ro
 - Persist with `saveWithSnapshot` so a bad save or import can be undone. Never write straight to IndexedDB from a component.
 - Before any bulk change (import, load, restore), call `snapshotNow(key, currentValue, 'Before …')` so it shows up as a named restore point. Labelled points are kept separately from autosaves (`src/core/snapshots.ts`).
 - Anything that adds user data must be included in the full backup (`dumpAll`) — it already is if it uses `kvSet`/`saveWithSnapshot`.
+- New modules also plug into **Restore from backup** (`src/shell/RestoreBackup.tsx`): add a `Describer` for the module's key to `DESCRIBERS` (so the preview says "42 books", not "318 entries") and its store's `load()` to `reloadStores`.
 
 ## Data safety (important)
 Browsers erase IndexedDB when the user clears "cookies and site data". Austin has lost tracker data this way before. Treat data loss as the worst possible bug: keep backup/export prominent, import must preview before it merges, and never overwrite existing data silently.

@@ -3,6 +3,7 @@ import { useAutoBackup } from '../core/autoBackup';
 import { autoBackupStatus } from '../core/autoBackupLogic';
 import { daysSinceBackup, useBackup } from '../core/backup';
 import { go } from './router';
+import { RestoreButton } from './RestoreBackup';
 
 /** Re-render every `ms` so "saved 2m ago" stays honest. */
 function useNow(ms = 30_000) {
@@ -43,25 +44,32 @@ export function AutoBackupPanel() {
   let actions: React.ReactNode;
   if (!ab.supported) {
     body = <>This browser can't keep a file up to date on its own — Chrome and Edge can. Until then, download a backup every week. {manualLine}</>;
-    actions = <button className="btn primary" onClick={() => void backup.exportAll()}>Back up now</button>;
+    actions = (
+      <>
+        <button className="btn primary" onClick={() => void backup.exportAll()}>Back up now</button>
+        <RestoreButton label="Restore from a file…" />
+      </>
+    );
   } else if (!ab.fileName) {
     body = <>Everything lives in this browser, and clearing site data erases it. Pick a backup file once — ideally in iCloud Drive, Dropbox or OneDrive — and every change is copied there automatically. {manualLine}</>;
     actions = (
       <>
         <button className="btn primary" onClick={() => void ab.choose()}>Choose backup file</button>
         <button className="btn ghost" onClick={() => void backup.exportAll()}>Download once</button>
+        <RestoreButton label="Restore from a file…" />
       </>
     );
   } else if (ab.risk?.kind === 'shrink') {
     body = (
       <>
         <b>{ab.fileName}</b> holds more than this browser does ({ab.risk.fileEntries} entries vs {ab.risk.nextEntries}), so nothing was written to it.
-        If your browser data was cleared, restore from that file first: <a href="#/cabin/ledger" onClick={(e) => { e.preventDefault(); go('/cabin/ledger'); }}>The Ledger → Import backup</a>. Auto-backup resumes by itself once the browser has caught up.
+        If your browser data was cleared, restore from that file — you'll see exactly what comes back before anything changes. Auto-backup carries on by itself afterwards.
       </>
     );
     actions = (
       <>
-        <button className="btn primary" onClick={() => void ab.choose()}>Use a different file</button>
+        <RestoreButton label="Restore from this file" primary fromAutoBackup />
+        <button className="btn ghost" onClick={() => void ab.choose()}>Use a different file</button>
         <button className="btn ghost danger" onClick={overwrite}>Overwrite anyway</button>
       </>
     );
@@ -89,6 +97,7 @@ export function AutoBackupPanel() {
     actions = (
       <>
         <button className="btn ghost" onClick={() => void ab.choose()}>Change file</button>
+        <RestoreButton label="Restore…" />
         <button className="btn ghost" onClick={turnOff}>Turn off</button>
       </>
     );
