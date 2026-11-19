@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { kvGet, saveWithSnapshot } from '../../core/storage';
+import { useAutoBackup } from '../../core/autoBackup';
+import { kvGet, listSnapshots, saveWithSnapshot, snapshotNow, snapshotsSettled, type Snapshot } from '../../core/storage';
 import { mergeDays, type MergePreview } from './logic';
 import { SEED_DAYS } from './seed';
 import { CATS, DEFAULT_DATA, type CatKey, type Deadline, type DayMap, type LedgerData } from './types';
 
-const KEY = 'ledger.v3';
+export const KEY = 'ledger.v3';
 
 interface LedgerState extends LedgerData {
   loaded: boolean;
@@ -13,9 +14,14 @@ interface LedgerState extends LedgerData {
   setNote: (date: string, note: string) => void;
   addDeadline: (d: Deadline) => void;
   removeDeadline: (index: number) => void;
-  applyDays: (incoming: DayMap) => MergePreview;
+  /** Merge days in, after taking a restore point named `why` ("Before import of x.csv"). */
+  applyDays: (incoming: DayMap, why: string) => MergePreview;
   previewDays: (incoming: DayMap) => MergePreview;
   loadSeed: () => MergePreview;
+  /** Put the ledger back to a snapshot. Takes a restore point of the current state first. */
+  restore: (snap: Snapshot<LedgerData>) => void;
+  /** Restore points and autosaves, newest first, once pending writes have landed. */
+  snapshots: () => Promise<Snapshot<LedgerData>[]>;
 }
 
 const pick = (s: LedgerState): LedgerData => ({
@@ -66,16 +72,29 @@ export const useLedger = create<LedgerState>((set, get) => {
 
     previewDays: (incoming) => mergeDays(get().days, incoming).preview,
 
-    applyDays(incoming) {
+    applyDays(incoming, why) {
       const { merged, preview } = mergeDays(get().days, incoming);
+      if (preview.add + preview.update === 0) return preview;
+      void snapshotNow(KEY, pick(get()), why);
       set({ days: merged });
       persist();
       return preview;
     },
 
     loadSeed() {
-      return get().applyDays(SEED_DAYS);
+      return get().applyDays(SEED_DAYS, 'Before loading Jan–Aug history');
     },
+
+    restore(snap) {
+      const from = Object.keys(get().days).length;
+      const to = Object.keys(snap.value.days ?? {}).length;
+      void snapshotNow(KEY, pick(get()), `Before restore · ${from} → ${to} days`);
+      useAutoBackup.getState().expectShrink();
+      set({ ...DEFAULT_DATA, ...snap.value });
+      persist();
+    },
+
+    snapshots: () => snapshotsSettled().then(() => listSnapshots<LedgerData>(KEY)),
   };
 });
 

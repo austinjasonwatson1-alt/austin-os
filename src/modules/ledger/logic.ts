@@ -127,6 +127,18 @@ export function mergeDays(current: DayMap, incoming: DayMap): { merged: DayMap; 
   return { merged, preview };
 }
 
+/** What restoring `target` would do to `current`: days that come back, disappear, or change. */
+export function compareDays(current: DayMap, target: DayMap): { back: number; gone: number; changed: number; minutes: number } {
+  let back = 0, gone = 0, changed = 0;
+  for (const k of Object.keys(target)) {
+    if (!current[k]) back++;
+    else if (JSON.stringify(current[k]) !== JSON.stringify(target[k])) changed++;
+  }
+  for (const k of Object.keys(current)) if (!target[k]) gone++;
+  const sum = (d: DayMap) => Object.values(d).reduce((s, e) => s + dayTotal(e), 0);
+  return { back, gone, changed, minutes: sum(target) - sum(current) };
+}
+
 /** Split CSV text into rows, honouring quoted fields ("a, b" and "" escapes). */
 export function parseCsvRows(text: string): string[][] {
   const rows: string[][] = [];

@@ -6,13 +6,14 @@
  * That is why backups (see backup.ts) are a first-class feature, not an afterthought.
  */
 
+import { pushSnapshot, type Snapshot } from './snapshots';
+
 const DB_NAME = 'austin-os';
 const STORE = 'kv';
+
 const SNAP_PREFIX = 'snap:';
 /** Device-local settings (e.g. the auto-backup file handle). Never part of a backup. */
 export const SYS_PREFIX = 'sys:';
-const SNAP_KEEP = 8;
-const SNAP_MIN_GAP_MS = 5 * 60 * 1000;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -44,10 +45,7 @@ export const kvSet = (key: string, value: unknown) => tx('readwrite', (s) => s.p
 export const kvDel = (key: string) => tx('readwrite', (s) => s.delete(key));
 export const kvKeys = (): Promise<string[]> => tx('readonly', (s) => s.getAllKeys() as IDBRequest<string[]>);
 
-export interface Snapshot<T = unknown> {
-  at: string;
-  value: T;
-}
+export type { Snapshot };
 
 type SaveListener = (key: string) => void;
 const saveListeners = new Set<SaveListener>();
@@ -58,15 +56,38 @@ export function onSave(fn: SaveListener): () => void {
   return () => void saveListeners.delete(fn);
 }
 
-/** Save `value` under `key` and, at most every few minutes, push it onto the snapshot ring. */
-export async function saveWithSnapshot<T>(key: string, value: T): Promise<void> {
-  await kvSet(key, value);
-  saveListeners.forEach((fn) => fn(key));
+/** Ring updates are read-modify-write, so they run one at a time or entries get lost. */
+let ringQueue: Promise<unknown> = Promise.resolve();
+function queued<T>(fn: () => Promise<T>): Promise<T> {
+  const run = ringQueue.then(fn, fn);
+  ringQueue = run.catch(() => undefined);
+  return run;
+}
+
+/** Resolves once every snapshot write queued so far has landed. */
+export const snapshotsSettled = () => ringQueue.then(() => undefined);
+
+async function addToRing<T>(key: string, snap: Snapshot<T>) {
   const ring = (await kvGet<Snapshot<T>[]>(SNAP_PREFIX + key)) ?? [];
-  const last = ring[0];
-  if (last && Date.now() - new Date(last.at).getTime() < SNAP_MIN_GAP_MS) return;
-  const next = [{ at: new Date().toISOString(), value }, ...ring].slice(0, SNAP_KEEP);
-  await kvSet(SNAP_PREFIX + key, next);
+  const next = pushSnapshot(ring, snap);
+  if (next !== ring) await kvSet(SNAP_PREFIX + key, next);
+}
+
+/** Save `value` under `key` and, at most every few minutes, push it onto the snapshot ring. */
+export function saveWithSnapshot<T>(key: string, value: T): Promise<void> {
+  return queued(async () => {
+    await kvSet(key, value);
+    saveListeners.forEach((fn) => fn(key));
+    await addToRing(key, { at: new Date().toISOString(), value });
+  });
+}
+
+/**
+ * Record a named restore point right now — call it with the data as it is BEFORE an import,
+ * load or restore, so that change can be undone.
+ */
+export function snapshotNow<T>(key: string, value: T, label: string): Promise<void> {
+  return queued(() => addToRing(key, { at: new Date().toISOString(), value, label }));
 }
 
 export const listSnapshots = <T>(key: string) => kvGet<Snapshot<T>[]>(SNAP_PREFIX + key).then((r) => r ?? []);

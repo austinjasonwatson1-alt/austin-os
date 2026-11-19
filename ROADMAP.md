@@ -11,7 +11,7 @@ A few weeks of Claude Code practice. Each item is a good self-contained session:
 - [x] First commit; set up a GitHub repo
 - [x] Import the old Ledger export (Sept → now) and verify totals against the old app — CSV import added; 270 days / 21,740 min match the old app month for month
 - [x] Auto-backup to a chosen file using the File System Access API (guards against cleared site data)
-- [ ] Snapshot restore UI ("undo my last import")
+- [x] Snapshot restore UI ("undo my last import")
 
 ## Week 2 — the library
 - [ ] **The Shelf**: rebuild the library tracker (books, ratings, genre, notes, covers)

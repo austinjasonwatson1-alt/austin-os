@@ -16,6 +16,7 @@ React 19 + TypeScript (strict) + Vite + Zustand. No router library (tiny hash ro
 - Keep business logic out of components. If it can be a pure function in `logic.ts`, it must be, with a test in `logic.test.ts`.
 - All dates are local-time `YYYY-MM-DD` strings via `src/core/dates.ts`. Never use `toISOString()` for a calendar date (it shifts across timezones).
 - Persist with `saveWithSnapshot` so a bad save or import can be undone. Never write straight to IndexedDB from a component.
+- Before any bulk change (import, load, restore), call `snapshotNow(key, currentValue, 'Before …')` so it shows up as a named restore point. Labelled points are kept separately from autosaves (`src/core/snapshots.ts`).
 - Anything that adds user data must be included in the full backup (`dumpAll`) — it already is if it uses `kvSet`/`saveWithSnapshot`.
 
 ## Data safety (important)

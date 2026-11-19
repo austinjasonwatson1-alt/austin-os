@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { currentStreak, dayTotal, gradeOf, mergeDays, monthStats, parseCsvRows, parseLedgerCsv, weekTotal } from './logic';
+import { compareDays, currentStreak, dayTotal, gradeOf, mergeDays, monthStats, parseCsvRows, parseLedgerCsv, weekTotal } from './logic';
 import { DEFAULT_DATA } from './types';
 
 const T = DEFAULT_DATA.thresholds;
@@ -113,5 +113,13 @@ describe('parseLedgerCsv', () => {
     const own = 'Date,Writing,Editing,Reading,Research,Craft,Querying,Total,Note\n2026-11-19,0,0,15,0,0,0,15,';
     expect(parseLedgerCsv(own)!.days).toEqual({ '2026-11-19': { reading: 15 } });
     expect(parseLedgerCsv('name,email\nx,y')).toBeNull();
+  });
+});
+
+describe('compareDays', () => {
+  it('describes what a restore would change', () => {
+    const now = { '2026-01-01': { writing: 10 }, '2026-01-02': { writing: 20 }, '2026-01-03': { reading: 5 } };
+    const snap = { '2026-01-01': { writing: 10 }, '2026-01-02': { writing: 25 }, '2025-12-31': { editing: 30 } };
+    expect(compareDays(now, snap)).toEqual({ back: 1, gone: 1, changed: 1, minutes: 30 });
   });
 });

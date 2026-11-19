@@ -181,3 +181,19 @@ input, textarea, select { font: inherit; color: inherit; }
 .foot-status { display: flex; align-items: flex-start; gap: 9px; width: 100%; padding: 2px 0; border: 0; background: none; color: var(--bone-faint); font-size: 12px; text-align: left; line-height: 1.4; }
 .foot-status .dot { margin-top: 5px; }
 .foot-status:hover { color: var(--bone-dim); }
+
+/* ---------- restore points ---------- */
+.snaps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.snap { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 12px; padding: 11px 10px; border-radius: 10px; transition: background .15s; }
+.snap:hover { background: rgba(233, 228, 216, 0.04); }
+.snap + .snap { border-top: 1px solid var(--line); }
+.snap-mark { color: var(--bone-faint); text-align: center; font-size: 15px; line-height: 1; }
+.snap.labelled .snap-mark { color: var(--lamp); font-size: 10px; text-shadow: 0 0 10px rgba(232, 168, 75, 0.5); }
+.snap-body { min-width: 0; }
+.snap-name { font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.snap:not(.labelled) .snap-name { color: var(--bone-dim); }
+.snap-meta { font-family: var(--mono); font-size: 11px; color: var(--bone-faint); margin-top: 2px; }
+.snap-fx { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.fx { font-family: var(--mono); font-size: 10.5px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line-strong); color: var(--bone-dim); }
+.fx.gone { color: var(--bad); border-color: rgba(209, 80, 63, 0.35); }
+.fx.back { color: var(--good); border-color: rgba(79, 191, 135, 0.35); }

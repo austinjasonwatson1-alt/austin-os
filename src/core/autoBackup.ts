@@ -55,12 +55,15 @@ interface AutoBackupState {
   /** Write even though the file looks like it holds more data. The UI must confirm first. */
   overwrite: () => Promise<void>;
   turnOff: () => Promise<void>;
+  /** The next write may make the file smaller (the user deliberately restored older data). */
+  expectShrink: () => void;
 }
 
 let handle: FileHandle | null = null;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let busy = false;
 let again = false;
+let allowShrink = false;
 
 export const useAutoBackup = create<AutoBackupState>((set, get) => {
   const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -78,7 +81,7 @@ export const useAutoBackup = create<AutoBackupState>((set, get) => {
       if (!force) {
         const existing = await (await handle.getFile()).text();
         const risk = overwriteRisk(existing, payload);
-        if (risk) return void set({ risk });
+        if (risk && !(risk.kind === 'shrink' && allowShrink)) return void set({ risk });
       }
       const w = await handle.createWritable();
       await w.write(JSON.stringify(payload, null, 1));
@@ -86,6 +89,7 @@ export const useAutoBackup = create<AutoBackupState>((set, get) => {
       const at = payload.exportedAt;
       await kvSet(KEY, { handle, lastWriteAt: at } satisfies Saved);
       await useBackup.getState().markBackedUp(at);
+      allowShrink = false;
       set({ lastWriteAt: at, error: null, risk: null });
     } catch (e) {
       if (e instanceof DOMException && e.name === 'NotAllowedError') set({ permission: 'prompt' });
@@ -167,6 +171,10 @@ export const useAutoBackup = create<AutoBackupState>((set, get) => {
     retry: () => write(),
 
     overwrite: () => write(true),
+
+    expectShrink() {
+      allowShrink = true;
+    },
 
     async turnOff() {
       clearTimeout(timer);
