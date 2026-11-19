@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { currentStreak, dayTotal, gradeOf, mergeDays, monthStats, weekTotal } from './logic';
+import { currentStreak, dayTotal, gradeOf, mergeDays, monthStats, parseCsvRows, parseLedgerCsv, weekTotal } from './logic';
 import { DEFAULT_DATA } from './types';
 
 const T = DEFAULT_DATA.thresholds;
@@ -71,5 +71,47 @@ describe('mergeDays', () => {
     expect(merged['2026-01-01']).toEqual({ writing: 45 });
     expect(merged['2026-01-02']).toEqual({ writing: 60 });
     expect(merged['not-a-date']).toBeUndefined();
+  });
+});
+
+describe('mergeDays notes', () => {
+  it('keeps an existing note when a bigger day without one replaces it', () => {
+    const { merged } = mergeDays({ '2026-01-01': { writing: 10, note: 'keep me' } }, { '2026-01-01': { writing: 20 } });
+    expect(merged['2026-01-01']).toEqual({ writing: 20, note: 'keep me' });
+  });
+});
+
+describe('parseCsvRows', () => {
+  it('handles quotes, escaped quotes and CRLF', () => {
+    expect(parseCsvRows('a,"b, c","say ""hi"""\r\n1,2,3\n')).toEqual([['a', 'b, c', 'say "hi"'], ['1', '2', '3']]);
+  });
+});
+
+describe('parseLedgerCsv', () => {
+  const OLD = [
+    'Date,Writing,Editing,Reading,Research,Craft,Querying,Prayer,AI research,PM work,Counted total,Note',
+    '2026-02-25,0,0,20,5,0,0,0,0,240,25,',
+    '2026-03-30,32,30,45,5,20,0,0,0,20,132,Edited at night',
+    '2026-05-10,0,0,0,0,0,0,0,0,0,0,',
+    '2026-05-11,1,0,0,0,0,0,0,0,0,9,typo total',
+  ].join('\n');
+
+  it('reads the old Ledger export, dropping prayer/AI/PM and empty days', () => {
+    const r = parseLedgerCsv(OLD)!;
+    expect(r.rows).toBe(4);
+    expect(r.days['2026-02-25']).toEqual({ reading: 20, research: 5 });
+    expect(r.days['2026-03-30']).toEqual({ writing: 32, editing: 30, reading: 45, research: 5, learning: 20, note: 'Edited at night' });
+    expect(r.days['2026-05-10']).toBeUndefined();
+    expect(r.minutes).toBe(25 + 132 + 1);
+  });
+
+  it('flags rows whose counted total disagrees', () => {
+    expect(parseLedgerCsv(OLD)!.badTotals).toEqual(['2026-05-11']);
+  });
+
+  it("reads this app's own export and rejects other CSVs", () => {
+    const own = 'Date,Writing,Editing,Reading,Research,Craft,Querying,Total,Note\n2026-11-19,0,0,15,0,0,0,15,';
+    expect(parseLedgerCsv(own)!.days).toEqual({ '2026-11-19': { reading: 15 } });
+    expect(parseLedgerCsv('name,email\nx,y')).toBeNull();
   });
 });

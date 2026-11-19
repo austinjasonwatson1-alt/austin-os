@@ -3,10 +3,10 @@ import { addDays, daysOfYear, daysUntil, mondayOf, MONTHS_LONG, parseISO, pretty
 import { useBackup } from '../../core/backup';
 import { Page } from '../../shell/Page';
 import {
-  currentStreak, dayTotal, fmtMins, gradeOf, GRADE_LABEL, monthLabel, monthStats, weekTotal, yearSummary,
+  currentStreak, dayTotal, fmtMins, gradeOf, GRADE_LABEL, monthLabel, monthStats, parseLedgerCsv, weekTotal, yearSummary,
 } from './logic';
 import { extractDays, useLedger } from './store';
-import { CATS, type GradeKey } from './types';
+import { CATS, type DayMap, type GradeKey } from './types';
 
 const gradeVar: Record<GradeKey, string> = {
   zero: 'var(--zero)', bad: 'var(--bad)', warn: 'var(--warn)', good: 'var(--good)', elite: 'var(--elite)',
@@ -314,12 +314,28 @@ function DataPanel() {
 
   const importFile = async (file: File) => {
     try {
-      const incoming = extractDays(JSON.parse(await file.text()));
-      if (!incoming) return setMsg('No ledger entries found in that file.');
+      const text = await file.text();
+      const isCsv = /\.csv$/i.test(file.name) || /^\uFEFF?date,/i.test(text.trimStart());
+      let incoming: DayMap | null;
+      let check = '';
+      if (isCsv) {
+        const csv = parseLedgerCsv(text);
+        incoming = csv && Object.keys(csv.days).length ? csv.days : null;
+        if (csv && incoming) {
+          check = `\n\nThe file: ${Object.keys(incoming).length} days, ${csv.minutes.toLocaleString()} counted minutes.\n` +
+            (csv.badTotals.length
+              ? `⚠ ${csv.badTotals.length} row(s) whose total doesn't match their categories: ${csv.badTotals.slice(0, 5).join(', ')}${csv.badTotals.length > 5 ? '…' : ''}`
+              : 'Every row’s total matches its categories.');
+        }
+      } else {
+        incoming = extractDays(JSON.parse(text));
+      }
+      if (!incoming) return setMsg(isCsv ? 'That CSV has no Ledger columns (Date, Writing, Reading…).' : 'No ledger entries found in that file.');
       const p = previewDays(incoming);
-      if (!window.confirm(`Load this backup?\n\n${p.add} new days\n${p.update} days upgraded (bigger total)\n${p.keep} days kept as they are`)) return;
+      if (p.add + p.update === 0) return setMsg(`Nothing new — all ${p.keep} days are already here.`);
+      if (!window.confirm(`Load this backup?${check}\n\n${p.add} new days\n${p.update} days upgraded (bigger total)\n${p.keep} days kept as they are`)) return;
       applyDays(incoming);
-      setMsg(`Loaded: ${p.add} added, ${p.update} upgraded.`);
+      setMsg(`Loaded: ${p.add} added, ${p.update} upgraded, ${p.keep} unchanged.`);
     } catch {
       setMsg('That file could not be read.');
     }
@@ -349,7 +365,7 @@ function DataPanel() {
         <button className="btn" onClick={() => fileRef.current?.click()}>Import backup</button>
         <button className="btn" onClick={() => void exportAll()}>Back up everything</button>
         <button className="btn" onClick={exportCsv}>Export CSV</button>
-        <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void importFile(f); e.target.value = ''; }} />
+        <input ref={fileRef} type="file" accept="application/json,.json,text/csv,.csv" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void importFile(f); e.target.value = ''; }} />
       </div>
       {msg && <p className="mono" style={{ fontSize: 12, color: 'var(--lamp)', marginBottom: 0 }}>{msg}</p>}
     </section>

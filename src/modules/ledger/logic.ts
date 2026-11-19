@@ -117,13 +117,83 @@ export function mergeDays(current: DayMap, incoming: DayMap): { merged: DayMap; 
       merged[k] = entry;
       preview.add++;
     } else if (dayTotal(entry) > dayTotal(cur)) {
-      merged[k] = entry;
+      // Bigger minutes win, but never drop a note the incoming day doesn't have.
+      merged[k] = !entry.note && cur.note ? { ...entry, note: cur.note } : entry;
       preview.update++;
     } else {
       preview.keep++;
     }
   }
   return { merged, preview };
+}
+
+/** Split CSV text into rows, honouring quoted fields ("a, b" and "" escapes). */
+export function parseCsvRows(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (ch === '"') quoted = false;
+      else field += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ',') { row.push(field); field = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); rows.push(row); row = []; field = '';
+    } else field += ch;
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim()));
+}
+
+export interface CsvImport {
+  days: DayMap;
+  /** Data rows read (including empty days that were skipped). */
+  rows: number;
+  minutes: number;
+  /** Dates whose "Counted total" / "Total" column disagrees with the sum of the categories. */
+  badTotals: string[];
+}
+
+/**
+ * Read a Ledger CSV — either this app's export or the old Ledger's (which adds Prayer, AI research
+ * and PM work columns; those are ignored on purpose). Columns are matched by header name.
+ * Days with no counted minutes and no note are skipped. Returns null if it isn't a Ledger CSV.
+ */
+export function parseLedgerCsv(text: string): CsvImport | null {
+  const [head, ...body] = parseCsvRows(text.replace(/^\uFEFF/, ''));
+  if (!head) return null;
+  const col = (name: string) => head.findIndex((h) => h.trim().toLowerCase() === name.toLowerCase());
+  const dateCol = col('Date');
+  const cats = CATS.map((c) => ({ k: c.k, i: col(c.name) >= 0 ? col(c.name) : col(c.k) })).filter((c) => c.i >= 0);
+  if (dateCol < 0 || cats.length === 0) return null;
+  const totalCol = col('Counted total') >= 0 ? col('Counted total') : col('Total');
+  const noteCol = col('Note');
+
+  const days: DayMap = {};
+  const badTotals: string[] = [];
+  let minutes = 0;
+  for (const r of body) {
+    const date = (r[dateCol] ?? '').trim();
+    if (!DAY_KEY.test(date)) continue;
+    const entry: DayEntry = {};
+    for (const c of cats) {
+      const v = Math.round(Number(r[c.i]) || 0);
+      if (v > 0) entry[c.k] = v;
+    }
+    const note = noteCol >= 0 ? (r[noteCol] ?? '').trim() : '';
+    if (note) entry.note = note;
+    const sum = dayTotal(entry);
+    if (totalCol >= 0 && r[totalCol]?.trim() && Number(r[totalCol]) !== sum) badTotals.push(date);
+    if (sum === 0 && !note) continue;
+    days[date] = entry;
+    minutes += sum;
+  }
+  return { days, rows: body.length, minutes, badTotals };
 }
 
 export const isoToday = () => iso(new Date());
