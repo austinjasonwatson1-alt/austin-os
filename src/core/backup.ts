@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { dumpAll, kvGet, kvSet } from './storage';
+import { buildBackupPayload } from './autoBackupLogic';
 import { todayISO } from './dates';
 
 const META_KEY = 'os.backupMeta';
@@ -9,10 +10,12 @@ interface BackupState {
   loaded: boolean;
   load: () => Promise<void>;
   exportAll: () => Promise<void>;
+  /** Record a successful backup (manual download or auto-backup write). */
+  markBackedUp: (at: string) => Promise<void>;
 }
 
 /** Whole-OS backup: one JSON file holding every module's data. */
-export const useBackup = create<BackupState>((set) => ({
+export const useBackup = create<BackupState>((set, get) => ({
   lastBackupAt: null,
   loaded: false,
   async load() {
@@ -20,13 +23,15 @@ export const useBackup = create<BackupState>((set) => ({
     set({ lastBackupAt: meta?.lastBackupAt ?? null, loaded: true });
   },
   async exportAll() {
-    const payload = { app: 'austin-os', version: 1, exportedAt: new Date().toISOString(), data: await dumpAll() };
+    const payload = buildBackupPayload(await dumpAll(), new Date());
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 1)], { type: 'application/json' }));
     a.download = `austin-os-backup-${todayISO()}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    const lastBackupAt = new Date().toISOString();
+    await get().markBackedUp(payload.exportedAt);
+  },
+  async markBackedUp(lastBackupAt) {
     await kvSet(META_KEY, { lastBackupAt });
     set({ lastBackupAt });
   },

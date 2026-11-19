@@ -1,5 +1,6 @@
 import { go, useRoute } from './router';
 import { MODULES } from '../modules/registry';
+import { AutoBackupFoot } from './AutoBackup';
 
 export function Sidebar() {
   const route = useRoute();
@@ -24,7 +25,7 @@ export function Sidebar() {
       <div className="nav-label">Writer's Cabin</div>
       {item('/cabin', '⌂', 'The Cabin')}
       {MODULES.filter((m) => m.section === 'cabin').map((m) => item(m.path, m.glyph, m.name, !m.component))}
-      <div className="rail-foot">Local only · data lives in this browser</div>
+      <div className="rail-foot"><AutoBackupFoot /></div>
     </nav>
   );
 }

@@ -9,6 +9,8 @@
 const DB_NAME = 'austin-os';
 const STORE = 'kv';
 const SNAP_PREFIX = 'snap:';
+/** Device-local settings (e.g. the auto-backup file handle). Never part of a backup. */
+export const SYS_PREFIX = 'sys:';
 const SNAP_KEEP = 8;
 const SNAP_MIN_GAP_MS = 5 * 60 * 1000;
 
@@ -39,6 +41,7 @@ function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T
 
 export const kvGet = <T>(key: string): Promise<T | undefined> => tx('readonly', (s) => s.get(key));
 export const kvSet = (key: string, value: unknown) => tx('readwrite', (s) => s.put(value, key));
+export const kvDel = (key: string) => tx('readwrite', (s) => s.delete(key));
 export const kvKeys = (): Promise<string[]> => tx('readonly', (s) => s.getAllKeys() as IDBRequest<string[]>);
 
 export interface Snapshot<T = unknown> {
@@ -46,9 +49,19 @@ export interface Snapshot<T = unknown> {
   value: T;
 }
 
+type SaveListener = (key: string) => void;
+const saveListeners = new Set<SaveListener>();
+
+/** Be told whenever user data is saved (the auto-backup listens here). Returns an unsubscribe. */
+export function onSave(fn: SaveListener): () => void {
+  saveListeners.add(fn);
+  return () => void saveListeners.delete(fn);
+}
+
 /** Save `value` under `key` and, at most every few minutes, push it onto the snapshot ring. */
 export async function saveWithSnapshot<T>(key: string, value: T): Promise<void> {
   await kvSet(key, value);
+  saveListeners.forEach((fn) => fn(key));
   const ring = (await kvGet<Snapshot<T>[]>(SNAP_PREFIX + key)) ?? [];
   const last = ring[0];
   if (last && Date.now() - new Date(last.at).getTime() < SNAP_MIN_GAP_MS) return;
@@ -67,11 +80,11 @@ export async function requestPersistence(): Promise<boolean> {
   }
 }
 
-/** Every user-data key (snapshots excluded) — what a full backup contains. */
+/** Every user-data key (snapshots and device-local settings excluded) — what a full backup contains. */
 export async function dumpAll(): Promise<Record<string, unknown>> {
   const out: Record<string, unknown> = {};
   for (const k of await kvKeys()) {
-    if (k.startsWith(SNAP_PREFIX)) continue;
+    if (k.startsWith(SNAP_PREFIX) || k.startsWith(SYS_PREFIX)) continue;
     out[k] = await kvGet(k);
   }
   return out;

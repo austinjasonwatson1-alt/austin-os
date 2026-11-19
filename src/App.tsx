@@ -1,4 +1,6 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
+import { useAutoBackup } from './core/autoBackup';
+import { useBackup } from './core/backup';
 import { byPath } from './modules/registry';
 import CabinHome from './shell/CabinHome';
 import Home from './shell/Home';
@@ -19,6 +21,10 @@ function Screen({ route }: { route: string }) {
 
 export default function App() {
   const route = useRoute();
+  useEffect(() => {
+    void useBackup.getState().load();
+    void useAutoBackup.getState().start();
+  }, []);
   return (
     <>
       <Sky />

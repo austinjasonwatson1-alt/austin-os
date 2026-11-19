@@ -10,7 +10,7 @@ A few weeks of Claude Code practice. Each item is a good self-contained session:
 ## Week 1 — foundations
 - [x] First commit; set up a GitHub repo
 - [ ] Import the old Ledger export (Sept → now) and verify totals against the old app
-- [ ] Auto-backup to a chosen file using the File System Access API (guards against cleared site data)
+- [x] Auto-backup to a chosen file using the File System Access API (guards against cleared site data)
 - [ ] Snapshot restore UI ("undo my last import")
 
 ## Week 2 — the library
