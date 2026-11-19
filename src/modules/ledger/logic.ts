@@ -223,3 +223,79 @@ export const describeLedger: Describer = {
     return `${Object.keys(days).length} days · ${fmtMins(mins)} · ${dl} deadline${dl === 1 ? '' : 's'}`;
   },
 };
+
+/* ---------------- home dashboard ---------------- */
+
+export interface DayPoint {
+  date: string;
+  mins: number;
+  grade: GradeKey;
+  future: boolean;
+}
+
+/** The seven days Monday→Sunday of the week holding `monday`, graded; days after `today` are marked future. */
+export function weekDays(days: DayMap, monday: string, today: string, t: Thresholds): DayPoint[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(monday, i);
+    const mins = dayTotal(days[date]);
+    return { date, mins, grade: gradeOf(mins, t), future: date > today };
+  });
+}
+
+/** Weekly totals for the last `n` weeks, oldest first, ending with the week holding `today`. */
+export function recentWeeks(days: DayMap, today: string, n: number): { monday: string; mins: number }[] {
+  const last = mondayOf(today);
+  return Array.from({ length: n }, (_, i) => {
+    const monday = addDays(last, (i - n + 1) * 7);
+    return { monday, mins: weekTotal(days, monday) };
+  });
+}
+
+/** Longest run of consecutive logged days anywhere in the data. */
+export function longestStreak(days: DayMap): number {
+  const keys = Object.keys(days).filter((k) => hasEntry(days[k])).sort();
+  let best = 0;
+  let run = 0;
+  let prev = '';
+  for (const k of keys) {
+    run = prev && addDays(prev, 1) === k ? run + 1 : 1;
+    best = Math.max(best, run);
+    prev = k;
+  }
+  return best;
+}
+
+/** Minutes per category over the `n` days ending `today`, biggest first, zero categories dropped. */
+export function catMix(days: DayMap, today: string, n: number): { k: CatKey; mins: number }[] {
+  const tot = Object.fromEntries(CATS.map((c) => [c.k, 0])) as Record<CatKey, number>;
+  for (let i = 0; i < n; i++) {
+    const e = days[addDays(today, -i)];
+    for (const c of CATS) tot[c.k] += Number(e?.[c.k]) || 0;
+  }
+  return CATS.map((c) => ({ k: c.k, mins: tot[c.k] })).filter((x) => x.mins > 0).sort((a, b) => b.mins - a.mins);
+}
+
+/** The next grade within reach today and how many minutes it needs; null once elite. */
+export function nextMark(mins: number, t: Thresholds): { grade: GradeKey; need: number } | null {
+  for (const grade of ['warn', 'good', 'elite'] as const) if (mins < t[grade]) return { grade, need: t[grade] - mins };
+  return null;
+}
+
+/** 0–1 brightness of the cabin lamp: how far today has climbed toward elite. */
+export const lampHeat = (mins: number, t: Thresholds): number => Math.max(0, Math.min(1, mins / t.elite));
+
+/** The soonest deadline on or after `today`, with days left. */
+export function nextDeadline(deadlines: { n: string; d: string }[], today: string): { n: string; d: string; left: number } | null {
+  const up = deadlines.filter((x) => x.d >= today).sort((a, b) => a.d.localeCompare(b.d))[0];
+  if (!up) return null;
+  return { ...up, left: Math.round((Date.parse(`${up.d}T12:00:00`) - Date.parse(`${today}T12:00:00`)) / 86_400_000) };
+}
+
+/** One line under the lamp: where today stands and what the next push earns. */
+export function lampLine(mins: number, t: Thresholds, streak: number): string {
+  const next = nextMark(mins, t);
+  if (mins === 0) return streak > 0 ? `The lamp is cold. ${t.warn}m keeps ${streak === 1 ? 'yesterday’s start' : `a ${streak}-day streak`} alive.` : `The lamp is cold. ${t.warn}m lights it.`;
+  if (!next) return 'Elite day. The lamp is roaring — anything more is a gift.';
+  const label = next.grade === 'warn' ? 'warning line' : `${GRADE_LABEL[next.grade].toLowerCase()} day`;
+  return `${next.need}m more to ${next.grade === 'elite' ? 'an' : 'a'} ${label}.`;
+}

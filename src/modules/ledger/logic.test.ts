@@ -132,3 +132,72 @@ describe('describeLedger', () => {
     expect(describeLedger.size(undefined)).toBe(0);
   });
 });
+
+import { catMix, lampHeat, longestStreak, nextDeadline, nextMark, recentWeeks, weekDays } from './logic';
+
+describe('home dashboard', () => {
+  const T = { elite: 180, good: 80, warn: 30 };
+  const D = {
+    '2026-11-16': { writing: 90 },
+    '2026-11-17': { reading: 20, research: 15 },
+    '2026-11-18': { writing: 200 },
+    '2026-11-10': { editing: 40 },
+    '2026-11-03': { writing: 10 },
+    '2026-11-04': { writing: 10 },
+  };
+
+  it('grades the week and marks future days', () => {
+    const w = weekDays(D, '2026-11-16', '2026-11-18', T);
+    expect(w.map((d) => d.grade)).toEqual(['good', 'warn', 'elite', 'zero', 'zero', 'zero', 'zero']);
+    expect(w.map((d) => d.future)).toEqual([false, false, false, true, true, true, true]);
+  });
+
+  it('totals recent weeks oldest first', () => {
+    expect(recentWeeks(D, '2026-11-18', 3)).toEqual([
+      { monday: '2026-11-02', mins: 20 },
+      { monday: '2026-11-09', mins: 40 },
+      { monday: '2026-11-16', mins: 325 },
+    ]);
+  });
+
+  it('finds the longest run, across month and year edges', () => {
+    expect(longestStreak(D)).toBe(3);
+    expect(longestStreak({ '2025-12-31': { writing: 5 }, '2026-01-01': { writing: 5 } })).toBe(2);
+    expect(longestStreak({})).toBe(0);
+  });
+
+  it('mixes categories biggest first and drops empty ones', () => {
+    expect(catMix(D, '2026-11-18', 3)).toEqual([
+      { k: 'writing', mins: 290 },
+      { k: 'reading', mins: 20 },
+      { k: 'research', mins: 15 },
+    ]);
+  });
+
+  it('names the next mark and the lamp heat', () => {
+    expect(nextMark(0, T)).toEqual({ grade: 'warn', need: 30 });
+    expect(nextMark(50, T)).toEqual({ grade: 'good', need: 30 });
+    expect(nextMark(180, T)).toBeNull();
+    expect(lampHeat(90, T)).toBe(0.5);
+    expect(lampHeat(400, T)).toBe(1);
+  });
+
+  it('picks the soonest upcoming deadline', () => {
+    const dl = [{ n: 'Old', d: '2026-01-01' }, { n: 'Late', d: '2027-03-01' }, { n: 'Query-ready', d: '2026-12-31' }];
+    expect(nextDeadline(dl, '2026-11-19')).toEqual({ n: 'Query-ready', d: '2026-12-31', left: 42 });
+    expect(nextDeadline([], '2026-11-19')).toBeNull();
+  });
+});
+
+import { lampLine } from './logic';
+
+describe('lampLine', () => {
+  const T = { elite: 180, good: 80, warn: 30 };
+  it('speaks to where today stands', () => {
+    expect(lampLine(0, T, 12)).toBe('The lamp is cold. 30m keeps a 12-day streak alive.');
+    expect(lampLine(0, T, 0)).toBe('The lamp is cold. 30m lights it.');
+    expect(lampLine(10, T, 3)).toBe('20m more to a warning line.');
+    expect(lampLine(100, T, 3)).toBe('80m more to a elite day.'.replace('a elite', 'an elite'));
+    expect(lampLine(200, T, 3)).toMatch(/^Elite day/);
+  });
+});

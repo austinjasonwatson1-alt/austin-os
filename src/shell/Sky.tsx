@@ -1,4 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
+import { todayISO } from '../core/dates';
+import { dayTotal, lampHeat } from '../modules/ledger/logic';
+import { useLedger } from '../modules/ledger/store';
 
 interface Star {
   x: number;
@@ -98,11 +101,15 @@ export function Sky() {
     };
   }, []);
 
+  // The cabin glow along the treeline burns brighter the more of today you've put in.
+  const heat = useLedger((s) => lampHeat(dayTotal(s.days[todayISO()]), s.thresholds));
+
   return (
     <>
       <div className="sky" aria-hidden>
         <canvas ref={ref} />
       </div>
+      <div className="sky-heat" style={{ '--heat': heat } as CSSProperties} aria-hidden />
       <Treeline />
       <div className="fog" aria-hidden />
     </>
