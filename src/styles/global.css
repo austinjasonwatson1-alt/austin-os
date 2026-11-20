@@ -344,3 +344,34 @@ input, textarea, select { font: inherit; color: inherit; }
 .g-today { fill: none; stroke: var(--bone); stroke-width: 1; opacity: .7; }
 .galaxy-note { text-align: center; font-size: 10.5px; letter-spacing: .06em; margin: 6px 0 0; }
 @media (prefers-reduced-motion: reduce) { .g-spin { animation: none; } }
+
+/* ---------- page transitions ---------- */
+.route { animation: route-side .45s cubic-bezier(.2, .7, .2, 1) backwards; transform-origin: 50% 20%; }
+.route-in { animation-name: route-in; animation-duration: .6s; }
+.route-out { animation-name: route-out; animation-duration: .5s; }
+@keyframes route-side { from { opacity: 0; transform: translateY(10px); } }
+@keyframes route-in { from { opacity: 0; transform: scale(1.035); filter: blur(6px); } 60% { filter: blur(0); } }
+@keyframes route-out { from { opacity: 0; transform: scale(.975); } }
+.route-wait { display: grid; place-items: center; min-height: 40vh; }
+.route-wait span { width: 14px; height: 14px; border-radius: 50%; background: var(--lamp); box-shadow: 0 0 24px var(--lamp); animation: dot-pulse .8s ease-in-out infinite alternate; }
+
+/* ---------- micro-motion ---------- */
+.btn.primary { position: relative; overflow: hidden; }
+.btn.primary::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-120%);
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 250, 230, .45) 50%, transparent 70%);
+}
+.btn.primary:hover::after { transform: translateX(120%); transition: transform .7s ease; }
+.btn.primary:hover { box-shadow: 0 0 22px rgba(232, 168, 75, .35); }
+.nav-item { position: relative; }
+.nav-item::before {
+  content: ''; position: absolute; left: -16px; top: 50%; width: 3px; height: 0; border-radius: 3px; background: var(--lamp);
+  box-shadow: 0 0 10px var(--lamp); transform: translateY(-50%); transition: height .25s ease;
+}
+.nav-item[aria-current='page']::before { height: 60%; }
+@media (max-width: 860px) { .nav-item::before { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .route, .route-wait span { animation: none; }
+  .btn.primary:hover::after { transition: none; }
+}

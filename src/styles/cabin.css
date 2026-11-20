@@ -252,3 +252,12 @@
 .c-info-when { font-size: 11px; color: var(--bone-faint); letter-spacing: .06em; }
 .c-info.on .c-info-when { color: var(--lamp); }
 @media (prefers-reduced-motion: reduce) { .c-body { animation: none; } }
+
+/* the lamp warms up when a page opens */
+.lamp-arc { animation: arc-warm 1.6s cubic-bezier(.2, .7, .2, 1) backwards; }
+@keyframes arc-warm { from { stroke-dasharray: 0 999; } }
+.lamp-flame { animation: lamp-warm 1.4s ease-out backwards, flicker 3.2s 1.4s ease-in-out infinite alternate; }
+@keyframes lamp-warm { from { opacity: 0; transform: scale(.6); } }
+.lamp-halo { animation: halo-warm 2s ease-out backwards; }
+@keyframes halo-warm { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .lamp-arc, .lamp-flame, .lamp-halo { animation: none; } }

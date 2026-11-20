@@ -1,4 +1,5 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
+import { routeMotion } from './shell/routeLogic';
 import { useAutoBackup } from './core/autoBackup';
 import { useBackup } from './core/backup';
 import { useLedger } from './modules/ledger/store';
@@ -29,6 +30,13 @@ function Screen({ route }: { route: string }) {
 
 export default function App() {
   const route = useRoute();
+  // Each page change plays a short entrance: deeper rooms zoom in, going back eases out.
+  const prev = useRef<string | null>(null);
+  const motion = routeMotion(prev.current, route);
+  useEffect(() => {
+    prev.current = route;
+    window.scrollTo({ top: 0 });
+  }, [route]);
   useEffect(() => {
     void useBackup.getState().load();
     void useAutoBackup.getState().start();
@@ -44,9 +52,11 @@ export default function App() {
       <div className="app">
         <Sidebar />
         <main className="main">
-          <Suspense fallback={null}>
-            <Screen route={route} />
-          </Suspense>
+          <div key={route} className={`route route-${motion}`}>
+            <Suspense fallback={<div className="route-wait" aria-hidden><span /></div>}>
+              <Screen route={route} />
+            </Suspense>
+          </div>
         </main>
       </div>
     </>
