@@ -226,3 +226,5 @@
   .rise, .lamp-flame, .star-today { animation: none; }
   .lamp, .lamp-arc, .week-fill { transition: none; }
 }
+
+.section-h { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--bone-dim); margin: 30px 0 12px; }

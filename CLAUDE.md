@@ -12,6 +12,7 @@ React 19 + TypeScript (strict) + Vite + Zustand. No router library (tiny hash ro
 
 ## Architecture rules
 - **One folder per module** under `src/modules/<name>/`: `types.ts`, `logic.ts` (pure functions, unit-tested), `store.ts` (Zustand + persistence), `<Name>Page.tsx` (UI).
+- The OS is a **homestead**: each part of life is an area (`AREAS` in `src/modules/registry.ts`): the Writer's Cabin, the Chapel (faith), the Office (PM job), the Observatory (AI study). An area without `live` shows as a blueprint. Home (`src/shell/Home.tsx`) is the homestead scene; the writing dashboard lives on the Cabin page.
 - Register every module in `src/modules/registry.ts`. Giving it a `component` makes it live; without one it shows as a "planned" room.
 - Keep business logic out of components. If it can be a pure function in `logic.ts`, it must be, with a test in `logic.test.ts`.
 - All dates are local-time `YYYY-MM-DD` strings via `src/core/dates.ts`. Never use `toISOString()` for a calendar date (it shifts across timezones).

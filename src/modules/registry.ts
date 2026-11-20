@@ -1,12 +1,51 @@
 import { lazy, type ComponentType } from 'react';
 
+export type AreaId = 'cabin' | 'chapel' | 'office' | 'observatory';
+
+/** A building on the homestead: one part of life. Without `live` it shows as being built. */
+export interface AreaDef {
+  id: AreaId;
+  path: string;
+  name: string;
+  glyph: string;
+  blurb: string;
+  /** What it will hold, shown while it's being built. */
+  plans: string[];
+  live: boolean;
+}
+
+export const AREAS: AreaDef[] = [
+  {
+    id: 'cabin', path: '/cabin', name: "The Writer's Cabin", glyph: '⌂', live: true,
+    blurb: 'The writing career: the Ledger, the Lounge, the Shelf, manuscripts, queries.',
+    plans: [],
+  },
+  {
+    id: 'chapel', path: '/chapel', name: 'The Chapel', glyph: '✝', live: false,
+    blurb: 'Prayer and faith: time with God, a prayer list, answered prayers.',
+    plans: ['Daily prayer and Bible-reading time, kept apart from writing minutes', 'A prayer list with dates, so answered prayers can be marked and remembered', 'Verses and notes worth keeping'],
+  },
+  {
+    id: 'office', path: '/office', name: 'The Office', glyph: '▣', live: false,
+    blurb: 'The PM job: focus blocks, weekly wins, notes.',
+    plans: ['Deep-work focus blocks with the lamp timer', 'Weekly wins and a running brag list for reviews', 'Meeting notes and follow-ups'],
+  },
+  {
+    id: 'observatory', path: '/observatory', name: 'The Observatory', glyph: '◐', live: false,
+    blurb: 'AI study and learning: courses, notes, hours.',
+    plans: ['Study hours, logged like the Ledger but counted on their own', 'Courses and papers with progress', 'Notes and experiments worth coming back to'],
+  },
+];
+
+export const areaByPath = (p: string) => AREAS.find((a) => a.path === p);
+
 export interface ModuleDef {
   id: string;
   path: string;
   name: string;
   glyph: string;
   blurb: string;
-  section: 'os' | 'cabin';
+  section: AreaId;
   /** Present once the module is built; absent means it renders as a "coming soon" room. */
   component?: ComponentType;
 }
