@@ -3,6 +3,7 @@ import { fmtMins, GRADE_LABEL, lampHeat } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
 import { CATS, type CatKey, type GradeKey } from '../modules/ledger/types';
 import { go } from './router';
+import { CountUp } from './fx';
 
 /** Shared pieces of the lamp: the dial, quick logging, clock, entrance stagger. */
 
@@ -79,7 +80,7 @@ export function Lamp({ mins, grade, loaded }: { mins: number; grade: GradeKey; l
       </svg>
       <div className="lamp-flame" />
       <div className="lamp-core">
-        <div className="lamp-mins">{loaded ? fmtMins(mins) : '—'}</div>
+        <div className="lamp-mins">{loaded ? <CountUp value={mins} format={fmtMins} /> : '—'}</div>
         <div className="lamp-grade mono" style={{ color: GRADE_VAR[grade] }}>{loaded ? GRADE_LABEL[grade] : ''}</div>
         <div className="lamp-sub mono">today</div>
       </div>

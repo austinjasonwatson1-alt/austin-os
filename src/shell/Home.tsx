@@ -6,7 +6,7 @@ import { currentStreak, dayTotal, fmtMins, gradeOf, GRADE_LABEL, lampHeat, lampL
 import { useLedger } from '../modules/ledger/store';
 import { dogPose, fmtPts } from '../modules/lounge/logic';
 import { useWallet } from '../modules/lounge/useWallet';
-import { CountUp } from './fx';
+import { CountUp, tilt } from './fx';
 import { AutoBackupPanel } from './AutoBackup';
 import { Homestead } from './Homestead';
 import { SkyPanel } from './SkyPanel';
@@ -73,7 +73,7 @@ export default function Home() {
 
         <div className="area-stack">
           {building.map((a, i) => (
-            <button key={a.id} className="area-plan rise" style={rise(2 + i)} onClick={() => go(a.path)}>
+            <button key={a.id} className="area-plan rise tilt" style={rise(2 + i)} onClick={() => go(a.path)} {...tilt(4)}>
               <span className="area-glyph plan" aria-hidden>{a.glyph}</span>
               <span className="area-plan-body">
                 <span className="area-plan-name">{a.name}</span>

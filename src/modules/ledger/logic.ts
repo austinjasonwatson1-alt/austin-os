@@ -299,3 +299,16 @@ export function lampLine(mins: number, t: Thresholds, streak: number): string {
   const label = next.grade === 'warn' ? 'warning line' : `${GRADE_LABEL[next.grade].toLowerCase()} day`;
   return `${next.need}m more to ${next.grade === 'elite' ? 'an' : 'a'} ${label}.`;
 }
+
+/**
+ * Where day `i` of `n` sits in the year-as-a-galaxy view: three spiral arms winding out from the
+ * core, January at the centre and December at the rim. Returns -1..1 coordinates.
+ */
+export function galaxyPoint(i: number, n: number): { x: number; y: number } {
+  const t = n > 1 ? i / (n - 1) : 0;
+  const arm = i % 3;
+  const angle = (arm * 2 * Math.PI) / 3 + t * 3.4 * Math.PI;
+  const jitter = (Math.sin(i * 12.9898) * 43758.5453) % 1;
+  const r = 0.1 + 0.86 * t + jitter * 0.025;
+  return { x: Math.cos(angle) * r, y: Math.sin(angle) * r };
+}

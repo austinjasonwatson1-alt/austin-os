@@ -8,6 +8,7 @@ import { useLedger } from '../modules/ledger/store';
 import { CAT, GRADE_VAR, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
 import { cabinRooms, Room } from './Rooms';
 import { Constellations } from './Constellations';
+import { CountUp, tilt } from './fx';
 import '../styles/cabin.css';
 
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -142,10 +143,10 @@ function WeekSky({ today }: { today: string }) {
 
 function Tile({ label, value, unit, foot, glyph, children }: { label: string; value: string; unit: string; foot: string; glyph: string; children?: ReactNode }) {
   return (
-    <div className="panel tile">
+    <div className="panel tile tilt" {...tilt(4)}>
       <span className="tile-glyph" aria-hidden>{glyph}</span>
       <p className="panel-t">{label}</p>
-      <div className="tile-v"><span className="big">{value}</span><span className="mono dim">{unit}</span></div>
+      <div className="tile-v"><span className="big">{/^\d+$/.test(value) ? <CountUp value={Number(value)} /> : value}</span><span className="mono dim">{unit}</span></div>
       {children}
       <div className="tile-foot mono">{foot}</div>
     </div>

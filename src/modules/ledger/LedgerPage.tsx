@@ -3,7 +3,7 @@ import { addDays, daysOfYear, daysUntil, mondayOf, MONTHS_LONG, parseISO, pretty
 import { useBackup } from '../../core/backup';
 import { Page } from '../../shell/Page';
 import {
-  currentStreak, dayTotal, fmtMins, gradeOf, GRADE_LABEL, monthLabel, monthStats, parseLedgerCsv, compareDays, weekTotal, yearSummary,
+  currentStreak, dayTotal, fmtMins, galaxyPoint, gradeOf, GRADE_LABEL, monthLabel, monthStats, parseLedgerCsv, compareDays, weekTotal, yearSummary,
 } from './logic';
 import { extractDays, useLedger } from './store';
 import { CATS, type DayMap, type GradeKey, type LedgerData } from './types';
@@ -192,6 +192,10 @@ function YearWall({ year, setYear, selected, onPick }: { year: number; setYear: 
   const keys = useMemo(() => daysOfYear(year), [year]);
   const lead = (parseISO(keys[0]).getDay() + 6) % 7;
   const scroller = useRef<HTMLDivElement>(null);
+  const [view, setView] = useState<'wall' | 'sky'>(() => {
+    try { return localStorage.getItem('ledger.yearView') === 'sky' ? 'sky' : 'wall'; } catch { return 'wall'; }
+  });
+  useEffect(() => { try { localStorage.setItem('ledger.yearView', view); } catch { /* per-device nicety only */ } }, [view]);
   // On narrow screens the wall scrolls sideways; open it on the current month, not January.
   useEffect(() => {
     const el = scroller.current;
@@ -199,17 +203,22 @@ function YearWall({ year, setYear, selected, onPick }: { year: number; setYear: 
     const idx = year === new Date().getFullYear() ? keys.indexOf(today) : keys.length - 1;
     const col = Math.floor((idx + lead) / 7);
     el.scrollLeft = Math.max(0, col * 16 - el.clientWidth + 48);
-  }, [year]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [year, view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section className="panel">
       <div className="panel-h">
-        <h2 className="panel-t">The year wall · {year}</h2>
+        <h2 className="panel-t">The year {view === 'sky' ? 'sky' : 'wall'} · {year}</h2>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <div className="seg" role="radiogroup" aria-label="View">
+            <button role="radio" aria-checked={view === 'wall'} onClick={() => setView('wall')}>Wall</button>
+            <button role="radio" aria-checked={view === 'sky'} onClick={() => setView('sky')}>Galaxy</button>
+          </div>
           <button className="btn ghost" aria-label="Previous year" onClick={() => setYear(year - 1)}>◀</button>
           <button className="btn ghost" aria-label="Next year" onClick={() => setYear(year + 1)} disabled={year >= new Date().getFullYear()}>▶</button>
         </div>
       </div>
+      {view === 'sky' ? <YearGalaxy keys={keys} selected={selected} onPick={onPick} /> : (
       <div ref={scroller} style={{ overflowX: 'auto', paddingBottom: 4 }}>
         <div style={{ display: 'grid', gridAutoFlow: 'column', gridTemplateRows: 'repeat(7, 13px)', gridAutoColumns: '13px', gap: 3, width: 'max-content' }}>
           {Array.from({ length: lead }, (_, i) => <span key={`pad${i}`} />)}
@@ -235,6 +244,7 @@ function YearWall({ year, setYear, selected, onPick }: { year: number; setYear: 
           })}
         </div>
       </div>
+      )}
       <div style={{ display: 'flex', gap: 14, marginTop: 12, flexWrap: 'wrap' }} className="mono faint">
         {(['zero', 'bad', 'warn', 'good', 'elite'] as GradeKey[]).map((g) => (
           <span key={g} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10.5, letterSpacing: '.1em', textTransform: 'uppercase' }}>
@@ -467,5 +477,50 @@ function RestorePanel() {
         </button>
       )}
     </section>
+  );
+}
+
+/** The year as a spiral galaxy: every day a star, January at the core, brighter for bigger days. */
+function YearGalaxy({ keys, selected, onPick }: { keys: string[]; selected: string; onPick: (d: string) => void }) {
+  const { days, thresholds } = useLedger();
+  const today = todayISO();
+  const [hover, setHover] = useState<string | null>(null);
+  const S = 300;
+  const pts = useMemo(() => keys.map((k, i) => ({ k, ...galaxyPoint(i, keys.length) })), [keys]);
+  const h = hover ? pts.find((p) => p.k === hover) : null;
+  return (
+    <div className="galaxy">
+      <svg viewBox={`${-S} ${-S} ${S * 2} ${S * 2}`} role="group" aria-label="The year as a galaxy of days">
+        <defs>
+          <radialGradient id="gcore"><stop offset="0" stopColor="#f6dca0" stopOpacity=".55" /><stop offset=".35" stopColor="#8a6fd0" stopOpacity=".18" /><stop offset="1" stopColor="#05070c" stopOpacity="0" /></radialGradient>
+        </defs>
+        <circle r={S} fill="url(#gcore)" />
+        <g className="g-spin">
+          {pts.map(({ k, x, y }) => {
+            if (k > today) return null;
+            const m = dayTotal(days[k]);
+            const g = gradeOf(m, thresholds);
+            const r = m ? 1.6 + Math.min(1, m / thresholds.elite) * 4.4 : 1;
+            return (
+              <g key={k} transform={`translate(${(x * S * 0.94).toFixed(1)} ${(y * S * 0.94).toFixed(1)})`} className="g-day"
+                onClick={() => onPick(k)} onPointerEnter={() => setHover(k)} onPointerLeave={() => setHover(null)}>
+                <circle r="9" fill="transparent" />
+                {m > 0 && <circle r={r * 2.4} fill={gradeVar[g]} opacity=".18" />}
+                <circle r={r} fill={m ? gradeVar[g] : 'rgba(233,228,216,.18)'} />
+                {k === selected && <circle r={r + 4} className="g-sel" />}
+                {k === today && <circle r={r + 7} className="g-today" />}
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+      {h && (
+        <div className="tip" style={{ left: `${50 + h.x * 47}%`, top: `${50 + h.y * 47}%` }}>
+          <b>{parseISO(h.k).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</b>
+          <span>{fmtMins(dayTotal(days[h.k]))} · {GRADE_LABEL[gradeOf(dayTotal(days[h.k]), thresholds)]}</span>
+        </div>
+      )}
+      <p className="galaxy-note mono faint">January at the core, December at the rim. Click a star to open that day.</p>
+    </div>
   );
 }

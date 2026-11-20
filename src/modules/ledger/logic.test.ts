@@ -201,3 +201,15 @@ describe('lampLine', () => {
     expect(lampLine(200, T, 3)).toMatch(/^Elite day/);
   });
 });
+
+import { galaxyPoint } from './logic';
+
+describe('galaxyPoint', () => {
+  it('winds the year outward from the core and stays in bounds', () => {
+    const r = (i: number) => Math.hypot(galaxyPoint(i, 365).x, galaxyPoint(i, 365).y);
+    expect(r(0)).toBeLessThan(0.15);
+    expect(r(364)).toBeGreaterThan(0.9);
+    for (let i = 0; i < 365; i += 7) expect(r(i)).toBeLessThanOrEqual(1);
+    expect(r(200)).toBeGreaterThan(r(100));
+  });
+});

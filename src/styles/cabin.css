@@ -119,13 +119,7 @@
 .home-grid > * { min-width: 0; }
 .home-stack { display: grid; gap: 16px; }
 
-.tip {
-  position: absolute; z-index: 3; transform: translate(-50%, calc(-100% - 14px)); pointer-events: none;
-  display: grid; gap: 1px; padding: 7px 10px; border-radius: 9px; white-space: nowrap;
-  background: rgba(10, 13, 21, 0.95); border: 1px solid var(--line-strong); box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
-  font-family: var(--mono); font-size: 11px; color: var(--bone-dim);
-}
-.tip b { color: var(--bone); font-weight: 500; }
+
 
 /* week constellation */
 .week-plot, .tide-plot { position: relative; }
