@@ -9,7 +9,9 @@ export const KEY = 'timer.v1';
 
 interface TimerState extends TimerData {
   loaded: boolean;
-  load: () => Promise<void>;
+  /** Read from storage once. `force` re-reads (after a restore); otherwise later calls are no-ops,
+   *  so a page mounting mid-save can never roll the in-memory state back to a stale copy. */
+  load: (force?: boolean) => Promise<void>;
   start: (cat: CatKey, goal: number) => void;
   pause: () => void;
   resume: () => void;
@@ -27,7 +29,8 @@ interface TimerState extends TimerData {
 const pick = (s: TimerState): TimerData => ({ running: s.running, sessions: s.sessions, ambient: s.ambient, lastCat: s.lastCat, lastGoal: s.lastGoal });
 
 export const useTimer = create<TimerState>((set, get) => {
-  const persist = () => void saveWithSnapshot(KEY, pick(get()));
+  // Never write before the saved copy has been read: that would replace real data with defaults.
+  const persist = () => { if (get().loaded) void saveWithSnapshot(KEY, pick(get())); };
   const patchRun = (p: Partial<NonNullable<TimerData['running']>>) => {
     const r = get().running;
     if (!r) return;
@@ -39,7 +42,8 @@ export const useTimer = create<TimerState>((set, get) => {
     ...DEFAULT_TIMER,
     loaded: false,
 
-    async load() {
+    async load(force = false) {
+      if (get().loaded && !force) return;
       const saved = await kvGet<TimerData>(KEY);
       set({ ...DEFAULT_TIMER, ...(saved ?? {}), loaded: true });
     },
@@ -74,7 +78,8 @@ export const useTimer = create<TimerState>((set, get) => {
 
     stop() {
       const r = get().running;
-      if (!r) return null;
+      // Minutes go into the Ledger, so it must be loaded first (otherwise they'd be lost).
+      if (!r || !useLedger.getState().loaded) return null;
       const end = r.pausedAt ?? Date.now();
       const minutes = Math.round(elapsedMs(r, end) / 60_000);
       set({ running: null });

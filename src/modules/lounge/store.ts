@@ -6,7 +6,9 @@ export const KEY = 'lounge.v1';
 
 interface LoungeState extends LoungeData {
   loaded: boolean;
-  load: () => Promise<void>;
+  /** Read from storage once. `force` re-reads (after a restore); otherwise later calls are no-ops,
+   *  so a page mounting mid-save can never roll the in-memory state back to a stale copy. */
+  load: (force?: boolean) => Promise<void>;
   saveReward: (r: Omit<Reward, 'id'> & { id?: string }) => void;
   removeReward: (id: string) => void;
   /** Spend points on a reward. Returns the new claim so the UI can offer undo. */
@@ -23,7 +25,8 @@ const pick = (s: LoungeState): LoungeData => ({ rewards: s.rewards, claims: s.cl
 const newId = (p: string) => `${p}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
 export const useLounge = create<LoungeState>((set, get) => {
-  const persist = () => void saveWithSnapshot(KEY, pick(get()));
+  // Never write before the saved copy has been read: that would replace real data with defaults.
+  const persist = () => { if (get().loaded) void saveWithSnapshot(KEY, pick(get())); };
   const patchClaim = (id: string, f: (c: Claim) => Claim) => {
     set({ claims: get().claims.map((c) => (c.id === id ? f(c) : c)) });
     persist();
@@ -33,7 +36,8 @@ export const useLounge = create<LoungeState>((set, get) => {
     ...DEFAULT_LOUNGE,
     loaded: false,
 
-    async load() {
+    async load(force = false) {
+      if (get().loaded && !force) return;
       const saved = await kvGet<LoungeData>(KEY);
       set({ ...DEFAULT_LOUNGE, ...(saved ?? {}), rates: { ...DEFAULT_LOUNGE.rates, ...(saved?.rates ?? {}) }, loaded: true });
     },

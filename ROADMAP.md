@@ -13,6 +13,12 @@ A few weeks of Claude Code practice. Each item is a good self-contained session:
 - [x] Auto-backup to a chosen file using the File System Access API (guards against cleared site data)
 - [x] Snapshot restore UI ("undo my last import")
 
+## Done overnight (Nov 20)
+- [x] **The homestead**: Home is a scene of the Writer's Cabin plus the Chapel, Office and Observatory (being built)
+- [x] **The Writing Lounge**: points from writing, a shop of real rewards, To buy → Mark bought
+- [x] **Lamp Mode**: full-screen focus timer that logs into the Ledger and pays points
+- [x] Living sky (clock, moon, seasons, opt-in weather), constellations, Cooper and Shadow, the clickable Lounge room, the year galaxy
+
 ## Week 2 — the library
 - [ ] **The Shelf**: rebuild the library tracker (books, ratings, genre, notes, covers)
 - [ ] Import the old Shelf's saved JSON
@@ -20,7 +26,12 @@ A few weeks of Claude Code practice. Each item is a good self-contained session:
 
 ## Week 3 — the manuscripts
 - [ ] **Manuscripts**: chapter board for *The Life I Deserve* and *Silence Speaks*, word counts, status
-- [ ] Writing session timer that logs minutes straight into the Ledger
+- [x] Writing session timer that logs minutes straight into the Ledger (Lamp Mode)
+
+## The homestead
+- [ ] **The Chapel**: prayer time (kept apart from writing minutes), prayer list, answered prayers
+- [ ] **The Office**: focus blocks, weekly wins, notes
+- [ ] **The Observatory**: AI study hours, courses, notes
 
 ## Week 4 — the business of writing
 - [ ] **Query Tracker**, **Contests**, **Editorial Vault**, **Outreach**

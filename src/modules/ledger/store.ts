@@ -9,7 +9,9 @@ export const KEY = 'ledger.v3';
 
 interface LedgerState extends LedgerData {
   loaded: boolean;
-  load: () => Promise<void>;
+  /** Read from storage once. `force` re-reads (after a restore); otherwise later calls are no-ops,
+   *  so a page mounting mid-save can never roll the in-memory state back to a stale copy. */
+  load: (force?: boolean) => Promise<void>;
   setMinutes: (date: string, cat: CatKey, minutes: number) => void;
   setNote: (date: string, note: string) => void;
   addDeadline: (d: Deadline) => void;
@@ -32,13 +34,15 @@ const pick = (s: LedgerState): LedgerData => ({
 });
 
 export const useLedger = create<LedgerState>((set, get) => {
-  const persist = () => void saveWithSnapshot(KEY, pick(get()));
+  // Never write before the saved copy has been read: that would replace real data with defaults.
+  const persist = () => { if (get().loaded) void saveWithSnapshot(KEY, pick(get())); };
 
   return {
     ...DEFAULT_DATA,
     loaded: false,
 
-    async load() {
+    async load(force = false) {
+      if (get().loaded && !force) return;
       const saved = await kvGet<LedgerData>(KEY);
       set({ ...DEFAULT_DATA, ...(saved ?? {}), loaded: true });
     },

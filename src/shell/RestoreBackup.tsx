@@ -13,7 +13,7 @@ import { useTimer } from '../modules/timer/store';
 const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge, 'timer.v1': describeTimer };
 
 /** After a restore, every store re-reads what it holds. Add new modules here. */
-const reloadStores = () => Promise.all([useLedger.getState().load(), useLounge.getState().load(), useTimer.getState().load()]);
+const reloadStores = () => Promise.all([useLedger.getState().load(true), useLounge.getState().load(true), useTimer.getState().load(true)]);
 
 const TAG: Record<Change, { text: string; cls: string }> = {
   new: { text: 'Brings back', cls: 'back' },

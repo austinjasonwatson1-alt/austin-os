@@ -168,7 +168,7 @@ export default function TimerPage() {
                   {live
                     ? <button className="btn lm-btn" onClick={t.pause}>Pause</button>
                     : <button className="btn lm-btn" onClick={t.resume}>Resume</button>}
-                  <button className="btn primary lm-btn" onClick={stop} disabled={ms < 60_000} title={ms < 60_000 ? 'Sessions under a minute are not logged' : undefined}>
+                  <button className="btn primary lm-btn" onClick={stop} disabled={ms < 60_000 || !ledger.loaded} title={ms < 60_000 ? 'Sessions under a minute are not logged' : undefined}>
                     Stop &amp; log {runMins ? fmtMins(runMins) : ''}
                   </button>
                   <DiscardButton />
