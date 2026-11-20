@@ -30,3 +30,4 @@ Dark, moody, space-and-cabin. Palette lives in CSS variables in `src/styles/glob
 ## Domain notes
 - The Ledger counts writing-career minutes only: Writing, Editing, Reading, Research, Craft, Querying. Prayer/faith, AI study and PM job work are intentionally excluded.
 - Day grades: elite ≥180m, good ≥80m, warning ≥30m, else slipping; 0 = zero day. Weekly: 700/450/250. "No zero days" is the personal rule.
+- The Lounge (`src/modules/lounge`): points are never stored — they're recomputed from the Ledger (`earnings()`), minus what's been claimed. Rewards are real-world things Austin prices himself; a claim spends points, sits on "To buy" until he marks it bought, and can be refunded or undone.

@@ -4,6 +4,9 @@ import { parseISO, todayISO } from '../core/dates';
 import { AREAS } from '../modules/registry';
 import { currentStreak, dayTotal, fmtMins, gradeOf, GRADE_LABEL, lampHeat, lampLine, mondayOf, weekTotal } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
+import { fmtPts } from '../modules/lounge/logic';
+import { useWallet } from '../modules/lounge/useWallet';
+import { CountUp } from './fx';
 import { AutoBackupPanel } from './AutoBackup';
 import { Homestead } from './Homestead';
 import { GRADE_VAR, greeting, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
@@ -23,6 +26,7 @@ export default function Home() {
   const date = parseISO(today).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
   const time = now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   const building = AREAS.filter((a) => !a.live);
+  const wallet = useWallet();
 
   return (
     <div className="home homestead">
@@ -57,6 +61,11 @@ export default function Home() {
                 <div><dt>This week</dt><dd>{loaded ? fmtMins(weekTotal(days, mondayOf(today))) : '—'}</dd></div>
               </dl>
               <QuickLog today={today} />
+              <button className="area-wallet" onClick={() => go('/cabin/lounge')}>
+                <span className="area-coin" aria-hidden>✦</span>
+                <span><b>{wallet.loaded ? <CountUp value={wallet.balance} /> : '—'}</b> points in the Lounge{wallet.today ? ` · +${fmtPts(wallet.today)} today` : ''}</span>
+                <span className="area-wallet-go" aria-hidden>→</span>
+              </button>
             </div>
           </div>
         </article>

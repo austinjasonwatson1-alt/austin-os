@@ -4,12 +4,14 @@ import { planRestore, type Change, type Describer, type RestorePlan } from '../c
 import { dumpAll, saveWithSnapshot, snapshotNow } from '../core/storage';
 import { describeLedger } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
+import { describeLounge } from '../modules/lounge/logic';
+import { useLounge } from '../modules/lounge/store';
 
 /** Every module's stored key → how to describe it. Add new modules here. */
-const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger };
+const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge };
 
 /** After a restore, every store re-reads what it holds. Add new modules here. */
-const reloadStores = () => Promise.all([useLedger.getState().load()]);
+const reloadStores = () => Promise.all([useLedger.getState().load(), useLounge.getState().load()]);
 
 const TAG: Record<Change, { text: string; cls: string }> = {
   new: { text: 'Brings back', cls: 'back' },

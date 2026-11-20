@@ -57,6 +57,11 @@ export const MODULES: ModuleDef[] = [
     blurb: 'Daily minutes toward the book. Grades, streaks, the year wall.',
     component: lazy(() => import('./ledger/LedgerPage')),
   },
+  {
+    id: 'lounge', path: '/cabin/lounge', name: 'The Lounge', glyph: '✦', section: 'cabin',
+    blurb: 'Writing earns points. Spend them on real things you want, then mark them bought.',
+    component: lazy(() => import('./lounge/LoungePage')),
+  },
   { id: 'shelf', path: '/cabin/shelf', name: 'The Shelf', glyph: '▥', section: 'cabin', blurb: 'Your library — every book read, rated, and mined for craft.' },
   { id: 'manuscripts', path: '/cabin/manuscripts', name: 'Manuscripts', glyph: '❡', section: 'cabin', blurb: 'The Life I Deserve and Silence Speaks — chapter boards and word counts.' },
   { id: 'queries', path: '/cabin/queries', name: 'Query Tracker', glyph: '✉', section: 'cabin', blurb: 'Agents, submissions, responses, follow-ups.' },
