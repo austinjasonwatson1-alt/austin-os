@@ -6,12 +6,14 @@ import { describeLedger } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
 import { describeLounge } from '../modules/lounge/logic';
 import { useLounge } from '../modules/lounge/store';
+import { describeTimer } from '../modules/timer/logic';
+import { useTimer } from '../modules/timer/store';
 
 /** Every module's stored key → how to describe it. Add new modules here. */
-const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge };
+const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge, 'timer.v1': describeTimer };
 
 /** After a restore, every store re-reads what it holds. Add new modules here. */
-const reloadStores = () => Promise.all([useLedger.getState().load(), useLounge.getState().load()]);
+const reloadStores = () => Promise.all([useLedger.getState().load(), useLounge.getState().load(), useTimer.getState().load()]);
 
 const TAG: Record<Change, { text: string; cls: string }> = {
   new: { text: 'Brings back', cls: 'back' },

@@ -120,6 +120,7 @@ export function QuickLog({ today }: { today: string }) {
             <em>+</em><span>{n}</span><small>min</small>
           </button>
         ))}
+        <button className="qlamp" onClick={() => go('/cabin/timer')}><span aria-hidden>◉</span> Lamp mode</button>
         <button className="qmore" onClick={() => go('/cabin/ledger')}>Open the Ledger →</button>
       </div>
       <div className="qlog-toast mono" aria-live="polite">

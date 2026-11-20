@@ -58,6 +58,11 @@ export const MODULES: ModuleDef[] = [
     component: lazy(() => import('./ledger/LedgerPage')),
   },
   {
+    id: 'timer', path: '/cabin/timer', name: 'Lamp Mode', glyph: '◉', section: 'cabin',
+    blurb: 'A focus timer. Everything goes dark but the lamp; stop and the minutes land in the Ledger.',
+    component: lazy(() => import('./timer/TimerPage')),
+  },
+  {
     id: 'lounge', path: '/cabin/lounge', name: 'The Lounge', glyph: '✦', section: 'cabin',
     blurb: 'Writing earns points. Spend them on real things you want, then mark them bought.',
     component: lazy(() => import('./lounge/LoungePage')),

@@ -2,6 +2,8 @@ import { Suspense, useEffect } from 'react';
 import { useAutoBackup } from './core/autoBackup';
 import { useBackup } from './core/backup';
 import { useLedger } from './modules/ledger/store';
+import { useLounge } from './modules/lounge/store';
+import { useTimer } from './modules/timer/store';
 import { areaByPath, byPath } from './modules/registry';
 import { AreaSoon } from './shell/AreaSoon';
 import CabinHome from './shell/CabinHome';
@@ -29,6 +31,8 @@ export default function App() {
     void useBackup.getState().load();
     void useAutoBackup.getState().start();
     void useLedger.getState().load();
+    void useLounge.getState().load();
+    void useTimer.getState().load();
   }, []);
   return (
     <>
