@@ -9,6 +9,8 @@ import { currentStreak, dayTotal, gradeOf, lampHeat } from '../ledger/logic';
 import { earned, milestones } from '../ledger/milestones';
 import { useLedger } from '../ledger/store';
 import { dogLine, dogPose, type DogName } from './logic';
+import { spine } from '../shelf/logic';
+import { useShelf } from '../shelf/store';
 
 const WINDOW_SKY: Record<string, [string, string]> = {
   night: ['#0a0f22', '#141a33'], dawn: ['#1d1a35', '#b5707a'], day: ['#3a5a8a', '#8fb0d6'], golden: ['#2a2a4a', '#e09a50'], dusk: ['#1a1433', '#8a4a74'],
@@ -33,6 +35,8 @@ export function LoungeScene() {
   const record = earned(ms, 'long-week');
   const chair = earned(ms, 'hundred');
   const fullShelf = earned(ms, 'hearth');
+  const allBooks = useShelf((st) => st.books);
+  const shelfBooks = useMemo(() => allBooks.filter((b) => b.status === 'read'), [allBooks]);
   const [say, setSay] = useState<{ text: string; x: number } | null>(null);
   const [playing, setPlaying] = useState(false);
   const now = new Date();
@@ -95,15 +99,17 @@ export function LoungeScene() {
           <rect x="262" y="52" width="246" height="7" rx="3" fill="#3a2c20" />
         </g>
 
-        {/* bookshelf → The Shelf */}
-        <Thing label="The Shelf" sub="coming soon" onOpen={() => go('/cabin/shelf')} x={40} y={60}>
+        {/* bookshelf → The Shelf: your real books once there are some, read ones in their own colors */}
+        <Thing label="The Shelf" sub={shelfBooks.length ? `${shelfBooks.length} book${shelfBooks.length === 1 ? '' : 's'} read · open` : 'open the Shelf'} onOpen={() => go('/cabin/shelf')} x={40} y={60}>
           <rect width="170" height="270" rx="3" className="ls-wood" />
           {[0, 1, 2, 3].map((r) => (
             <g key={r} transform={`translate(10 ${14 + r * 64})`}>
               <rect y="52" width="150" height="6" className="ls-wood-d" />
-              {Array.from({ length: fullShelf ? 13 : 4 + r * 2 }, (_, i) => (
-                <rect key={i} x={i * 11 + (i > 9 ? 4 : 0)} y={52 - (32 + ((i * 7 + r * 3) % 14))} width="9" height={32 + ((i * 7 + r * 3) % 14)} rx="1"
-                  fill={['#5a2a22', '#2e3f5a', '#3d4a2e', '#6a4a22', '#4a2e4a', '#2a4a4a'][(i + r) % 6]} opacity=".9" />
+              {(shelfBooks.length
+                ? shelfBooks.slice(r * 13, r * 13 + 13).map((b) => ({ color: spine(b).color, h: 30 + (spine(b).height - 104) / 2 }))
+                : Array.from({ length: fullShelf ? 13 : 4 + r * 2 }, (_, i) => ({ color: ['#5a2a22', '#2e3f5a', '#3d4a2e', '#6a4a22', '#4a2e4a', '#2a4a4a'][(i + r) % 6], h: 32 + ((i * 7 + r * 3) % 14) }))
+              ).map((b, i) => (
+                <rect key={i} x={i * 11 + (i > 9 ? 4 : 0)} y={52 - b.h} width="9" height={b.h} rx="1" fill={b.color} opacity=".9" />
               ))}
             </g>
           ))}

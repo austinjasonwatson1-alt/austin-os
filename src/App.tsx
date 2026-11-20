@@ -5,6 +5,7 @@ import { useBackup } from './core/backup';
 import { useLedger } from './modules/ledger/store';
 import { useLounge } from './modules/lounge/store';
 import { useTimer } from './modules/timer/store';
+import { useShelf } from './modules/shelf/store';
 import { areaByPath, byPath } from './modules/registry';
 import { AreaSoon } from './shell/AreaSoon';
 import CabinHome from './shell/CabinHome';
@@ -44,6 +45,7 @@ export default function App() {
     void useLounge.getState().load();
     void useTimer.getState().load();
     void useSky.getState().load();
+    void useShelf.getState().load();
   }, []);
   return (
     <>
