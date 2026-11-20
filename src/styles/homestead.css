@@ -176,3 +176,43 @@
 
 .hs-scene .dog { --x: 0; }
 .hs-scene .dog > g { filter: drop-shadow(0 0 2px rgba(242, 182, 90, .9)); }
+
+/* ---------- the richer homestead ---------- */
+.hs-path { fill: rgba(120, 100, 80, 0.16); }
+.hs-shimmer path { stroke: rgba(233, 228, 216, .18); stroke-width: 1.2; stroke-linecap: round; animation: shimmer 4s ease-in-out infinite alternate; }
+.hs-shimmer path:nth-child(2n) { animation-delay: -2s; }
+@keyframes shimmer { from { opacity: .2; transform: translateX(-3px); } to { opacity: 1; transform: translateX(3px); } }
+.hs-grass path { fill: none; stroke: #121a2c; stroke-width: 1.4; stroke-linejoin: round; }
+.hs-mist { pointer-events: none; animation: mist 30s ease-in-out infinite alternate; }
+@keyframes mist { from { transform: translateX(-30px); } to { transform: translateX(30px); } }
+
+.hs-b .hs-stone { fill: #141a26; }
+.hs-b .hs-roof-in { fill: #0e1422; stroke: none; }
+.hs-b .hs-logend { fill: #121827; stroke: rgba(233, 228, 216, .18); }
+.hs-b .hs-post { stroke: rgba(233, 228, 216, .25); stroke-width: 3; }
+.hs-b .hs-step { fill: #0c111c; stroke: rgba(233, 228, 216, .15); }
+.hs-b .hs-sill { fill: #0c111c; stroke: rgba(233, 228, 216, .15); }
+.hs-b.live .hs-window .hs-win { fill: url(#hs-room); animation: window-flicker 5s ease-in-out infinite; }
+.hs-b.live .hs-window:nth-child(2n) .hs-win { animation-delay: -2.4s; }
+@keyframes window-flicker { 0%, 100% { opacity: calc(0.5 + var(--heat) * 0.5); } 45% { opacity: calc(0.42 + var(--heat) * 0.5); } 55% { opacity: calc(0.55 + var(--heat) * 0.45); } }
+.hs-inside path, .hs-inside rect { fill: rgba(60, 30, 10, .55); stroke: rgba(60, 30, 10, .55); stroke-width: 1.5; }
+.hs-b.plan .hs-inside { display: none; }
+.hs-lantern path { fill: #ffe2a0; filter: drop-shadow(0 0 6px #ffc66e); }
+.hs-lantern-glow { animation: lantern 3s ease-in-out infinite alternate; }
+@keyframes lantern { from { opacity: .7; } to { opacity: 1; } }
+.hs-woodpile circle { fill: #1a1510; stroke: rgba(232, 168, 75, .25); }
+.hs-embers circle { fill: #ffb347; filter: drop-shadow(0 0 3px #ff8a2a); animation: ember-rise 3.5s ease-out infinite; opacity: 0; }
+.hs-embers circle:nth-child(2) { animation-delay: -1.2s; }
+.hs-embers circle:nth-child(3) { animation-delay: -2.4s; }
+@keyframes ember-rise { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(14px, -70px); opacity: 0; } }
+.hs-smoke circle:nth-child(4) { animation-delay: -1s; }
+.hs-smoke circle:nth-child(5) { animation-delay: -3s; }
+
+.hs-site path { fill: none; stroke: rgba(111, 179, 242, .35); stroke-width: 1.2; }
+.hs-site-lamp rect { fill: #ffe2a0; }
+.hs-site-lamp circle { opacity: .55; animation: lantern 2.4s ease-in-out infinite alternate; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hs-shimmer path, .hs-mist, .hs-b.live .hs-window .hs-win, .hs-lantern-glow, .hs-embers circle, .hs-site-lamp circle { animation: none; }
+  .hs-embers circle { opacity: 0; }
+}

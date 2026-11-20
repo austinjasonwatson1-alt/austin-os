@@ -48,6 +48,19 @@ export function Homestead({ heat, pose, children }: { heat: number; pose: DogPos
             <stop offset="0" stopColor="#f7c66e" stopOpacity=".9" />
             <stop offset="1" stopColor="#e8a84b" stopOpacity="0" />
           </radialGradient>
+          <linearGradient id="hs-room" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#ffd88a" />
+            <stop offset="1" stopColor="#d9862c" />
+          </linearGradient>
+          <linearGradient id="hs-pond" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#1b2540" />
+            <stop offset="1" stopColor="#0a0f1c" />
+          </linearGradient>
+          <linearGradient id="hs-mist" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#9fb0d0" stopOpacity="0" />
+            <stop offset=".6" stopColor="#9fb0d0" stopOpacity=".10" />
+            <stop offset="1" stopColor="#9fb0d0" stopOpacity="0" />
+          </linearGradient>
           <pattern id="hs-grid" width="8" height="8" patternUnits="userSpaceOnUse">
             <path d="M8 0H0V8" fill="none" stroke="rgba(111,179,242,.12)" strokeWidth=".6" />
           </pattern>
@@ -62,6 +75,19 @@ export function Homestead({ heat, pose, children }: { heat: number; pose: DogPos
         <g className="hs-layer" data-depth="2">
           <path d="M-60 300 C 120 262, 250 250, 380 272 S 640 300, 760 276 S 1000 250, 1260 290 L1260 360 L-60 360 Z" fill="url(#hs-near)" />
           <path d="M210 302 C 330 296, 420 312, 560 306 S 800 300, 940 304 S 1080 312, 1150 306" className="hs-trail" />
+          {/* the dirt path from the cabin door down toward you */}
+          <path d="M462 300 C 458 318, 430 330, 420 346 L 404 362 L 452 362 C 462 344, 478 328, 478 300 Z" className="hs-path" />
+          {/* a small pond holding the moon */}
+          <ellipse cx="300" cy="326" rx="70" ry="11" fill="url(#hs-pond)" stroke="rgba(233,228,216,.08)" />
+          <g className="hs-shimmer"><path d="M262 324h22M298 328h30M318 322h14M276 330h16" /></g>
+          <ellipse cx="312" cy="325" rx="6" ry="2" fill="rgba(244,236,216,.35)" />
+          {/* rocks and grass */}
+          <path d="M228 314 q8 -8 18 0 z M372 318 q6 -6 13 0 z M690 312 q9 -9 20 0 z M960 316 q7 -7 15 0 z" fill="#0f1524" />
+          <g className="hs-grass">
+            {[180, 236, 384, 520, 548, 712, 738, 880, 996, 1110].map((x, i) => (
+              <path key={x} d={`M${x} ${310 + (i % 3) * 4} l3 -9 l2 9 l3 -12 l2 12 l3 -8 l2 8`} />
+            ))}
+          </g>
         </g>
 
         {/* buildings */}
@@ -75,18 +101,49 @@ export function Homestead({ heat, pose, children }: { heat: number; pose: DogPos
           </Building>
 
           <Building area={area('cabin')} x={470} y={300}>
-            <rect x="34" y="-128" width="18" height="40" className="hs-wall" />
-            <path d="M-92 -78 L0 -140 L92 -78 Z" className="hs-wall hs-roof" />
+            <circle cx="0" cy="-60" r="110" fill="url(#hs-glow)" className="hs-cabin-glow" />
+            <rect x="34" y="-128" width="18" height="40" className="hs-wall hs-stone" />
+            <path d="M-96 -76 L0 -142 L96 -76 L88 -76 L0 -134 L-88 -76 Z" className="hs-wall hs-roof" />
+            <path d="M-88 -76 L0 -134 L88 -76 Z" className="hs-wall hs-roof-in" />
             <rect x="-80" y="-80" width="160" height="80" className="hs-wall hs-logs" />
-            {[-64, -48, -32, -16].map((y) => <line key={y} x1="-80" x2="80" y1={y} y2={y} className="hs-log" />)}
-            <rect x="-62" y="-60" width="34" height="28" className="hs-win" />
-            <rect x="28" y="-60" width="34" height="28" className="hs-win" />
-            <line x1="-45" x2="-45" y1="-60" y2="-32" className="hs-mullion" />
-            <line x1="45" x2="45" y1="-60" y2="-32" className="hs-mullion" />
-            <rect x="-14" y="-46" width="28" height="46" className="hs-door hs-door-lit" />
-            <circle cx="0" cy="-60" r="80" fill="url(#hs-glow)" className="hs-cabin-glow" />
+            {[-70, -60, -50, -40, -30, -20, -10].map((y) => <line key={y} x1="-80" x2="80" y1={y} y2={y} className="hs-log" />)}
+            {[-80, 80].map((x) => [-75, -55, -35, -15].map((y) => <circle key={`${x}${y}`} cx={x} cy={y} r="3.4" className="hs-logend" />))}
+            {/* windows with the room inside: desk lamp and a chair back */}
+            {[-62, 28].map((x) => (
+              <g key={x} className="hs-window">
+                <rect x={x} y="-62" width="34" height="30" className="hs-win" />
+                <g className="hs-inside" transform={`translate(${x} -62)`}>
+                  {x < 0 ? (
+                    <><path d="M6 30 V20 H28 V30" /><path d="M10 20 L14 8 L22 6" fill="none" /><path d="M18 2 L26 6 L22 11 Z" /></>
+                  ) : (
+                    <><path d="M8 30 V12 C8 6 26 6 26 12 V30 Z" /><rect x="4" y="22" width="26" height="4" /></>
+                  )}
+                </g>
+                <line x1={x + 17} x2={x + 17} y1="-62" y2="-32" className="hs-mullion" />
+                <line x1={x} x2={x + 34} y1="-47" y2="-47" className="hs-mullion" />
+                <rect x={x - 3} y="-33" width="40" height="5" className="hs-sill" />
+              </g>
+            ))}
+            {/* porch */}
+            <path d="M-34 -50 L0 -66 L34 -50 Z" className="hs-wall hs-roof" />
+            <line x1="-28" x2="-28" y1="-50" y2="0" className="hs-post" />
+            <line x1="28" x2="28" y1="-50" y2="0" className="hs-post" />
+            <rect x="-14" y="-44" width="28" height="44" className="hs-door hs-door-lit" />
+            <rect x="-38" y="-2" width="76" height="5" className="hs-step" />
+            {/* porch lantern */}
+            <g className="hs-lantern" transform="translate(22 -44)">
+              <circle r="16" fill="url(#hs-glow)" className="hs-lantern-glow" />
+              <path d="M-3 -6 H3 L4 4 H-4 Z" />
+            </g>
+            {/* woodpile */}
+            <g transform="translate(-118 0)" className="hs-woodpile">
+              {[0, 1, 2].map((r) => [0, 1, 2, 3].slice(0, 4 - r).map((c) => <circle key={`${r}${c}`} cx={c * 9 + r * 4.5} cy={-5 - r * 8} r="4.4" />))}
+            </g>
             <g className="hs-smoke">
-              <circle cx="43" cy="-136" r="6" /><circle cx="49" cy="-150" r="8" /><circle cx="41" cy="-168" r="10" />
+              <circle cx="43" cy="-136" r="6" /><circle cx="49" cy="-150" r="8" /><circle cx="41" cy="-168" r="10" /><circle cx="52" cy="-186" r="12" /><circle cx="44" cy="-206" r="13" />
+            </g>
+            <g className="hs-embers">
+              <circle cx="43" cy="-132" r="1.4" /><circle cx="46" cy="-132" r="1.1" /><circle cx="40" cy="-132" r="1.2" />
             </g>
           </Building>
 
@@ -108,6 +165,7 @@ export function Homestead({ heat, pose, children }: { heat: number; pose: DogPos
           </Building>
 
           <Pines />
+          <rect x="-60" y="270" width="1320" height="60" fill="url(#hs-mist)" className="hs-mist" />
           {/* Cooper and Shadow out front of the cabin; click them to go in to the Lounge */}
           <g transform="translate(588 304) scale(.42)"><Dog who="cooper" pose={pose} onClick={() => go('/cabin/lounge')} /></g>
           <g transform="translate(640 306) scale(.42)"><Dog who="shadow" pose={pose} onClick={() => go('/cabin/lounge')} /></g>
@@ -128,6 +186,12 @@ function Building({ area, x, y, children }: { area: (typeof AREAS)[number]; x: n
       role="link" tabIndex={0} aria-label={`${area.name}${area.live ? '' : ' (being built)'}`} onClick={open} onKeyDown={key}
     >
       {!area.live && <rect x="-70" y="-200" width="140" height="200" fill="url(#hs-grid)" className="hs-blue" />}
+      {!area.live && (
+        <g className="hs-site" aria-hidden>
+          <path d="M58 0 V-120 M76 0 V-120 M58 -40 H76 M58 -80 H76 M58 -120 H76 M58 0 L76 -40 L58 -80 L76 -120" />
+          <g transform="translate(-58 -6)" className="hs-site-lamp"><circle r="12" fill="url(#hs-glow)" /><rect x="-2.5" y="-4" width="5" height="7" rx="1" /></g>
+        </g>
+      )}
       {children}
       <g className="hs-tag" transform="translate(0 -214)">
         <rect x={-area.name.length * 4.4 - 14} y="-15" width={area.name.length * 8.8 + 28} height="26" rx="13" />
