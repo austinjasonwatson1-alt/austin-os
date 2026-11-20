@@ -172,7 +172,7 @@ input, textarea, select { font: inherit; color: inherit; }
   .nav-item { flex: none; width: auto; padding: 6px 12px 6px 10px; gap: 7px; border-radius: 99px; font-size: 13.5px; white-space: nowrap; }
   .nav-item .glyph { width: auto; font-size: 13px; }
   .nav-item.is-soon { display: none; }
-  .rail-foot { flex: none; margin: 0 0 0 auto; padding: 0 0 0 6px; border-top: 0; }
+  .rail-foot { flex: none; margin: 0 0 0 auto; padding: 0 0 0 6px; border-top: 0; display: flex; gap: 6px; align-items: center; }
   .foot-status { align-items: center; padding: 7px 10px; border-radius: 99px; border: 1px solid var(--line-strong); white-space: nowrap; }
   .foot-status .dot { margin-top: 0; }
   .foot-long { display: none; }
@@ -388,3 +388,18 @@ input, textarea, select { font: inherit; color: inherit; }
 .field-row { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 8px; }
 .lounge-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .field.grow { flex: 1; }
+
+/* ---------- app status (update / install) ---------- */
+.app-status { display: grid; gap: 6px; margin-bottom: 10px; }
+.app-pill {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 10px; text-align: left; font-size: 12.5px;
+  border: 1px solid rgba(232, 168, 75, .35); background: var(--lamp-soft); color: var(--bone);
+}
+.app-pill:hover { border-color: rgba(232, 168, 75, .6); }
+.app-pill.update { border-color: rgba(79, 191, 135, .45); background: rgba(79, 191, 135, .08); }
+.app-pill b { color: var(--good); }
+@media (max-width: 860px) {
+  .app-status { margin: 0; display: flex; }
+  .app-pill { width: auto; padding: 6px 10px; white-space: nowrap; }
+  .app-pill:not(.update) .app-pill-t { display: none; }
+}
