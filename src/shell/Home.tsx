@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { OWNER } from '../config';
 import { parseISO, todayISO } from '../core/dates';
 import { AREAS } from '../modules/registry';
+import { candleHeat, chapelMinutes, chapelStreak } from '../modules/chapel/logic';
+import { useChapel } from '../modules/chapel/store';
+import { Candle } from '../modules/chapel/Candle';
 import { currentStreak, dayTotal, fmtMins, gradeOf, GRADE_LABEL, lampHeat, lampLine, mondayOf, weekTotal } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
 import { dogPose, fmtPts } from '../modules/lounge/logic';
@@ -28,6 +31,10 @@ export default function Home() {
   const time = now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   const building = AREAS.filter((a) => !a.live);
   const wallet = useWallet();
+  const chapelDays = useChapel((st) => st.days);
+  const prayers = useChapel((st) => st.prayers);
+  const chapelToday = chapelMinutes(chapelDays[today]);
+  const openPrayers = prayers.filter((p) => !p.answeredOn).length;
 
   return (
     <div className="home homestead">
@@ -40,7 +47,7 @@ export default function Home() {
             {building.length} more buildings are going up on the homestead.
           </p>
         </div>
-        <Homestead heat={lampHeat(mins, thresholds)} pose={dogPose(g)} />
+        <Homestead heat={lampHeat(mins, thresholds)} chapelHeat={candleHeat(chapelToday)} pose={dogPose(g)} />
       </section>
 
       <div className="hs-areas">
@@ -72,8 +79,20 @@ export default function Home() {
         </article>
 
         <div className="area-stack">
+          <button className="area-plan area-live rise tilt" style={rise(2)} onClick={() => go('/chapel')} {...tilt(4)}>
+            <span className="area-glyph chapel-g" aria-hidden><Candle heat={candleHeat(chapelToday)} size={0.36} /></span>
+            <span className="area-plan-body">
+              <span className="area-plan-name">The Chapel</span>
+              <span className="area-plan-blurb">
+                {chapelToday ? `${fmtMins(chapelToday)} with God today` : 'The candle is waiting today'}
+                {chapelStreak(chapelDays, today) > 1 ? ` · ${chapelStreak(chapelDays, today)}-day streak` : ''}
+                {openPrayers ? ` · ${openPrayers} prayer${openPrayers === 1 ? '' : 's'} carried` : ''}
+              </span>
+            </span>
+            <span className="chip live">Open</span>
+          </button>
           {building.map((a, i) => (
-            <button key={a.id} className="area-plan rise tilt" style={rise(2 + i)} onClick={() => go(a.path)} {...tilt(4)}>
+            <button key={a.id} className="area-plan rise tilt" style={rise(3 + i)} onClick={() => go(a.path)} {...tilt(4)}>
               <span className="area-glyph plan" aria-hidden>{a.glyph}</span>
               <span className="area-plan-body">
                 <span className="area-plan-name">{a.name}</span>

@@ -1,0 +1,12 @@
+/* the candle */
+.candle { --s: 1; position: relative; display: block; width: calc(34px * var(--s)); height: calc(120px * var(--s)); }
+.candle-wax { position: absolute; left: 0; right: 0; bottom: 0; height: calc(78px * var(--s)); border-radius: calc(6px * var(--s)) calc(6px * var(--s)) 4px 4px;
+  background: linear-gradient(90deg, #cfc4ad, #f4ecdc 40%, #e2d6bd 70%, #b9ab90); box-shadow: inset 0 calc(8px * var(--s)) calc(10px * var(--s)) rgba(255, 220, 160, calc(var(--h) * .6)); }
+.candle-wick { position: absolute; left: 50%; bottom: calc(76px * var(--s)); width: 2px; height: calc(8px * var(--s)); background: #2a2018; transform: translateX(-50%); }
+.candle-flame { position: absolute; left: 50%; bottom: calc(82px * var(--s)); width: calc(16px * var(--s)); height: calc(34px * var(--s)); transform: translateX(-50%) scale(calc(.4 + var(--h) * .6)); transform-origin: 50% 100%; opacity: 0; transition: opacity .8s, transform .8s; }
+.candle-flame i { position: absolute; inset: 0; border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%; background: radial-gradient(circle at 50% 75%, #fff8e0 0%, #ffd27a 35%, #f08a24 70%, transparent 72%); animation: candle 1.6s ease-in-out infinite alternate; transform-origin: 50% 100%; filter: blur(.3px); }
+.candle-glow { position: absolute; left: 50%; bottom: calc(60px * var(--s)); width: calc(140px * var(--s)); height: calc(140px * var(--s)); transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle, rgba(255, 200, 110, calc(var(--h) * .45)), transparent 65%); opacity: 0; transition: opacity 1s; pointer-events: none; }
+.candle.lit .candle-flame, .candle.lit .candle-glow { opacity: 1; }
+@keyframes candle { 0% { transform: rotate(-2deg) scaleY(1); } 50% { transform: rotate(1.5deg) scaleY(1.06); } 100% { transform: rotate(-1deg) scaleY(.96); } }
+
+@media (prefers-reduced-motion: reduce) { .candle-flame i { animation: none; } }

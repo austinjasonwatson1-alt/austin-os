@@ -9,7 +9,7 @@ import type { DogPose } from '../modules/lounge/logic';
  * lit windows; buildings still on the list are drawn as glowing blueprints. Each one is a door.
  * `heat` (0–1) is how much of today's writing is done; the cabin windows burn with it.
  */
-export function Homestead({ heat, pose, children }: { heat: number; pose: DogPose; children?: ReactNode }) {
+export function Homestead({ heat, chapelHeat = 0, pose, children }: { heat: number; chapelHeat?: number; pose: DogPose; children?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Layers drift at different speeds with the pointer. Off for reduced motion.
@@ -147,7 +147,8 @@ export function Homestead({ heat, pose, children }: { heat: number; pose: DogPos
             </g>
           </Building>
 
-          <Building area={area('chapel')} x={790} y={292}>
+          <Building area={area('chapel')} x={790} y={292} heat={chapelHeat}>
+            <circle cx="0" cy="-60" r="80" fill="url(#hs-glow)" className="hs-cabin-glow" />
             <rect x="-40" y="-70" width="80" height="70" className="hs-wall" />
             <path d="M-48 -68 L0 -104 L48 -68 Z" className="hs-wall hs-roof" />
             <rect x="-12" y="-150" width="24" height="56" className="hs-wall" />
@@ -187,12 +188,12 @@ export function Homestead({ heat, pose, children }: { heat: number; pose: DogPos
   );
 }
 
-function Building({ area, x, y, children }: { area: (typeof AREAS)[number]; x: number; y: number; children: ReactNode }) {
+function Building({ area, x, y, heat, children }: { area: (typeof AREAS)[number]; x: number; y: number; heat?: number; children: ReactNode }) {
   const open = () => go(area.path);
   const key = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
   return (
     <g
-      className={area.live ? 'hs-b live' : 'hs-b plan'} transform={`translate(${x} ${y})`}
+      className={area.live ? 'hs-b live' : 'hs-b plan'} transform={`translate(${x} ${y})`} style={heat === undefined ? undefined : ({ '--heat': heat } as CSSProperties)}
       role="link" tabIndex={0} aria-label={`${area.name}${area.live ? '' : ' (being built)'}`} onClick={open} onKeyDown={key}
     >
       {!area.live && <rect x="-70" y="-200" width="140" height="200" fill="url(#hs-grid)" className="hs-blue" />}

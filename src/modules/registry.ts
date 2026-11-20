@@ -12,6 +12,8 @@ export interface AreaDef {
   /** What it will hold, shown while it's being built. */
   plans: string[];
   live: boolean;
+  /** The area's own page, once it's built. */
+  component?: ComponentType;
 }
 
 export const AREAS: AreaDef[] = [
@@ -21,7 +23,8 @@ export const AREAS: AreaDef[] = [
     plans: [],
   },
   {
-    id: 'chapel', path: '/chapel', name: 'The Chapel', glyph: '✝', live: false,
+    id: 'chapel', path: '/chapel', name: 'The Chapel', glyph: '✝', live: true,
+    component: lazy(() => import('./chapel/ChapelPage')),
     blurb: 'Prayer and faith: time with God, a prayer list, answered prayers.',
     plans: ['Daily prayer and Bible-reading time, kept apart from writing minutes', 'A prayer list with dates, so answered prayers can be marked and remembered', 'Verses and notes worth keeping'],
   },

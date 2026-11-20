@@ -6,6 +6,7 @@ import { useLedger } from './modules/ledger/store';
 import { useLounge } from './modules/lounge/store';
 import { useTimer } from './modules/timer/store';
 import { useShelf } from './modules/shelf/store';
+import { useChapel } from './modules/chapel/store';
 import { areaByPath, byPath } from './modules/registry';
 import { AreaSoon } from './shell/AreaSoon';
 import CabinHome from './shell/CabinHome';
@@ -22,6 +23,7 @@ function Screen({ route }: { route: string }) {
   if (route === '/cabin') return <CabinHome />;
   const area = areaByPath(route);
   if (area && !area.live) return <AreaSoon a={area} />;
+  if (area?.component) { const A = area.component; return <A />; }
   const m = byPath(route);
   if (!m) return <Home />;
   if (!m.component) return <Soon m={m} />;
@@ -46,6 +48,7 @@ export default function App() {
     void useTimer.getState().load();
     void useSky.getState().load();
     void useShelf.getState().load();
+    void useChapel.getState().load();
   }, []);
   return (
     <>
