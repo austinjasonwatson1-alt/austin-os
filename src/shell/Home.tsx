@@ -9,6 +9,7 @@ import { useWallet } from '../modules/lounge/useWallet';
 import { CountUp } from './fx';
 import { AutoBackupPanel } from './AutoBackup';
 import { Homestead } from './Homestead';
+import { SkyPanel } from './SkyPanel';
 import { GRADE_VAR, greeting, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
 import { go } from './router';
 import '../styles/cabin.css';
@@ -84,8 +85,9 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="rise" style={{ ...rise(6), marginTop: 18 }}>
+      <div className="home-lower rise" style={rise(6)}>
         <AutoBackupPanel />
+        <SkyPanel />
       </div>
     </div>
   );

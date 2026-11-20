@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { chime, setAmbient } from '../../core/ambient';
 import { todayISO } from '../../core/dates';
+import { useSky } from '../../core/skyStore';
 import { embers } from '../../shell/fx';
 import { CAT } from '../../shell/lamp';
 import { go } from '../../shell/router';
@@ -60,9 +61,9 @@ export default function TimerPage() {
   useEffect(() => {
     if (run && goalMs && ms >= goalMs && rang.current !== run.startedAt) {
       rang.current = run.startedAt;
-      if (t.ambient !== 'off') chime();
+      if (useSky.getState().prefs.chime) chime();
     }
-  }, [run, goalMs, ms, t.ambient]);
+  }, [run, goalMs, ms]);
 
   // The tab title shows the clock while a session runs.
   useEffect(() => {

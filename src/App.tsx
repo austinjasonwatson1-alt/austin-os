@@ -11,6 +11,8 @@ import Home from './shell/Home';
 import { useRoute } from './shell/router';
 import { Sidebar } from './shell/Sidebar';
 import { Sky } from './shell/Sky';
+import { Celebrations } from './shell/Celebrations';
+import { useSky } from './core/skyStore';
 import { Soon } from './shell/Soon';
 
 function Screen({ route }: { route: string }) {
@@ -33,10 +35,12 @@ export default function App() {
     void useLedger.getState().load();
     void useLounge.getState().load();
     void useTimer.getState().load();
+    void useSky.getState().load();
   }, []);
   return (
     <>
       <Sky />
+      <Celebrations />
       <div className="app">
         <Sidebar />
         <main className="main">
