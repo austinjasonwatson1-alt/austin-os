@@ -64,3 +64,10 @@ export const describeTimer: Describer = {
     return `${s.length} session${s.length === 1 ? '' : 's'} · ${Math.round(mins / 6) / 10}h`;
   },
 };
+
+/** Lamp-mode minutes spent on each chapter (key "manuscriptId/chapterId"). */
+export function minutesByChapter(sessions: { minutes: number; chapter?: { ms: string; id: string } }[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const s of sessions) if (s.chapter) out[`${s.chapter.ms}/${s.chapter.id}`] = (out[`${s.chapter.ms}/${s.chapter.id}`] ?? 0) + s.minutes;
+  return out;
+}

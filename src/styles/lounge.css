@@ -56,7 +56,6 @@
 .reward-cost b { font-family: var(--display); font-weight: 700; font-size: 24px; }
 .reward-cost small { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--lamp); }
 .reward-need { font-size: 11px; color: var(--bone-faint); }
-.reward-confirm { display: flex; gap: 6px; }
 
 .reward-add { align-items: center; justify-content: center; border: 1px dashed rgba(232, 168, 75, 0.35); background: rgba(232, 168, 75, 0.03); color: var(--bone-dim); text-align: center; transition: background .2s, border-color .2s; }
 .reward-add:hover { background: rgba(232, 168, 75, 0.07); border-color: rgba(232, 168, 75, 0.6); color: var(--bone); }

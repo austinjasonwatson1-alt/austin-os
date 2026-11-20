@@ -3,7 +3,7 @@ import { kvGet, saveWithSnapshot } from '../../core/storage';
 import { useLedger } from '../ledger/store';
 import type { CatKey } from '../ledger/types';
 import { creditDays, elapsedMs } from './logic';
-import { DEFAULT_TIMER, KEEP_SESSIONS, type Ambient, type Session, type TimerData } from './types';
+import { DEFAULT_TIMER, KEEP_SESSIONS, type Ambient, type ChapterRef, type Session, type TimerData } from './types';
 
 export const KEY = 'timer.v1';
 
@@ -17,6 +17,7 @@ interface TimerState extends TimerData {
   resume: () => void;
   setCat: (cat: CatKey) => void;
   setGoal: (goal: number) => void;
+  setChapter: (c: ChapterRef | null) => void;
   /** Stop and log the minutes into the Ledger. Returns the session (null if under a minute). */
   stop: () => Session | null;
   /** Throw the running session away without logging it. */
@@ -26,7 +27,7 @@ interface TimerState extends TimerData {
   setAmbient: (a: Ambient) => void;
 }
 
-const pick = (s: TimerState): TimerData => ({ running: s.running, sessions: s.sessions, ambient: s.ambient, lastCat: s.lastCat, lastGoal: s.lastGoal });
+const pick = (s: TimerState): TimerData => ({ running: s.running, sessions: s.sessions, ambient: s.ambient, lastCat: s.lastCat, lastGoal: s.lastGoal, lastChapter: s.lastChapter });
 
 export const useTimer = create<TimerState>((set, get) => {
   // Never write before the saved copy has been read: that would replace real data with defaults.
@@ -50,7 +51,7 @@ export const useTimer = create<TimerState>((set, get) => {
 
     start(cat, goal) {
       if (get().running) return;
-      set({ running: { cat, goal, startedAt: Date.now(), pausedAt: null, pausedMs: 0 }, lastCat: cat, lastGoal: goal });
+      set({ running: { cat, goal, startedAt: Date.now(), pausedAt: null, pausedMs: 0, chapter: get().lastChapter ?? undefined }, lastCat: cat, lastGoal: goal });
       persist();
     },
 
@@ -67,6 +68,12 @@ export const useTimer = create<TimerState>((set, get) => {
     setCat(cat) {
       set({ lastCat: cat });
       if (get().running) patchRun({ cat });
+      else persist();
+    },
+
+    setChapter(c) {
+      set({ lastChapter: c });
+      if (get().running) patchRun({ chapter: c ?? undefined });
       else persist();
     },
 
@@ -90,7 +97,7 @@ export const useTimer = create<TimerState>((set, get) => {
       const credit = creditDays(r.startedAt, end, minutes);
       const ledger = useLedger.getState();
       for (const [day, n] of Object.entries(credit)) ledger.setMinutes(day, r.cat, (Number(ledger.days[day]?.[r.cat]) || 0) + n);
-      const s: Session = { id: `s-${r.startedAt.toString(36)}`, cat: r.cat, startedAt: r.startedAt, endedAt: end, minutes, credit };
+      const s: Session = { id: `s-${r.startedAt.toString(36)}`, cat: r.cat, startedAt: r.startedAt, endedAt: end, minutes, credit, chapter: r.chapter };
       set({ sessions: [s, ...get().sessions].slice(0, KEEP_SESSIONS) });
       persist();
       return s;

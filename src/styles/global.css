@@ -403,3 +403,14 @@ input, textarea, select { font: inherit; color: inherit; }
   .app-pill { width: auto; padding: 6px 10px; white-space: nowrap; }
   .app-pill:not(.update) .app-pill-t { display: none; }
 }
+.reward-confirm { display: flex; gap: 6px; }
+.book-fields { display: grid; gap: 12px; min-width: 0; }
+.field-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.field-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg.wide { display: flex; width: 100%; }
+.seg.wide button { flex: 1; padding: 7px 6px; }
+.field textarea.ruled, textarea.ruled {
+  width: 100%; resize: vertical; border: 1px solid var(--line-strong); border-radius: 9px; outline: none; padding: 4px 10px; line-height: 28px;
+  font-family: var(--display); font-style: italic; font-size: 15.5px; caret-color: var(--lamp);
+  background: repeating-linear-gradient(180deg, transparent 0 27px, rgba(233, 228, 216, .08) 27px 28px), rgba(5, 7, 12, .55);
+}

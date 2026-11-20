@@ -71,7 +71,10 @@ export const MODULES: ModuleDef[] = [
     id: 'shelf', path: '/cabin/shelf', name: 'The Shelf', glyph: '▥', section: 'cabin', blurb: 'Your library — every book read, rated, and mined for craft.',
     component: lazy(() => import('./shelf/ShelfPage')),
   },
-  { id: 'manuscripts', path: '/cabin/manuscripts', name: 'Manuscripts', glyph: '❡', section: 'cabin', blurb: 'The Life I Deserve and Silence Speaks — chapter boards and word counts.' },
+  {
+    id: 'manuscripts', path: '/cabin/manuscripts', name: 'Manuscripts', glyph: '❡', section: 'cabin', blurb: 'The Life I Deserve and Silence Speaks — chapter boards and word counts.',
+    component: lazy(() => import('./manuscripts/ManuscriptsPage')),
+  },
   { id: 'queries', path: '/cabin/queries', name: 'Query Tracker', glyph: '✉', section: 'cabin', blurb: 'Agents, submissions, responses, follow-ups.' },
   { id: 'contests', path: '/cabin/contests', name: 'Contests', glyph: '✧', section: 'cabin', blurb: 'Short-story contests: deadlines, rules, what you entered.' },
   { id: 'editorial', path: '/cabin/editorial', name: 'Editorial Vault', glyph: '✎', section: 'cabin', blurb: 'Feedback, craft notes, and your standing editing brief.' },

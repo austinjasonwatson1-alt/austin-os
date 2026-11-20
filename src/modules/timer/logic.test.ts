@@ -40,3 +40,11 @@ describe('lamp mode timer', () => {
     expect(describeTimer.detail({ sessions: [{ minutes: 30 }, { minutes: 60 }] })).toBe('2 sessions · 1.5h');
   });
 });
+
+import { minutesByChapter } from './logic';
+
+describe('minutesByChapter', () => {
+  it('adds up lamp-mode time per chapter', () => {
+    expect(minutesByChapter([{ minutes: 30, chapter: { ms: 'm', id: 'c1' } }, { minutes: 20 }, { minutes: 15, chapter: { ms: 'm', id: 'c1' } }])).toEqual({ 'm/c1': 45 });
+  });
+});

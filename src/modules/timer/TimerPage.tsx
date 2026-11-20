@@ -12,6 +12,7 @@ import { earnings, fmtPts } from '../lounge/logic';
 import { useLounge } from '../lounge/store';
 import { applyCredit, elapsedMs, fmtClock } from './logic';
 import { useTimer } from './store';
+import { useManuscripts } from '../manuscripts/store';
 import { GOALS, type Ambient, type Session } from './types';
 import '../../styles/timer.css';
 
@@ -161,6 +162,7 @@ export default function TimerPage() {
                 <button key={m} role="radio" aria-checked={goal === m} className="lm-chip" onClick={() => t.setGoal(m)}>{m ? `${m} min` : 'Open'}</button>
               ))}
             </div>
+            <ChapterPick />
             <div className="lm-actions">
               {!run && <button className="lm-go" onClick={() => { setDone(null); t.start(cat, goal); }}>Light the lamp</button>}
               {run && (
@@ -206,4 +208,31 @@ function TodaySessions() {
   if (!list.length) return null;
   const total = list.reduce((a, s) => a + (s.credit[today] ?? 0), 0);
   return <p className="lm-sessions mono">{list.length} session{list.length === 1 ? '' : 's'} today · {fmtMins(total)} in lamp mode</p>;
+}
+
+/** "Working on": credit this session to a manuscript chapter (optional). */
+function ChapterPick() {
+  const { manuscripts, load } = useManuscripts();
+  useEffect(() => { void load(); }, [load]);
+  const run = useTimer((s) => s.running);
+  const last = useTimer((s) => s.lastChapter);
+  const cur = run ? run.chapter : last;
+  const any = manuscripts.some((m) => m.chapters.length);
+  if (!any) return null;
+  return (
+    <label className="lm-select">
+      <span className="mono">Working on</span>
+      <select value={cur ? `${cur.ms}/${cur.id}` : ''} onChange={(e) => {
+        const [ms, id] = e.target.value.split('/');
+        useTimer.getState().setChapter(ms && id ? { ms, id } : null);
+      }}>
+        <option value="">Nothing in particular</option>
+        {manuscripts.filter((m) => m.chapters.length).map((m) => (
+          <optgroup key={m.id} label={m.title}>
+            {m.chapters.map((c, i) => <option key={c.id} value={`${m.id}/${c.id}`}>{`${i + 1}. ${c.title}`}{c.status === 'done' ? ' (done)' : ''}</option>)}
+          </optgroup>
+        ))}
+      </select>
+    </label>
+  );
 }

@@ -9,7 +9,11 @@ export interface Running {
   pausedMs: number;
   /** Target length in minutes; 0 = open-ended. */
   goal: number;
+  /** The manuscript chapter being worked on, if one was picked. */
+  chapter?: ChapterRef;
 }
+
+export interface ChapterRef { ms: string; id: string }
 
 export interface Session {
   id: string;
@@ -19,6 +23,7 @@ export interface Session {
   minutes: number;
   /** Minutes credited to each day (a session can cross midnight). */
   credit: Record<string, number>;
+  chapter?: ChapterRef;
 }
 
 export type Ambient = 'off' | 'rain' | 'fire' | 'wind';
@@ -29,6 +34,7 @@ export interface TimerData {
   ambient: Ambient;
   lastCat: CatKey;
   lastGoal: number;
+  lastChapter?: ChapterRef | null;
 }
 
 export const GOALS = [25, 50, 90, 0];
