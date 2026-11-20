@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { routeMotion } from './shell/routeLogic';
 import { useAutoBackup } from './core/autoBackup';
 import { useBackup } from './core/backup';
@@ -7,6 +7,8 @@ import { useLounge } from './modules/lounge/store';
 import { useTimer } from './modules/timer/store';
 import { useShelf } from './modules/shelf/store';
 import { useChapel } from './modules/chapel/store';
+import { useManuscripts } from './modules/manuscripts/store';
+import { useReview } from './modules/review/store';
 import { areaByPath, byPath } from './modules/registry';
 import { AreaSoon } from './shell/AreaSoon';
 import CabinHome from './shell/CabinHome';
@@ -18,9 +20,12 @@ import { Celebrations } from './shell/Celebrations';
 import { useSky } from './core/skyStore';
 import { Soon } from './shell/Soon';
 
+const ReviewPage = lazy(() => import('./modules/review/ReviewPage'));
+
 function Screen({ route }: { route: string }) {
   if (route === '/home') return <Home />;
   if (route === '/cabin') return <CabinHome />;
+  if (route === '/review') return <ReviewPage />;
   const area = areaByPath(route);
   if (area && !area.live) return <AreaSoon a={area} />;
   if (area?.component) { const A = area.component; return <A />; }
@@ -49,6 +54,8 @@ export default function App() {
     void useSky.getState().load();
     void useShelf.getState().load();
     void useChapel.getState().load();
+    void useManuscripts.getState().load();
+    void useReview.getState().load();
   }, []);
   return (
     <>

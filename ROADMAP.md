@@ -20,20 +20,23 @@ A few weeks of Claude Code practice. Each item is a good self-contained session:
 - [x] Living sky (clock, moon, seasons, opt-in weather), constellations, Cooper and Shadow, the clickable Lounge room, the year galaxy
 
 ## Week 2 — the library
-- [ ] **The Shelf**: rebuild the library tracker (books, ratings, genre, notes, covers)
-- [ ] Import the old Shelf's saved JSON
-- [ ] Book analysis notes attached to each book (why it worked, craft takeaways)
+- [x] **The Shelf**: rebuild the library tracker (books, ratings, genre, notes, covers)
+- [x] Import an old shelf (JSON, or a Goodreads-style CSV) — waiting on Austin's old Shelf file to try it for real
+- [x] Book analysis notes attached to each book (why it worked, craft takeaways)
 
 ## Week 3 — the manuscripts
-- [ ] **Manuscripts**: chapter board for *The Life I Deserve* and *Silence Speaks*, word counts, status
+- [x] **Manuscripts**: chapter board for *The Life I Deserve* and *Silence Speaks*, word counts, status
 - [x] Writing session timer that logs minutes straight into the Ledger (Lamp Mode)
 
+## Online
+- [x] GitHub Pages deploy workflow, installable app (PWA), offline, update notice — needs Pages switched on once in repo settings
+
 ## The homestead
-- [ ] **The Chapel**: prayer time (kept apart from writing minutes), prayer list, answered prayers
+- [x] **The Chapel**: prayer time (kept apart from writing minutes), prayer list, answered prayers
 - [ ] **The Office**: focus blocks, weekly wins, notes
 - [ ] **The Observatory**: AI study hours, courses, notes
 
 ## Week 4 — the business of writing
 - [ ] **Query Tracker**, **Contests**, **Editorial Vault**, **Outreach**
 - [ ] Command palette (⌘K) and global search across modules
-- [ ] Weekly review screen
+- [x] Weekly review screen (Sundays)

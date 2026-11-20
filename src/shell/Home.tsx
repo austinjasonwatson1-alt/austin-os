@@ -4,6 +4,9 @@ import { parseISO, todayISO } from '../core/dates';
 import { AREAS } from '../modules/registry';
 import { candleHeat, chapelMinutes, chapelStreak } from '../modules/chapel/logic';
 import { useChapel } from '../modules/chapel/store';
+import { reviewTime, reviewWeek } from '../modules/review/logic';
+import { useReview } from '../modules/review/store';
+import '../styles/review.css';
 import { Candle } from '../modules/chapel/Candle';
 import { currentStreak, dayTotal, fmtMins, gradeOf, GRADE_LABEL, lampHeat, lampLine, mondayOf, weekTotal } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
@@ -31,6 +34,8 @@ export default function Home() {
   const time = now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   const building = AREAS.filter((a) => !a.live);
   const wallet = useWallet();
+  const reviews = useReview((st) => st.reviews);
+  const reviewSealed = Boolean(reviews[reviewWeek(now, mondayOf(today))]?.sealedAt);
   const chapelDays = useChapel((st) => st.days);
   const prayers = useChapel((st) => st.prayers);
   const chapelToday = chapelMinutes(chapelDays[today]);
@@ -49,6 +54,14 @@ export default function Home() {
         </div>
         <Homestead heat={lampHeat(mins, thresholds)} chapelHeat={candleHeat(chapelToday)} pose={dogPose(g)} />
       </section>
+
+      {reviewTime(now) && !reviewSealed && (
+        <button className="review-nudge rise" style={rise(1)} onClick={() => go('/review')}>
+          <span aria-hidden style={{ fontSize: 24, color: 'var(--lamp)' }}>◷</span>
+          <span><b>{now.getDay() === 0 ? 'It’s Sunday.' : 'A new week.'}</b><br /><span>Time to look back at the week and set one intention for the next.</span></span>
+          <span className="go" aria-hidden>→</span>
+        </button>
+      )}
 
       <div className="hs-areas">
         <article className="panel area-card area-cabin rise" style={rise(1)}>

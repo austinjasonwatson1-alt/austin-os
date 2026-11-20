@@ -1,0 +1,100 @@
+import { addDays } from '../../core/dates';
+import type { Describer } from '../../core/restoreLogic';
+import { chapelMinutes } from '../chapel/logic';
+import type { ChapelDay } from '../chapel/types';
+import { dayTotal, gradeOf } from '../ledger/logic';
+import type { CatKey, DayMap, GradeKey, Thresholds } from '../ledger/types';
+import { CATS } from '../ledger/types';
+import type { Manuscript } from '../manuscripts/types';
+import type { Book } from '../shelf/types';
+import type { ReviewData } from './types';
+
+export interface WeekSummary {
+  monday: string;
+  sunday: string;
+  minutes: number;
+  grade: GradeKey;
+  prevMinutes: number;
+  days: { date: string; mins: number; grade: GradeKey; future: boolean }[];
+  best: { date: string; mins: number } | null;
+  zeroDays: string[];
+  logged: number;
+  byCat: { k: CatKey; mins: number }[];
+  chapel: { minutes: number; days: number };
+  words: number | null;
+  booksFinished: Book[];
+}
+
+export interface WeekInputs {
+  days: DayMap;
+  thresholds: Thresholds;
+  weekly: Thresholds;
+  chapel: Record<string, ChapelDay>;
+  manuscripts: Manuscript[];
+  books: Book[];
+}
+
+const sumWeek = (days: DayMap, monday: string) => Array.from({ length: 7 }, (_, i) => dayTotal(days[addDays(monday, i)])).reduce((a, b) => a + b, 0);
+
+/** Last known word total on or before `day` for one manuscript. */
+const wordsAt = (h: Record<string, number>, day: string): number | null => {
+  const k = Object.keys(h).filter((d) => d <= day).sort().pop();
+  return k ? h[k] : null;
+};
+
+/** Everything the Sunday review shows for the week starting `monday`, counting only days up to `today`. */
+export function weekSummary(w: WeekInputs, monday: string, today: string): WeekSummary {
+  const sunday = addDays(monday, 6);
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(monday, i);
+    const mins = dayTotal(w.days[date]);
+    return { date, mins, grade: gradeOf(mins, w.thresholds), future: date > today };
+  });
+  const past = days.filter((d) => !d.future);
+  const minutes = past.reduce((s, d) => s + d.mins, 0);
+  const best = past.reduce<{ date: string; mins: number } | null>((b, d) => (d.mins > (b?.mins ?? 0) ? { date: d.date, mins: d.mins } : b), null);
+  const byCat = CATS.map((c) => ({ k: c.k, mins: past.reduce((s, d) => s + (Number(w.days[d.date]?.[c.k]) || 0), 0) })).filter((x) => x.mins > 0).sort((a, b) => b.mins - a.mins);
+  const chapelDays = past.map((d) => chapelMinutes(w.chapel[d.date]));
+
+  // Words: change in each manuscript's total across the week, where there's history to tell.
+  let words: number | null = null;
+  for (const m of w.manuscripts) {
+    const end = wordsAt(m.history, sunday < today ? sunday : today);
+    const start = wordsAt(m.history, addDays(monday, -1));
+    if (end !== null && start !== null) words = (words ?? 0) + (end - start);
+  }
+
+  return {
+    monday, sunday, minutes,
+    grade: gradeOf(minutes, w.weekly),
+    prevMinutes: sumWeek(w.days, addDays(monday, -7)),
+    days, best,
+    zeroDays: past.filter((d) => d.mins === 0).map((d) => d.date),
+    logged: past.filter((d) => d.mins > 0).length,
+    byCat,
+    chapel: { minutes: chapelDays.reduce((a, b) => a + b, 0), days: chapelDays.filter(Boolean).length },
+    words,
+    booksFinished: w.books.filter((b) => b.status === 'read' && b.finished && b.finished >= monday && b.finished <= sunday),
+  };
+}
+
+/** Sunday, or Monday morning before noon: time to look back at the week. */
+export const reviewTime = (d: Date) => d.getDay() === 0 || (d.getDay() === 1 && d.getHours() < 12);
+
+/** Which week the review should open on: this week on Sunday, otherwise the week just finished on Monday morning, else this week. */
+export function reviewWeek(d: Date, mondayOfToday: string): string {
+  return d.getDay() === 1 && d.getHours() < 12 ? addDays(mondayOfToday, -7) : mondayOfToday;
+}
+
+/** Percent change against last week, e.g. +12 or -30; null with nothing to compare. */
+export const vsLast = (now: number, prev: number): number | null => (prev > 0 ? Math.round(((now - prev) / prev) * 100) : null);
+
+export const describeReview: Describer = {
+  name: 'Weekly reviews',
+  size: (v) => Object.keys((v as Partial<ReviewData>).reviews ?? {}).length,
+  detail: (v) => {
+    const r = (v as Partial<ReviewData>).reviews ?? {};
+    const sealed = Object.values(r).filter((x) => x.sealedAt).length;
+    return `${Object.keys(r).length} week${Object.keys(r).length === 1 ? '' : 's'} · ${sealed} sealed`;
+  },
+};

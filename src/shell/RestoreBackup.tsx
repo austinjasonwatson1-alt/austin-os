@@ -13,13 +13,15 @@ import { describeManuscripts } from '../modules/manuscripts/logic';
 import { useManuscripts } from '../modules/manuscripts/store';
 import { describeChapel } from '../modules/chapel/logic';
 import { useChapel } from '../modules/chapel/store';
+import { describeReview } from '../modules/review/logic';
+import { useReview } from '../modules/review/store';
 import { useTimer } from '../modules/timer/store';
 
 /** Every module's stored key → how to describe it. Add new modules here. */
-const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge, 'timer.v1': describeTimer, 'shelf.v1': describeShelf, 'manuscripts.v1': describeManuscripts, 'chapel.v1': describeChapel };
+const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge, 'timer.v1': describeTimer, 'shelf.v1': describeShelf, 'manuscripts.v1': describeManuscripts, 'chapel.v1': describeChapel, 'review.v1': describeReview };
 
 /** After a restore, every store re-reads what it holds. Add new modules here. */
-const reloadStores = () => Promise.all([useLedger.getState().load(true), useLounge.getState().load(true), useTimer.getState().load(true), useShelf.getState().load(true), useManuscripts.getState().load(true), useChapel.getState().load(true)]);
+const reloadStores = () => Promise.all([useLedger.getState().load(true), useLounge.getState().load(true), useTimer.getState().load(true), useShelf.getState().load(true), useManuscripts.getState().load(true), useChapel.getState().load(true), useReview.getState().load(true)]);
 
 const TAG: Record<Change, { text: string; cls: string }> = {
   new: { text: 'Brings back', cls: 'back' },
