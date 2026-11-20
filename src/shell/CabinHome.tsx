@@ -7,6 +7,7 @@ import {
 import { useLedger } from '../modules/ledger/store';
 import { CAT, GRADE_VAR, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
 import { cabinRooms, Room } from './Rooms';
+import { Constellations } from './Constellations';
 import '../styles/cabin.css';
 
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -46,6 +47,8 @@ export default function CabinHome() {
         <Tide today={today} />
         <Mix today={today} />
       </div>
+
+      <div className="rise" style={rise(6)}><Constellations /></div>
 
       <h2 className="section-h rise" style={rise(6)}>Rooms in the cabin</h2>
       <div className="grid cols-3 rise" style={rise(6)}>

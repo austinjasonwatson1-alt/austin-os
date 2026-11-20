@@ -5,6 +5,7 @@ import { rise } from '../../shell/lamp';
 import { go } from '../../shell/router';
 import { fmtPts, progressTo } from './logic';
 import { useWallet } from './useWallet';
+import { LoungeScene } from './LoungeScene';
 import { useLounge } from './store';
 import { asText, DEFAULT_RATES, GLYPHS, type Claim, type Rates, type Reward } from './types';
 import '../../styles/cabin.css';
@@ -46,6 +47,8 @@ export default function LoungePage() {
           <div className="wallet-l mono">points to spend</div>
         </div>
       </section>
+
+      <div className="rise" style={rise(1)}><LoungeScene /></div>
 
       {toast && (
         <div className="lounge-toast mono" role="status">

@@ -235,3 +235,26 @@
 }
 
 .section-h { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--bone-dim); margin: 30px 0 12px; }
+
+/* ---------- constellations ---------- */
+.stars-panel { margin-top: 16px; background: radial-gradient(90% 120% at 50% 0%, rgba(80, 96, 190, .12), transparent 60%), var(--panel); }
+.stars-field svg { display: block; width: 100%; height: auto; overflow: visible; }
+.c-line { fill: none; stroke: rgba(246, 208, 140, .35); stroke-width: 1.2; stroke-dasharray: 3 5; }
+.c-star { cursor: pointer; outline: none; }
+.c-ring { fill: none; stroke: rgba(233, 228, 216, .14); stroke-dasharray: 2 3; }
+.c-dim { fill: rgba(233, 228, 216, .3); }
+.c-glow { fill: rgba(242, 182, 90, .55); }
+.c-body { fill: #f6dca0; filter: drop-shadow(0 0 4px rgba(255, 220, 160, .8)); transform-box: fill-box; transform-origin: center; animation: twinkle 4s ease-in-out infinite alternate; }
+.c-star:nth-child(3n) .c-body { animation-delay: -1.3s; }
+.c-star:nth-child(3n+1) .c-body { animation-delay: -2.6s; }
+@keyframes twinkle { from { transform: scale(.92) rotate(0deg); opacity: .85; } to { transform: scale(1.06) rotate(8deg); opacity: 1; } }
+.c-star.sel .c-ring { stroke: rgba(111, 179, 242, .6); }
+.c-star.sel.on .c-body { fill: #fff3d4; }
+.c-star:focus-visible .c-ring, .c-star:focus-visible .c-glow { stroke: var(--lamp); stroke-width: 2; }
+.c-info { display: grid; gap: 3px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(5, 7, 12, .4); margin-top: 6px; }
+.c-info.on { border-color: rgba(232, 168, 75, .3); }
+.c-info-name { font-family: var(--display); font-weight: 700; font-size: 19px; }
+.c-info-desc { font-size: 13.5px; color: var(--bone-dim); }
+.c-info-when { font-size: 11px; color: var(--bone-faint); letter-spacing: .06em; }
+.c-info.on .c-info-when { color: var(--lamp); }
+@media (prefers-reduced-motion: reduce) { .c-body { animation: none; } }

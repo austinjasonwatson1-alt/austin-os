@@ -1,0 +1,28 @@
+/* ---------- Cooper and Shadow ---------- */
+.dog { cursor: default; outline: none; }
+.dog[role='button'] { cursor: pointer; }
+.dog > g { filter: drop-shadow(0 0 1px rgba(242, 182, 90, .85)) drop-shadow(-2px -2px 4px rgba(242, 182, 90, .25)); }
+.dog-body, .dog-tail { fill: #111115; }
+.dog-ear { fill: #23232b; stroke: rgba(242, 182, 90, .35); stroke-width: .8; }
+.dog-scruff, .dog-brow { fill: none; stroke: #33333c; stroke-width: 1.4; stroke-linecap: round; }
+.dog-nose { fill: #050506; }
+.dog-eye { fill: #f2c46a; }
+.dog-eye-shut { fill: none; stroke: #3a3a44; stroke-width: 1.4; stroke-linecap: round; }
+.dog-shadow { fill: rgba(0, 0, 0, .45); }
+.collar.c-red { fill: #b03a2e; }
+.collar.c-blue { fill: #3a6fb0; }
+.tag { fill: #e0b04a; }
+.dog .wag { transform-box: fill-box; transform-origin: 0% 50%; animation: wag .5s ease-in-out infinite alternate; }
+.dog-shadow + g .wag { animation-duration: .35s; }
+.pose-rest .wag { animation-duration: 1.4s; }
+@keyframes wag { from { transform: rotate(-8deg); } to { transform: rotate(10deg); } }
+.dog-breathe { transform-box: fill-box; transform-origin: 50% 100%; animation: breathe 3.6s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.015, 1.05); } }
+.zzz text { font-family: var(--display); font-weight: 700; font-size: 11px; fill: rgba(233, 228, 216, .5); animation: zzz 3s ease-in-out infinite; }
+.zzz text:nth-child(2) { animation-delay: -1s; font-size: 13px; }
+.zzz text:nth-child(3) { animation-delay: -2s; font-size: 15px; }
+@keyframes zzz { 0% { opacity: 0; transform: translate(0, 6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -8px); } }
+.dog:focus-visible > g { filter: drop-shadow(0 0 3px var(--lamp)); }
+.dog.pressed > g { animation: hop .4s ease-out; }
+
+@media (prefers-reduced-motion: reduce) { .dog .wag, .dog-breathe, .zzz text { animation: none; } }

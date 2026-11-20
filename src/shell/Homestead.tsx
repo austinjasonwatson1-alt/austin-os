@@ -1,13 +1,15 @@
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import { AREAS, type AreaId } from '../modules/registry';
 import { go } from './router';
+import { Dog } from './Dogs';
+import type { DogPose } from '../modules/lounge/logic';
 
 /**
  * The homestead at night: four buildings along a ridge under the sky. Built buildings are solid with
  * lit windows; buildings still on the list are drawn as glowing blueprints. Each one is a door.
  * `heat` (0–1) is how much of today's writing is done; the cabin windows burn with it.
  */
-export function Homestead({ heat, children }: { heat: number; children?: ReactNode }) {
+export function Homestead({ heat, pose, children }: { heat: number; pose: DogPose; children?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Layers drift at different speeds with the pointer. Off for reduced motion.
@@ -106,6 +108,9 @@ export function Homestead({ heat, children }: { heat: number; children?: ReactNo
           </Building>
 
           <Pines />
+          {/* Cooper and Shadow out front of the cabin; click them to go in to the Lounge */}
+          <g transform="translate(588 304) scale(.42)"><Dog who="cooper" pose={pose} onClick={() => go('/cabin/lounge')} /></g>
+          <g transform="translate(640 306) scale(.42)"><Dog who="shadow" pose={pose} onClick={() => go('/cabin/lounge')} /></g>
         </g>
       </svg>
       <div className="hs-swipe" aria-hidden>← swipe the homestead →</div>

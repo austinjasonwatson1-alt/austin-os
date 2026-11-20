@@ -1,7 +1,7 @@
 import { addDays, mondayOf } from '../../core/dates';
 import type { Describer } from '../../core/restoreLogic';
 import { dayTotal, gradeOf } from '../ledger/logic';
-import type { DayMap, Thresholds } from '../ledger/types';
+import type { DayMap, GradeKey, Thresholds } from '../ledger/types';
 import type { Claim, LoungeData, Rates } from './types';
 
 export interface Earnings {
@@ -91,3 +91,31 @@ export const describeLounge: Describer = {
     return `${r} reward${r === 1 ? '' : 's'} · ${c} claimed`;
   },
 };
+
+/* ---------------- Cooper and Shadow ---------------- */
+
+export type DogPose = 'sleep' | 'rest' | 'proud';
+export type DogName = 'cooper' | 'shadow';
+
+/** The dogs read the day: asleep before the work starts, by the fire on a solid day, sitting proud on an elite one. */
+export function dogPose(grade: GradeKey): DogPose {
+  if (grade === 'elite') return 'proud';
+  if (grade === 'good' || grade === 'warn') return 'rest';
+  return 'sleep';
+}
+
+export function dogLine(who: DogName, pose: DogPose): string {
+  const lines: Record<DogName, Record<DogPose, string>> = {
+    cooper: {
+      sleep: 'Cooper is out cold, ears spilled across the rug. He’ll wake up when the typewriter does.',
+      rest: 'Cooper has claimed the warm spot. His tail thumps twice when you look over.',
+      proud: 'Cooper is sitting up tall, ears and all. Elite day — he knows.',
+    },
+    shadow: {
+      sleep: 'Shadow is curled up tight, one eye almost open. Just in case.',
+      rest: 'Shadow is stretched out beside Cooper, keeping watch over the pages.',
+      proud: 'Shadow is up and wiggling. Somebody did the work today.',
+    },
+  };
+  return lines[who][pose];
+}

@@ -48,3 +48,13 @@ describe('points', () => {
     expect(describeLounge.detail({ rewards: [1, 2], claims: [1] })).toBe('2 rewards · 1 claimed');
   });
 });
+
+import { dogLine, dogPose } from './logic';
+
+describe('Cooper and Shadow', () => {
+  it('follow the day', () => {
+    expect((['zero', 'bad', 'warn', 'good', 'elite'] as const).map(dogPose)).toEqual(['sleep', 'sleep', 'rest', 'rest', 'proud']);
+    expect(dogLine('cooper', 'proud')).toMatch(/Cooper/);
+    expect(dogLine('shadow', 'sleep')).toMatch(/Shadow/);
+  });
+});

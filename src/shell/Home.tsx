@@ -4,7 +4,7 @@ import { parseISO, todayISO } from '../core/dates';
 import { AREAS } from '../modules/registry';
 import { currentStreak, dayTotal, fmtMins, gradeOf, GRADE_LABEL, lampHeat, lampLine, mondayOf, weekTotal } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
-import { fmtPts } from '../modules/lounge/logic';
+import { dogPose, fmtPts } from '../modules/lounge/logic';
 import { useWallet } from '../modules/lounge/useWallet';
 import { CountUp } from './fx';
 import { AutoBackupPanel } from './AutoBackup';
@@ -40,7 +40,7 @@ export default function Home() {
             {building.length} more buildings are going up on the homestead.
           </p>
         </div>
-        <Homestead heat={lampHeat(mins, thresholds)} />
+        <Homestead heat={lampHeat(mins, thresholds)} pose={dogPose(g)} />
       </section>
 
       <div className="hs-areas">
