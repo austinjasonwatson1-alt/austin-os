@@ -1,7 +1,7 @@
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import { AREAS, type AreaId } from '../modules/registry';
 import { go } from './router';
-import { Dog } from './Dogs';
+import { Dog, Patrol } from './Dogs';
 import type { DogPose } from '../modules/lounge/logic';
 
 /**
@@ -167,8 +167,18 @@ export function Homestead({ heat, pose, children }: { heat: number; pose: DogPos
           <Pines />
           <rect x="-60" y="270" width="1320" height="60" fill="url(#hs-mist)" className="hs-mist" />
           {/* Cooper and Shadow out front of the cabin; click them to go in to the Lounge */}
-          <g transform="translate(588 304) scale(.42)"><Dog who="cooper" pose={pose} onClick={() => go('/cabin/lounge')} /></g>
-          <g transform="translate(640 306) scale(.42)"><Dog who="shadow" pose={pose} onClick={() => go('/cabin/lounge')} /></g>
+          {pose === 'sleep' ? (
+            <>
+              <g transform="translate(560 304) scale(.42)"><Dog who="cooper" pose="sleep" onClick={() => go('/cabin/lounge')} /></g>
+              <g transform="translate(612 306) scale(.42)"><Dog who="shadow" pose="sleep" onClick={() => go('/cabin/lounge')} /></g>
+            </>
+          ) : (
+            // Once the day has started, they're out trotting the path between the cabin and the chapel.
+            <>
+              <g transform="translate(570 306) scale(.42)"><Patrol dist={400} dur={22}><Dog who="cooper" pose="walk" onClick={() => go('/cabin/lounge')} /></Patrol></g>
+              <g transform="translate(600 308) scale(.42)"><Patrol dist={380} dur={22} delay={-1.4}><Dog who="shadow" pose="walk" onClick={() => go('/cabin/lounge')} /></Patrol></g>
+            </>
+          )}
         </g>
       </svg>
       <div className="hs-swipe" aria-hidden>← swipe the homestead →</div>

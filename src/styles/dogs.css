@@ -1,28 +1,69 @@
 /* ---------- Cooper and Shadow ---------- */
 .dog { cursor: default; outline: none; }
 .dog[role='button'] { cursor: pointer; }
-.dog > g { filter: drop-shadow(0 0 1px rgba(242, 182, 90, .85)) drop-shadow(-2px -2px 4px rgba(242, 182, 90, .25)); }
-.dog-body, .dog-tail { fill: #111115; }
-.dog-ear { fill: #23232b; stroke: rgba(242, 182, 90, .35); stroke-width: .8; }
-.dog-scruff, .dog-brow { fill: none; stroke: #33333c; stroke-width: 1.4; stroke-linecap: round; }
+/* a warm rim of lamplight around the whole silhouette, plus a soft cool sheen from the sky */
+.dog > .dog-bob { filter: drop-shadow(0 0 1px rgba(242, 182, 90, .85)) drop-shadow(-2px -2px 4px rgba(242, 182, 90, .25)); }
+.dog-sheen { fill: none; stroke: rgba(170, 190, 230, .16); stroke-width: 2.2; stroke-linecap: round; }
+.dog-ear-sheen { fill: none; stroke: rgba(170, 190, 230, .14); stroke-width: 1.6; stroke-linecap: round; }
+.dog-ear { stroke: rgba(242, 182, 90, .3); stroke-width: .8; }
+.dog-scruff, .dog-brow { fill: none; stroke: #3a3a44; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .dog-nose { fill: #050506; }
+.dog-nose-shine { fill: rgba(255, 255, 255, .35); }
 .dog-eye { fill: #f2c46a; }
-.dog-eye-shut { fill: none; stroke: #3a3a44; stroke-width: 1.4; stroke-linecap: round; }
-.dog-shadow { fill: rgba(0, 0, 0, .45); }
+.dog-eye-shine { fill: #fff6dc; }
+.dog-eye-shut { fill: none; stroke: #4a4a55; stroke-width: 1.4; stroke-linecap: round; }
+.dog-ground { fill: rgba(0, 0, 0, .45); }
 .collar.c-red { fill: #b03a2e; }
 .collar.c-blue { fill: #3a6fb0; }
 .tag { fill: #e0b04a; }
+
+/* tails, ears, breathing, blinking */
 .dog .wag { transform-box: fill-box; transform-origin: 0% 50%; animation: wag .5s ease-in-out infinite alternate; }
-.dog-shadow + g .wag { animation-duration: .35s; }
-.pose-rest .wag { animation-duration: 1.4s; }
-@keyframes wag { from { transform: rotate(-8deg); } to { transform: rotate(10deg); } }
+.dog.dog-shadow .wag { animation-duration: .36s; }
+.dog.pose-rest .wag { animation-duration: 1.4s; }
+.dog.pose-play .wag, .dog.pose-walk .wag { animation-duration: .28s; }
+@keyframes wag { from { transform: rotate(-8deg); } to { transform: rotate(12deg); } }
+.ear-hound { transform-box: fill-box; transform-origin: 30% 0%; animation: ear-swing 3.2s ease-in-out infinite; }
+.pose-walk .ear-hound, .pose-play .ear-hound { animation-duration: .56s; }
+@keyframes ear-swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(5deg); } }
+.ear-terrier { transform-box: fill-box; transform-origin: 20% 100%; animation: ear-perk 6s ease-in-out infinite; }
+@keyframes ear-perk { 0%, 86%, 100% { transform: rotate(0); } 90% { transform: rotate(-14deg); } 94% { transform: rotate(4deg); } }
+.dog-eyes { transform-box: fill-box; transform-origin: center; animation: blink 5.5s infinite; }
+.dog.dog-shadow .dog-eyes { animation-delay: -2s; }
+@keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
 .dog-breathe { transform-box: fill-box; transform-origin: 50% 100%; animation: breathe 3.6s ease-in-out infinite; }
 @keyframes breathe { 50% { transform: scale(1.015, 1.05); } }
 .zzz text { font-family: var(--display); font-weight: 700; font-size: 11px; fill: rgba(233, 228, 216, .5); animation: zzz 3s ease-in-out infinite; }
 .zzz text:nth-child(2) { animation-delay: -1s; font-size: 13px; }
 .zzz text:nth-child(3) { animation-delay: -2s; font-size: 15px; }
 @keyframes zzz { 0% { opacity: 0; transform: translate(0, 6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(6px, -8px); } }
-.dog:focus-visible > g { filter: drop-shadow(0 0 3px var(--lamp)); }
-.dog.pressed > g { animation: hop .4s ease-out; }
 
-@media (prefers-reduced-motion: reduce) { .dog .wag, .dog-breathe, .zzz text { animation: none; } }
+/* the trot: legs swing in diagonal pairs, the body bobs */
+.dog-leg { transform-box: fill-box; transform-origin: 50% 0%; animation: leg .56s ease-in-out infinite alternate; }
+.leg-f1, .leg-b2 { animation-delay: -.28s; }
+@keyframes leg { from { transform: rotate(20deg); } to { transform: rotate(-20deg); } }
+.pose-play .dog-leg { animation: none; }
+.pose-walk .dog-bob { animation: bob .28s ease-in-out infinite alternate; }
+@keyframes bob { to { transform: translateY(-2px); } }
+.dog.dog-shadow.pose-walk .dog-bob { animation-duration: .24s; }
+
+/* clicked: a hop and a heart */
+.dog.hopping .dog-bob { animation: hop .45s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes hop { 40% { transform: translateY(-12px); } }
+.dog-heart { font-size: 18px; fill: #e5737a; animation: heart 1.6s ease-out forwards; }
+@keyframes heart { from { opacity: 0; transform: translateY(6px) scale(.6); } 20% { opacity: 1; transform: translateY(0) scale(1.1); } to { opacity: 0; transform: translateY(-26px) scale(1); } }
+.dog:focus-visible > .dog-bob { filter: drop-shadow(0 0 3px var(--lamp)); }
+
+/* trotting back and forth along a path (dogs face left; flipped while heading right) */
+.patrol { transform-box: fill-box; transform-origin: center; animation: patrol 18s linear infinite; }
+@keyframes patrol {
+  0% { transform: translateX(0) scaleX(-1); }
+  46% { transform: translateX(var(--dist)) scaleX(-1); }
+  50% { transform: translateX(var(--dist)) scaleX(1); }
+  96% { transform: translateX(0) scaleX(1); }
+  100% { transform: translateX(0) scaleX(-1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dog .wag, .dog-breathe, .zzz text, .ear-hound, .ear-terrier, .dog-eyes, .dog-leg, .pose-walk .dog-bob, .dog.hopping .dog-bob, .patrol { animation: none; }
+}

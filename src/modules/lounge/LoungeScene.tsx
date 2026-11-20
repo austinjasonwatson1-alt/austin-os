@@ -175,8 +175,8 @@ export function LoungeScene() {
         </Thing>
 
         {/* Cooper and Shadow */}
-        <g transform={`translate(${spot.c[0]} ${spot.c[1]}) scale(1.3)`}><Dog who="cooper" pose={pose} onClick={() => bark('cooper', spot.c[0])} /></g>
-        <g transform={`translate(${spot.s[0]} ${spot.s[1]}) scale(1.3)`}><Dog who="shadow" pose={pose} onClick={() => bark('shadow', spot.s[0])} /></g>
+        <g transform={`translate(${spot.c[0]} ${spot.c[1]}) scale(1.3)`}><Dog who="cooper" pose={pose} playful onClick={() => bark('cooper', spot.c[0])} /></g>
+        <g transform={`translate(${spot.s[0]} ${spot.s[1]}) scale(1.3)`}><Dog who="shadow" pose={pose === 'proud' ? 'beg' : pose} playful onClick={() => bark('shadow', spot.s[0])} /></g>
       </svg>
       {say && <div className="ls-say" style={{ left: `${Math.min(80, Math.max(20, say.x / 10))}%` }} role="status">{say.text}</div>}
     </section>
