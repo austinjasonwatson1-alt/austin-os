@@ -261,3 +261,5 @@
 .lamp-halo { animation: halo-warm 2s ease-out backwards; }
 @keyframes halo-warm { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .lamp-arc, .lamp-flame, .lamp-halo { animation: none; } }
+.star-sel { fill: none; stroke: var(--bone); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.week-day.sel { fill: var(--bone); }

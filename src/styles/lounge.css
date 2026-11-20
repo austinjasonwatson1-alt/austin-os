@@ -28,7 +28,7 @@
 
 .lounge-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 18px; align-items: start; }
 .lounge-grid > * { min-width: 0; }
-.lounge-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
 .lounge-h .section-h { margin-top: 6px; }
 .lounge-side { display: grid; gap: 16px; }
 
@@ -57,7 +57,6 @@
 .reward-cost small { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--lamp); }
 .reward-need { font-size: 11px; color: var(--bone-faint); }
 .reward-confirm { display: flex; gap: 6px; }
-.btn.sm { padding: 5px 10px; font-size: 12.5px; border-radius: 8px; }
 
 .reward-add { align-items: center; justify-content: center; border: 1px dashed rgba(232, 168, 75, 0.35); background: rgba(232, 168, 75, 0.03); color: var(--bone-dim); text-align: center; transition: background .2s, border-color .2s; }
 .reward-add:hover { background: rgba(232, 168, 75, 0.07); border-color: rgba(232, 168, 75, 0.6); color: var(--bone); }
@@ -68,14 +67,6 @@
 .glyphs { display: flex; flex-wrap: wrap; gap: 4px; }
 .glyphs button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: none; color: var(--bone-dim); font-size: 15px; }
 .glyphs button[aria-checked='true'] { color: var(--lamp); border-color: rgba(232, 168, 75, .55); background: var(--lamp-soft); }
-.field { display: grid; gap: 4px; min-width: 0; }
-.field span { font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--bone-faint); }
-.field input, .rate input {
-  width: 100%; min-width: 0; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--line-strong);
-  background: rgba(5, 7, 12, 0.55); outline: none; transition: border-color .15s, box-shadow .15s;
-}
-.field input:focus, .rate input:focus { border-color: rgba(232, 168, 75, .6); box-shadow: 0 0 0 3px rgba(232, 168, 75, .12); }
-.field-row { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 8px; }
 
 /* ---------- claims ---------- */
 .empty { font-size: 13.5px; margin: 0; }

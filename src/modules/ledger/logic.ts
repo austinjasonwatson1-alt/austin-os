@@ -312,3 +312,12 @@ export function galaxyPoint(i: number, n: number): { x: number; y: number } {
   const r = 0.1 + 0.86 * t + jitter * 0.025;
   return { x: Math.cos(angle) * r, y: Math.sin(angle) * r };
 }
+
+/** Minutes for each day of month `m` (0-11), with null for days that haven't happened yet. */
+export function monthDays(days: DayMap, y: number, m: number, today: string): (number | null)[] {
+  const dim = new Date(y, m + 1, 0).getDate();
+  return Array.from({ length: dim }, (_, i) => {
+    const key = `${y}-${pad(m + 1)}-${pad(i + 1)}`;
+    return key > today ? null : dayTotal(days[key]);
+  });
+}

@@ -213,3 +213,13 @@ describe('galaxyPoint', () => {
     expect(r(200)).toBeGreaterThan(r(100));
   });
 });
+
+import { monthDays } from './logic';
+
+describe('monthDays', () => {
+  it('lists every day of the month, future days as null', () => {
+    const d = monthDays({ '2026-11-02': { writing: 40 } }, 2026, 10, '2026-11-03');
+    expect(d.length).toBe(30);
+    expect(d.slice(0, 4)).toEqual([0, 40, 0, null]);
+  });
+});
