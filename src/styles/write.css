@@ -1,0 +1,49 @@
+/* ================= Writing inside the cabin ================= */
+.write { position: fixed; inset: 0; z-index: 55; overflow-y: auto; background: radial-gradient(60% 40% at 50% 0%, rgba(232, 168, 75, .07), transparent 70%), #07080c; animation: lm-in .5s ease-out both; }
+.write.missing { display: grid; place-content: center; gap: 14px; text-align: center; }
+.w-bar {
+  position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 18px;
+  background: linear-gradient(180deg, rgba(7, 8, 12, .96), rgba(7, 8, 12, .8)); border-bottom: 1px solid var(--line); backdrop-filter: blur(10px);
+  transition: opacity .4s;
+}
+.write.focus .w-bar { opacity: .35; }
+.write.focus .w-bar:hover, .write.focus .w-bar:focus-within { opacity: 1; }
+.w-back { border: 0; background: none; color: var(--bone-dim); font-family: var(--display); font-size: 16px; }
+.w-back:hover { color: var(--lamp); }
+.w-stats { display: flex; gap: 14px; font-size: 11.5px; color: var(--bone-dim); }
+.w-stats b { color: var(--bone); font-weight: 500; }
+.w-stats .up { color: var(--good); }
+.w-tools { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+.w-clock { font-size: 12px; color: var(--bone-dim); }
+.w-clock.live { color: var(--lamp); text-shadow: 0 0 10px rgba(232, 168, 75, .5); }
+.w-amb { border: 1px solid var(--line); background: rgba(5, 7, 12, .6); color: var(--bone-dim); border-radius: 8px; padding: 5px 8px; font-size: 12px; }
+
+.w-page { width: min(720px, 100% - 32px); margin: 0 auto; padding: 8vh 0 50vh; }
+.w-head { display: grid; justify-items: center; gap: 6px; margin-bottom: 40px; text-align: center; }
+.w-head .mono { font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: var(--lamp); }
+.w-title { width: 100%; border: 0; background: none; outline: none; text-align: center; font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4vw, 40px); color: var(--bone); }
+.w-text {
+  display: block; width: 100%; min-height: 60vh; resize: none; border: 0; outline: none; background: none; overflow: hidden;
+  font-family: 'Literata', Georgia, serif; font-size: 20px; line-height: 1.85; color: #ece5d6; caret-color: var(--lamp);
+  text-shadow: 0 0 calc(var(--lamp-heat) * 14px) rgba(232, 168, 75, .06);
+}
+.w-text::placeholder { color: var(--bone-faint); font-style: italic; }
+.w-text::selection { background: rgba(232, 168, 75, .3); }
+.w-nav { display: flex; justify-content: space-between; margin-top: 60px; }
+.w-nav .btn { font-family: var(--display); }
+
+.w-versions { position: fixed; top: 0; right: 0; bottom: 0; z-index: 3; width: min(380px, 100%); overflow-y: auto; padding: 18px; border-left: 1px solid var(--line-strong); background: var(--panel-solid); box-shadow: -30px 0 60px rgba(0, 0, 0, .5); animation: v-in .25s ease-out; }
+@keyframes v-in { from { transform: translateX(30px); opacity: 0; } }
+.w-versions ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.w-v { display: grid; gap: 2px; width: 100%; padding: 9px 10px; border-radius: 10px; border: 1px solid transparent; background: none; text-align: left; color: var(--bone); font-size: 13.5px; }
+.w-v:hover, .w-versions li.on .w-v { border-color: var(--line-strong); background: rgba(233, 228, 216, .03); }
+.w-v .mono { font-size: 10.5px; }
+.w-peek { padding: 8px 10px 12px; }
+.w-peek p { margin: 0 0 10px; font-family: 'Literata', Georgia, serif; font-size: 14px; line-height: 1.6; color: var(--bone-dim); white-space: pre-wrap; }
+
+@media (max-width: 860px) {
+  .w-bar { padding: 8px 12px; gap: 8px; }
+  .w-tools { margin-left: 0; }
+  .w-text { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .write, .w-versions { animation: none; } }

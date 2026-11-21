@@ -8,6 +8,9 @@ import { minutesByChapter } from '../timer/logic';
 import { useTimer } from '../timer/store';
 import { byStatus, chapterNo, dailyTotals, fmtWords, progress, readTime, totalWords, wordsSince } from './logic';
 import { useManuscripts } from './store';
+import { countWords } from '../drafts/logic';
+import { manuscriptDocx, manuscriptText } from '../drafts/manuscriptFormat';
+import { useDrafts } from '../drafts/store';
 import { STATUS_NAME, STATUSES, type Chapter, type ChapterStatus, type Manuscript } from './types';
 import '../../styles/cabin.css';
 import '../../styles/ledger.css';
@@ -91,6 +94,7 @@ function Workbench({ m, mins }: { m: Manuscript; mins: Record<string, number> })
   const [drag, setDrag] = useState<string | null>(null);
   const [over, setOver] = useState<ChapterStatus | null>(null);
   const [sure, setSure] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const left = Math.max(0, m.target - total);
 
   const drop = (status: ChapterStatus, beforeId?: string) => (e: DragEvent) => {
@@ -139,6 +143,7 @@ function Workbench({ m, mins }: { m: Manuscript; mins: Record<string, number> })
           <div className="ms-head-actions">
             <button className="qlamp" onClick={() => go('/cabin/timer')}><span aria-hidden>◉</span> Lamp mode</button>
             <button className="btn primary" onClick={() => setEdit('new')}>+ Chapter</button>
+            <button className="btn" onClick={() => setExporting(true)}>Export manuscript</button>
           </div>
         </div>
       </section>
@@ -162,6 +167,7 @@ function Workbench({ m, mins }: { m: Manuscript; mins: Record<string, number> })
                     {mins[`${m.id}/${c.id}`] ? <span>◉ {fmtMins(mins[`${m.id}/${c.id}`])}</span> : null}
                   </span>
                 </button>
+                <button className="card-write" onClick={() => go(`/cabin/write/${m.id}/${c.id}`)} aria-label={`Write ${c.title}`}>✎ Write</button>
                 <span className="card-move">
                   <button aria-label="Move back a column" disabled={st === 'idea'} onClick={() => s.move(m.id, c.id, STATUSES[STATUSES.indexOf(st) - 1])}>‹</button>
                   <button aria-label="Move forward a column" disabled={st === 'done'} onClick={() => s.move(m.id, c.id, STATUSES[STATUSES.indexOf(st) + 1])}>›</button>
@@ -180,6 +186,7 @@ function Workbench({ m, mins }: { m: Manuscript; mins: Record<string, number> })
       </div>
 
       {edit && <ChapterSheet m={m} chapter={edit === 'new' ? null : edit} onClose={() => setEdit(null)} />}
+      {exporting && <ExportSheet m={m} onClose={() => setExporting(false)} />}
     </>
   );
 }
@@ -217,7 +224,53 @@ function ChapterSheet({ m, chapter, onClose }: { m: Manuscript; chapter: Chapter
           ? <button className="btn danger" onClick={() => { useManuscripts.getState().removeChapter(m.id, chapter.id); close(); }}>Delete this chapter</button>
           : <button className="btn ghost" style={{ marginRight: 'auto' }} onClick={() => setSure(true)}>Delete…</button>)}
         <button className="btn ghost" onClick={close}>Cancel</button>
+        {chapter && <button className="btn" onClick={() => { useManuscripts.getState().saveChapter(m.id, c); go(`/cabin/write/${m.id}/${chapter.id}`); }}>✎ Write it</button>}
         <button className="btn primary" onClick={save}>{chapter ? 'Save' : 'Add chapter'}</button>
+      </div>
+    </dialog>
+  );
+}
+
+/* ---------------- export in standard manuscript format ---------------- */
+
+function ExportSheet({ m, onClose }: { m: Manuscript; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const drafts = useDrafts();
+  useEffect(() => { void drafts.load(); ref.current?.showModal(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [a, setA] = useState(drafts.author);
+  useEffect(() => setA(drafts.author), [drafts.author]);
+  const chapters = m.chapters.map((c) => ({ title: c.title, text: drafts.drafts[`${m.id}/${c.id}`]?.text ?? '' })).filter((c) => c.text.trim());
+  const words = chapters.reduce((s, c) => s + countWords(c.text), 0);
+  const close = () => { ref.current?.close(); onClose(); };
+  const input = { title: m.title, author: a, chapters, words };
+  const save = (blob: Blob, ext: string) => {
+    useDrafts.getState().setAuthor(a);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${m.title.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-')}.${ext}`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+  return (
+    <dialog ref={ref} className="sheet" onClose={onClose} aria-labelledby="ex-title">
+      <div className="page-eyebrow" style={{ fontSize: 10.5 }}>Export</div>
+      <h2 id="ex-title" className="sheet-title">{m.title}</h2>
+      <p className="dim" style={{ fontSize: 13.5, marginTop: 0 }}>
+        Standard manuscript format: Times New Roman 12, double spaced, one-inch margins, a running header with your surname, the title and page number, and each chapter starting a third of the way down a new page. {chapters.length} chapter{chapters.length === 1 ? '' : 's'} with text, {words.toLocaleString('en-US')} words.
+      </p>
+      <div className="book-fields">
+        <div className="field-row two">
+          <label className="field"><span>Name on the manuscript</span><input value={a.name} onChange={(e) => setA({ ...a, name: e.target.value })} /></label>
+          <label className="field"><span>Surname (for the header)</span><input value={a.surname} onChange={(e) => setA({ ...a, surname: e.target.value })} /></label>
+        </div>
+        <label className="field"><span>Contact lines (address, email, phone)</span><textarea className="ruled" rows={3} value={a.contact} onChange={(e) => setA({ ...a, contact: e.target.value })} /></label>
+      </div>
+      {chapters.length === 0 && <p className="sheet-warn">No chapter has any text yet. Open a chapter with ✎ Write to start.</p>}
+      <div className="sheet-actions">
+        <button className="btn ghost" onClick={close}>Close</button>
+        <button className="btn" disabled={!chapters.length} onClick={() => save(new Blob([manuscriptText(input)], { type: 'text/plain' }), 'txt')}>Plain text</button>
+        <button className="btn primary" disabled={!chapters.length} onClick={() => save(new Blob([manuscriptDocx(input) as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), 'docx')}>Download .docx</button>
       </div>
     </dialog>
   );

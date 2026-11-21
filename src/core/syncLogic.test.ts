@@ -49,3 +49,15 @@ describe('two-device sync', () => {
     expect(unionById([{ id: 'a' }], [])).toEqual([{ id: 'a' }]);
   });
 });
+
+describe('drafts sync', () => {
+  it('keeps the most recently edited chapter text from either computer', () => {
+    const w = syncMerge(
+      { 'drafts.v1': { drafts: { 'm/1': { text: 'old', updatedAt: '2026-11-21T10:00:00Z' }, 'm/2': { text: 'mine', updatedAt: '2026-11-21T12:00:00Z' } }, versions: { 'm/1': [{ at: 'a' }] } } },
+      { 'drafts.v1': { drafts: { 'm/1': { text: 'newer', updatedAt: '2026-11-21T11:00:00Z' }, 'm/2': { text: 'theirs', updatedAt: '2026-11-21T09:00:00Z' } }, versions: { 'm/1': [{ at: 'b' }] } } },
+    ) as Record<string, any>;
+    expect(w['drafts.v1'].drafts['m/1'].text).toBe('newer');
+    expect(w['drafts.v1'].drafts['m/2'].text).toBe('mine');
+    expect(w['drafts.v1'].versions['m/1'].map((v: any) => v.at)).toEqual(['b', 'a']);
+  });
+});

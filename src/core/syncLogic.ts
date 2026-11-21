@@ -73,6 +73,21 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
       verses: unionById(arr<WithId>(l.verses), arr<WithId>(r.verses)),
     };
   },
+  // Chapter text: the most recently edited copy of each chapter wins; versions from both are kept.
+  'drafts.v1': (l, r) => {
+    const drafts: Obj = { ...(isObj(r.drafts) ? r.drafts : {}) };
+    for (const [k, v] of Object.entries(isObj(l.drafts) ? l.drafts : {})) {
+      const o = drafts[k] as Obj | undefined;
+      if (!o || String((v as Obj).updatedAt) >= String(o.updatedAt)) drafts[k] = v;
+    }
+    const versions: Obj = { ...(isObj(r.versions) ? r.versions : {}) };
+    for (const [k, v] of Object.entries(isObj(l.versions) ? l.versions : {})) {
+      const all = [...arr<Obj>(v), ...arr<Obj>(versions[k])];
+      const seen = new Set<string>();
+      versions[k] = all.filter((x) => (seen.has(String(x.at)) ? false : (seen.add(String(x.at)), true))).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 30);
+    }
+    return { ...l, drafts, versions };
+  },
   'review.v1': (l, r) => {
     const reviews: Obj = { ...(isObj(r.reviews) ? r.reviews : {}) };
     for (const [w, v] of Object.entries(isObj(l.reviews) ? l.reviews : {})) reviews[w] = fill(v as Obj, isObj(reviews[w]) ? (reviews[w] as Obj) : {});

@@ -10,6 +10,7 @@ import { useShelf } from './modules/shelf/store';
 import { useChapel } from './modules/chapel/store';
 import { useManuscripts } from './modules/manuscripts/store';
 import { useReview } from './modules/review/store';
+import { useDrafts } from './modules/drafts/store';
 import { AREA_STORES } from './modules/areas/store';
 import { areaByPath, byPath } from './modules/registry';
 import { AreaSoon } from './shell/AreaSoon';
@@ -25,12 +26,14 @@ import { Soon } from './shell/Soon';
 
 const ReviewPage = lazy(() => import('./modules/review/ReviewPage'));
 const YearPage = lazy(() => import('./modules/review/YearPage'));
+const WritePage = lazy(() => import('./modules/drafts/WritePage'));
 
 function Screen({ route }: { route: string }) {
   if (route === '/home') return <Home />;
   if (route === '/cabin') return <CabinHome />;
   if (route === '/review') return <ReviewPage />;
   if (route === '/year') return <YearPage />;
+  if (route.startsWith('/cabin/write/')) return <WritePage />;
   const area = areaByPath(route);
   if (area && !area.live) return <AreaSoon a={area} />;
   if (area?.component) { const A = area.component; return <A />; }
@@ -62,6 +65,7 @@ export default function App() {
     void useChapel.getState().load();
     void useManuscripts.getState().load();
     void useReview.getState().load();
+    void useDrafts.getState().load();
     void AREA_STORES.office.getState().load();
     void AREA_STORES.observatory.getState().load();
   }, []);
