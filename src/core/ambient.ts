@@ -3,7 +3,7 @@
  * to download and nothing to license. Everything is off until the user turns it on.
  */
 
-export type AmbientKind = 'rain' | 'fire' | 'wind';
+export type AmbientKind = 'rain' | 'fire' | 'wind' | 'organ' | 'room';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -86,6 +86,37 @@ function build(c: AudioContext, kind: AmbientKind, out: AudioNode): () => void {
       timers.push(setTimeout(crack, 60 + Math.random() * (Math.random() < 0.2 ? 900 : 300)));
     };
     crack();
+  } else if (kind === 'organ') {
+    // A soft held chord (an open fifth with a gentle third), breathing slowly, like a chapel at rest.
+    const lfo = c.createOscillator(); const lg = c.createGain();
+    lfo.frequency.value = 0.08; lg.gain.value = 0.03;
+    const vol = c.createGain(); vol.gain.value = 0.06;
+    lfo.connect(lg).connect(vol.gain);
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+    for (const f of [130.81, 196.0, 261.63, 329.63]) {
+      const o = c.createOscillator(); o.type = 'triangle'; o.frequency.value = f; o.detune.value = (Math.random() - 0.5) * 6;
+      o.connect(lp); nodes.push(o);
+    }
+    lp.connect(vol).connect(g);
+    fadeIn(c, g, 1);
+    nodes.push(lfo);
+    lfo.start();
+  } else if (kind === 'room') {
+    // Quiet room tone with the odd soft keystroke: an office after hours.
+    const n = noise(c, true);
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260;
+    n.connect(lp).connect(g);
+    fadeIn(c, g, 0.25);
+    nodes.push(n);
+    const key = () => {
+      const s2 = noise(c); const kg = c.createGain(); const hp = c.createBiquadFilter();
+      hp.type = 'highpass'; hp.frequency.value = 2500;
+      const t = c.currentTime;
+      kg.gain.setValueAtTime(0.0001, t); kg.gain.exponentialRampToValueAtTime(0.05, t + 0.003); kg.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+      s2.connect(hp).connect(kg).connect(g); s2.start(t); s2.stop(t + 0.06);
+      timers.push(setTimeout(key, Math.random() < 0.15 ? 2500 + Math.random() * 4000 : 90 + Math.random() * 220));
+    };
+    timers.push(setTimeout(key, 1500));
   } else {
     const n = noise(c);
     const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 500; bp.Q.value = 0.8;

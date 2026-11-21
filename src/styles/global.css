@@ -445,3 +445,10 @@ input, textarea, select { font: inherit; color: inherit; }
 .rail-search:hover { color: var(--bone); border-color: var(--line-strong); }
 .rail-search kbd { margin-left: auto; font-family: var(--mono); font-size: 10px; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line-strong); }
 @media (max-width: 860px) { .rail-search { width: auto; flex: none; margin: 0; padding: 6px 10px; } .rail-search span:not(:first-child), .rail-search kbd { display: none; } }
+
+/* ---------- room sounds & dogs at your feet ---------- */
+.room-sound { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 99px; border: 1px solid var(--line); background: rgba(5, 7, 12, .45); color: var(--bone-faint); font-size: 12px; }
+.room-sound:hover { color: var(--bone); border-color: var(--line-strong); }
+.room-sound.on { color: var(--lamp); border-color: rgba(232, 168, 75, .45); }
+.at-feet { position: fixed; left: 18px; bottom: 6px; z-index: 3; width: 220px; height: auto; pointer-events: none; animation: lm-in 2s ease-out both; }
+@media (max-width: 860px) { .at-feet { width: 150px; } }

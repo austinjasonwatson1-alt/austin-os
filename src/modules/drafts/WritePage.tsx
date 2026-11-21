@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { setAmbient } from '../../core/ambient';
 import { go, useRoute } from '../../shell/router';
+import { DogsAtFeet } from '../../shell/DogsAtFeet';
 import { fmtMins } from '../ledger/logic';
 import { useManuscripts } from '../manuscripts/store';
 import { elapsedMs, fmtClock } from '../timer/logic';
@@ -146,6 +147,7 @@ export default function WritePage() {
         </nav>
       </main>
 
+      {run && <DogsAtFeet minutes={Math.floor(elapsedMs(run, now) / 60_000)} />}
       {showVersions && <Versions ms={msId} ch={chId} onClose={() => setShowVersions(false)} onRestored={(t) => { setText(t); startWords.current = countWords(t); }} />}
     </div>
   );

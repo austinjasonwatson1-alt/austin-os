@@ -1,4 +1,7 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { anniversary, bedtime, greyness, growth } from './worldLogic';
+import { skyPhase, type Phase } from '../core/skyLogic';
+import { usePub } from '../modules/pub/store';
 import { areaHeat, areaMinutes, money, moneyYear } from '../modules/areas/logic';
 import { AREA_STORES } from '../modules/areas/store';
 import { AREA_CONFIGS, OBSERVATORY, OFFICE } from '../modules/areas/types';
@@ -17,7 +20,7 @@ import { dogPose, fmtPts } from '../modules/lounge/logic';
 import { useWallet } from '../modules/lounge/useWallet';
 import { CountUp, tilt } from './fx';
 import { AutoBackupPanel } from './AutoBackup';
-import { Homestead } from './Homestead';
+import { Homestead, type World } from './Homestead';
 import { SkyPanel } from './SkyPanel';
 import { GRADE_VAR, greeting, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
 import { go } from './router';
@@ -36,6 +39,18 @@ export default function Home() {
   const date = parseISO(today).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
   const time = now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   const building = AREAS.filter((a) => !a.live);
+  const firstDay = useMemo(() => Object.keys(days).filter((k) => dayTotal(days[k]) > 0).sort()[0] ?? null, [days]);
+  const totalMins = useMemo(() => Object.values(days).reduce((t, e) => t + dayTotal(e), 0), [days]);
+  const hasOffer = usePub((st) => st.queries.some((q) => q.status === 'offer'));
+  const world: World = { growth: growth(totalMins, streak, hasOffer), phase: (new URLSearchParams(window.location.search).get('sky') as Phase | null) ?? skyPhase(now), sleeping: bedtime(now), grey: greyness(firstDay, today) };
+  const years = anniversary(firstDay, today);
+  // On the anniversary, the sky replays its best: a shooting star once per day.
+  useEffect(() => {
+    if (!years) return;
+    try { if (localStorage.getItem('anniv.seen') === today) return; localStorage.setItem('anniv.seen', today); } catch { /* fine */ }
+    const t = setTimeout(() => window.dispatchEvent(new Event('austin:celebrate')), 1800);
+    return () => clearTimeout(t);
+  }, [years, today]);
   const wallet = useWallet();
   const reviews = useReview((st) => st.reviews);
   const reviewSealed = Boolean(reviews[reviewWeek(now, mondayOf(today))]?.sealedAt);
@@ -69,7 +84,7 @@ export default function Home() {
             {building.length ? `${building.length} more building${building.length === 1 ? ' is' : 's are'} going up on the homestead.` : lineAround}
           </p>
         </div>
-        <Homestead heat={lampHeat(mins, thresholds)} chapelHeat={candleHeat(chapelToday)} officeHeat={areaHeat(officeToday, OFFICE.fullDay)} obsHeat={areaHeat(obsToday, OBSERVATORY.fullDay)} forgeHeat={areaHeat(forgeToday, AREA_CONFIGS.forge.fullDay)} hearthHeat={areaHeat(hearthToday, AREA_CONFIGS.hearth.fullDay)} pose={dogPose(g)} />
+        <Homestead heat={lampHeat(mins, thresholds)} chapelHeat={candleHeat(chapelToday)} officeHeat={areaHeat(officeToday, OFFICE.fullDay)} obsHeat={areaHeat(obsToday, OBSERVATORY.fullDay)} forgeHeat={areaHeat(forgeToday, AREA_CONFIGS.forge.fullDay)} hearthHeat={areaHeat(hearthToday, AREA_CONFIGS.hearth.fullDay)} world={world} pose={dogPose(g)} />
       </section>
 
       {reviewTime(now) && !reviewSealed && (
@@ -78,6 +93,14 @@ export default function Home() {
           <span><b>{now.getDay() === 0 ? 'It’s Sunday.' : 'A new week.'}</b><br /><span>Time to look back at the week and set one intention for the next.</span></span>
           <span className="go" aria-hidden>→</span>
         </button>
+      )}
+
+      {years && (
+        <div className="review-nudge anniv rise" style={rise(1)}>
+          <span aria-hidden style={{ fontSize: 24, color: 'var(--lamp)' }}>✦</span>
+          <span><b>{years === 1 ? 'A year ago today' : `${years} years ago today`}, you logged your first minutes.</b><br /><span>{Math.round(totalMins / 60).toLocaleString('en-US')} hours since. The homestead remembers.</span></span>
+          <button className="btn ghost sm" onClick={() => go('/library')}>Open the Library</button>
+        </div>
       )}
 
       {chapelNudge(now, chapelToday) && hushed !== today && (

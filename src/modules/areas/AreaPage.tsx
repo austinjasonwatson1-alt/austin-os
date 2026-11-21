@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { mondayOf, parseISO, todayISO } from '../../core/dates';
 import { CountUp, embers } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
+import { RoomSound } from '../../shell/RoomSound';
 import { fmtMins } from '../ledger/logic';
 import { areaMinutes, areaStreak, areaWeek, daysTo, money, moneyYear, nextOccurrence } from './logic';
 import { AREA_STORES } from './store';
@@ -36,6 +37,7 @@ export function AreaPage({ config }: { config: AreaConfig }) {
           <div className="page-eyebrow">The Homestead · {config.name}</div>
           <h1 className="hero-title">The<br /><em>{config.word}</em></h1>
           <p className="hero-line">{config.lede}</p>
+          <div style={{ marginBottom: 14 }}><RoomSound kind={({ office: 'room', observatory: 'wind', forge: 'fire', bank: 'room', hearth: 'fire' } as const)[config.id]} label={({ office: 'a quiet office', observatory: 'wind on the dome', forge: 'the forge fire', bank: 'a quiet room', hearth: 'the hearth fire' } as const)[config.id]} /></div>
           {config.kinds.length > 0 && <div className="area-log">
             {config.kinds.map((k) => (
               <div key={k.k} className="clog" style={{ '--kc': k.color } as CSSProperties}>

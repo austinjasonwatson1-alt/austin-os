@@ -14,6 +14,8 @@ const WX_EVERY_MS = 30 * 60_000;
 export interface Prefs {
   /** A soft bell on an elite day and at the end of a lamp-mode goal. */
   chime: boolean;
+  /** Each room plays its own quiet sound while you're in it. */
+  roomSound?: boolean;
 }
 interface WxSaved { lat: number; lon: number; kind: Weather | null; temp: number | null; at: number }
 
@@ -25,6 +27,7 @@ interface SkyState {
   weatherErr: string | null;
   load: () => Promise<void>;
   setChime: (on: boolean) => void;
+  setRoomSound: (on: boolean) => void;
   /** Ask for location (must run from a click), then fetch the weather. */
   enableWeather: () => Promise<void>;
   disableWeather: () => Promise<void>;
@@ -54,6 +57,12 @@ export const useSky = create<SkyState>((set, get) => ({
 
   setChime(chime) {
     const prefs = { ...get().prefs, chime };
+    set({ prefs });
+    void saveWithSnapshot(PREFS, prefs);
+  },
+
+  setRoomSound(roomSound) {
+    const prefs = { ...get().prefs, roomSound };
     set({ prefs });
     void saveWithSnapshot(PREFS, prefs);
   },

@@ -219,3 +219,28 @@
 .area-live { border-style: solid; border-color: rgba(242, 196, 106, .3); background: radial-gradient(80% 120% at 0% 50%, rgba(242, 196, 106, .08), transparent 60%), linear-gradient(160deg, rgba(18, 20, 36, 0.8), rgba(9, 10, 20, 0.7)); }
 .area-live:hover { border-color: rgba(242, 196, 106, .6); box-shadow: 0 14px 34px rgba(0, 0, 0, .4), 0 0 26px rgba(242, 196, 106, .1); }
 .area-glyph.chapel-g { align-items: end; padding-bottom: 4px; overflow: visible; border-color: rgba(242, 196, 106, .35); background: radial-gradient(circle at 50% 30%, rgba(242, 196, 106, .14), transparent 70%); }
+
+/* ---------- the living homestead ---------- */
+/* the sky lights the walls by day; their own lamps matter less in daylight */
+.hs-scene .hs-b .hs-wall { fill: color-mix(in srgb, #4a5a7e calc(var(--wall) * 100%), #0c1220); }
+.hs-scene .hs-b .hs-roof { fill: color-mix(in srgb, #3a4866 calc(var(--wall) * 100%), #0a0f1a); }
+.hs-scene .hs-b.live .hs-win, .hs-scene .hs-b.live .hs-door-lit { opacity: calc((0.45 + var(--heat) * 0.55) * var(--glow)); }
+.hs-scene .hs-cabin-glow { opacity: calc((0.12 + var(--heat) * 0.45) * var(--glow)); }
+.hs-scene[data-phase='day'] .hs-pines path, .hs-scene[data-phase='golden'] .hs-pines path { fill: #0d1626; }
+/* bedtime: buildings unused today go dark */
+.hs-scene.sleeping .hs-b.live:not(:hover) .hs-win { transition: opacity 3s; }
+.hs-scene.sleeping .hs-b.live[style*='--heat: 0'] .hs-win { opacity: .08; }
+.hs-garden .stem { stroke: #2f5a3a; stroke-width: 1.2; }
+.hs-garden .flower { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 4s ease-in-out infinite alternate; }
+@keyframes sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+.hs-garden .sapling { fill: #08101c; stroke: rgba(79, 191, 135, .25); stroke-width: 3; }
+.ph-wall { fill: #2a2110; stroke: rgba(242, 196, 106, .6); stroke-width: 2; }
+.ph-win { fill: #ffd88a; filter: drop-shadow(0 0 6px #ffc66e); }
+.hs-lh .lh-tower { fill: #0f1626; stroke: rgba(233, 228, 216, .3); stroke-width: 1.4; }
+.hs-lh .lh-band { stroke: rgba(233, 228, 216, .18); stroke-width: 3; }
+.hs-lh .lh-lamp { fill: #141c2e; stroke: rgba(233, 228, 216, .3); }
+.hs-lh.lit .lh-lamp { fill: #fff1c8; filter: drop-shadow(0 0 10px #ffd88a); }
+.hs-lh.plan .lh-tower, .hs-lh.plan .lh-lamp { fill: rgba(111, 179, 242, .04); stroke: rgba(111, 179, 242, .45); stroke-dasharray: 4 3; }
+.lh-beam { fill: url(#hs-glow); opacity: .35; transform-origin: 0 -77px; animation: beam 6s ease-in-out infinite alternate; }
+@keyframes beam { from { transform: rotate(-14deg); opacity: .15; } to { transform: rotate(10deg); opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .hs-garden .flower, .lh-beam { animation: none; } }

@@ -1,6 +1,8 @@
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import { AREAS, type AreaId } from '../modules/registry';
 import { go } from './router';
+import { daylight, type Growth } from './worldLogic';
+import type { Phase } from '../core/skyLogic';
 import { Dog, Patrol } from './Dogs';
 import type { DogPose } from '../modules/lounge/logic';
 
@@ -9,7 +11,10 @@ import type { DogPose } from '../modules/lounge/logic';
  * lit windows; buildings still on the list are drawn as glowing blueprints. Each one is a door.
  * `heat` (0–1) is how much of today's writing is done; the cabin windows burn with it.
  */
-export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, forgeHeat = 0, hearthHeat = 0, pose, children }: { heat: number; chapelHeat?: number; officeHeat?: number; obsHeat?: number; forgeHeat?: number; hearthHeat?: number; pose: DogPose; children?: ReactNode }) {
+/** What the scene needs to know about the life around it. */
+export interface World { growth: Growth; phase: Phase; sleeping: boolean; grey: number }
+
+export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, forgeHeat = 0, hearthHeat = 0, world, pose, children }: { heat: number; chapelHeat?: number; officeHeat?: number; obsHeat?: number; forgeHeat?: number; hearthHeat?: number; world?: World; pose: DogPose; children?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Layers drift at different speeds with the pointer. Off for reduced motion.
@@ -33,7 +38,8 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
   const area = (id: AreaId) => AREAS.find((a) => a.id === id)!;
 
   return (
-    <div ref={ref} className="hs-scene" style={{ '--heat': heat } as CSSProperties}>
+    <div ref={ref} className={`hs-scene${world?.sleeping ? ' sleeping' : ''}`} data-phase={world?.phase ?? 'night'}
+      style={{ '--heat': heat, '--wall': world ? daylight(world.phase).wall : 0, '--glow': world ? daylight(world.phase).glow : 1 } as CSSProperties}>
       <svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" className="hs-svg" role="group" aria-label="The homestead">
         <defs>
           <linearGradient id="hs-far" x1="0" y1="0" x2="0" y2="1">
@@ -90,6 +96,21 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
           </g>
         </g>
 
+        {/* the lighthouse on the far point: lit at 1,000 hours, a blueprint until then */}
+        {world && (
+          <g className="hs-layer" data-depth="1">
+            <g transform="translate(262 236) scale(.62)" className={world.growth.lighthouse ? 'hs-lh lit' : 'hs-lh plan'} role="img"
+              aria-label={world.growth.lighthouse ? 'The lighthouse, lit at 1,000 hours' : `The lighthouse: ${world.growth.hoursToLighthouse} hours to go`}>
+              <title>{world.growth.lighthouse ? 'The lighthouse, lit at 1,000 hours' : `The lighthouse lights at 1,000 hours (${world.growth.hoursToLighthouse.toLocaleString('en-US')} to go)`}</title>
+              <path d="M-12 0 L-8 -70 L8 -70 L12 0 Z" className="lh-tower" />
+              <path d="M-8 -52 H8 M-9 -32 H9 M-11 -12 H11" className="lh-band" />
+              <rect x="-9" y="-84" width="18" height="14" className="lh-lamp" />
+              <path d="M-11 -84 L0 -94 L11 -84 Z" className="lh-tower" />
+              {world.growth.lighthouse && <path d="M0 -77 L140 -100 L140 -54 Z" className="lh-beam" />}
+            </g>
+          </g>
+        )}
+
         {/* the newer buildings, smaller, up on the far ridge */}
         <g className="hs-layer" data-depth="2">
           <g transform="translate(330 262) scale(.62)">
@@ -100,7 +121,7 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
               <rect x="24" y="-92" width="12" height="30" className="hs-wall" />
             </Building>
           </g>
-          <g transform="translate(935 262) scale(.62)">
+          <g transform="translate(882 262) scale(.62)">
             <Building area={area('hearth')} x={0} y={0} heat={hearthHeat}>
               <circle cx="0" cy="-34" r="60" fill="url(#hs-glow)" className="hs-cabin-glow" />
               <path d="M-50 0 V-48 L0 -84 L50 -48 V0 Z" className="hs-wall" />
@@ -196,18 +217,19 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
           </Building>
 
           <Pines />
+          {world && <Garden g={world.growth} />}
           <rect x="-60" y="270" width="1320" height="60" fill="url(#hs-mist)" className="hs-mist" />
           {/* Cooper and Shadow out front of the cabin; click them to go in to the Lounge */}
           {pose === 'sleep' ? (
             <>
-              <g transform="translate(560 304) scale(.42)"><Dog who="cooper" pose="sleep" onClick={() => go('/cabin/lounge')} /></g>
-              <g transform="translate(612 306) scale(.42)"><Dog who="shadow" pose="sleep" onClick={() => go('/cabin/lounge')} /></g>
+              <g transform="translate(560 304) scale(.42)"><Dog who="cooper" grey={world?.grey} pose="sleep" onClick={() => go('/cabin/lounge')} /></g>
+              <g transform="translate(612 306) scale(.42)"><Dog who="shadow" grey={world?.grey} pose="sleep" onClick={() => go('/cabin/lounge')} /></g>
             </>
           ) : (
             // Once the day has started, they're out trotting the path between the cabin and the chapel.
             <>
-              <g transform="translate(570 306) scale(.42)"><Patrol dist={400} dur={22}><Dog who="cooper" pose="walk" onClick={() => go('/cabin/lounge')} /></Patrol></g>
-              <g transform="translate(600 308) scale(.42)"><Patrol dist={380} dur={22} delay={-1.4}><Dog who="shadow" pose="walk" onClick={() => go('/cabin/lounge')} /></Patrol></g>
+              <g transform="translate(570 306) scale(.42)"><Patrol dist={400} dur={22}><Dog who="cooper" grey={world?.grey} pose="walk" onClick={() => go('/cabin/lounge')} /></Patrol></g>
+              <g transform="translate(600 308) scale(.42)"><Patrol dist={380} dur={22} delay={-1.4}><Dog who="shadow" grey={world?.grey} pose="walk" onClick={() => go('/cabin/lounge')} /></Patrol></g>
             </>
           )}
         </g>
@@ -243,11 +265,43 @@ function Building({ area, x, y, heat, children }: { area: (typeof AREAS)[number]
   );
 }
 
+/** By the cabin: a flower for every three days of the streak, saplings for every 50 hours, and the publishing house once an offer comes. */
+function Garden({ g }: { g: Growth }) {
+  const colors = ['#e5737a', '#f2c46a', '#cfd8ff', '#d97ba4', '#f0a35a', '#9fd3a8'];
+  return (
+    <g className="hs-garden" aria-hidden>
+      {Array.from({ length: g.flowers }, (_, i) => {
+        const x = 392 + i * 7 + (i % 2) * 3;
+        const y = 318 + (i % 3) * 3;
+        return (
+          <g key={`f${i}`} className="flower" style={{ animationDelay: `${-i * 0.4}s` }}>
+            <path d={`M${x} ${y} v-9`} className="stem" />
+            <circle cx={x} cy={y - 10} r="2.6" fill={colors[i % colors.length]} />
+          </g>
+        );
+      })}
+      {Array.from({ length: g.saplings }, (_, i) => (
+        <path key={`s${i}`} transform={`translate(${410 + i * 9 - (i % 2) * 14} ${332 + i * 2.4}) scale(${0.18 + i * 0.012})`}
+          d="M0 -78 L13 -46 L6 -48 L19 -18 L8 -20 L23 6 L3 4 L3 12 L-3 12 L-3 4 L-23 6 L-8 -20 L-19 -18 L-6 -48 L-13 -46 Z" className="sapling" />
+      ))}
+      {g.publishingHouse && (
+        <g transform="translate(640 268) scale(.5)" className="pubhouse">
+          <title>The publishing house: an offer came in</title>
+          <rect x="-60" y="-90" width="120" height="90" className="ph-wall" />
+          <path d="M-70 -88 L0 -126 L70 -88 Z" className="ph-wall" />
+          {[-40, -12, 16, 44].map((x) => <rect key={x} x={x - 8} y={-70} width="16" height="22" className="ph-win" />)}
+          <rect x="-12" y="-36" width="24" height="36" className="ph-win" />
+        </g>
+      )}
+    </g>
+  );
+}
+
 /** A few pines around the buildings, deterministic so the scene never reshuffles. */
 function Pines() {
   const spots: [number, number, number][] = [
     [40, 300, 1.1], [78, 296, 0.8], [262, 290, 1.25], [300, 296, 0.9], [352, 300, 0.7], [604, 304, 1.15], [646, 300, 0.85],
-    [700, 300, 1.0], [900, 290, 1.2], [940, 294, 0.8], [1150, 292, 1.05], [1186, 296, 0.75],
+    [700, 300, 1.0], [958, 292, 1.05], [975, 296, 0.75], [1150, 292, 1.05], [1186, 296, 0.75],
   ];
   return (
     <g className="hs-pines">

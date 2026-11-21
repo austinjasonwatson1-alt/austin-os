@@ -9,6 +9,7 @@ import { currentStreak, dayTotal, gradeOf, lampHeat } from '../ledger/logic';
 import { earned, milestones } from '../ledger/milestones';
 import { useLedger } from '../ledger/store';
 import { dogLine, dogPose, type DogName } from './logic';
+import { greyness, TRICKS, tricks } from '../../shell/worldLogic';
 import { spine } from '../shelf/logic';
 import { useShelf } from '../shelf/store';
 import { upcomingContests } from '../pub/logic';
@@ -34,6 +35,9 @@ export function LoungeScene() {
   const streak = currentStreak(days, today);
   const ms = useMemo(() => milestones(days, thresholds, weekly), [days, thresholds, weekly]);
   const fire = earned(ms, 'seven');
+  const known = useMemo(() => tricks((id) => earned(ms, id)), [ms]);
+  const firstDay = useMemo(() => Object.keys(days).filter((k) => dayTotal(days[k]) > 0).sort()[0] ?? null, [days]);
+  const grey = greyness(firstDay, today);
   const record = earned(ms, 'long-week');
   const chair = earned(ms, 'hundred');
   const fullShelf = earned(ms, 'hearth');
@@ -55,7 +59,7 @@ export function LoungeScene() {
     return () => clearTimeout(id);
   }, [say]);
 
-  const bark = (who: DogName, x: number) => setSay({ text: dogLine(who, pose), x });
+  const bark = (who: DogName, x: number) => setSay((cur) => (cur && cur.text.includes('shows off') && cur.x === x ? cur : { text: dogLine(who, pose), x }));
   const toggleRecord = () => {
     const on = !playing;
     setPlaying(on);
@@ -198,9 +202,12 @@ export function LoungeScene() {
         </Thing>
 
         {/* Cooper and Shadow */}
-        <g transform={`translate(${spot.c[0]} ${spot.c[1]}) scale(1.3)`}><Dog who="cooper" pose={pose} playful onClick={() => bark('cooper', spot.c[0])} /></g>
-        <g transform={`translate(${spot.s[0]} ${spot.s[1]}) scale(1.3)`}><Dog who="shadow" pose={pose === 'proud' ? 'beg' : pose} playful onClick={() => bark('shadow', spot.s[0])} /></g>
+        <g transform={`translate(${spot.c[0]} ${spot.c[1]}) scale(1.3)`}><Dog who="cooper" pose={pose} playful grey={grey} tricks={known} onTrick={(t) => setSay({ text: `Cooper shows off: ${TRICKS.find((x) => x.t === t)!.name.toLowerCase()}!`, x: spot.c[0] })} onClick={() => bark('cooper', spot.c[0])} /></g>
+        <g transform={`translate(${spot.s[0]} ${spot.s[1]}) scale(1.3)`}><Dog who="shadow" pose={pose === 'proud' ? 'beg' : pose} playful grey={grey} tricks={known} onTrick={(t) => setSay({ text: `Shadow shows off: ${TRICKS.find((x) => x.t === t)!.name.toLowerCase()}!`, x: spot.s[0] })} onClick={() => bark('shadow', spot.s[0])} /></g>
       </svg>
+      <div className="ls-tricks mono" aria-label="Tricks learned">
+        {TRICKS.map((t) => <span key={t.t} className={known.includes(t.t) ? 'on' : ''} title={t.how}>{known.includes(t.t) ? '\u2726' : '\u25cb'} {t.name}</span>)}
+      </div>
       {say && <div className="ls-say" style={{ left: `${Math.min(80, Math.max(20, say.x / 10))}%` }} role="status">{say.text}</div>}
     </section>
   );

@@ -10,6 +10,7 @@ import { cabinRooms, Room } from './Rooms';
 import { Constellations } from './Constellations';
 import { RoadMap } from '../modules/pub/RoadMap';
 import { WeekSky } from './WeekSky';
+import { RoomSound } from './RoomSound';
 import { CountUp, tilt } from './fx';
 import '../styles/cabin.css';
 
@@ -34,6 +35,7 @@ export default function CabinHome() {
           <div className="page-eyebrow">Writer's Cabin · {date} <span className="hero-time">· {time}</span></div>
           <h1 className="hero-title">The Writer's<br /><em>Cabin.</em></h1>
           <p className="hero-line">{loaded ? lampLine(mins, thresholds, streak) : 'Lighting the lamp…'}</p>
+          <div style={{ marginBottom: 14 }}><RoomSound kind="fire" label="the cabin fire" /></div>
           <QuickLog today={today} />
         </div>
         <Lamp mins={mins} grade={g} loaded={loaded} />

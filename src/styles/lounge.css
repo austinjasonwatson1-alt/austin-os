@@ -171,3 +171,6 @@
 .ls-letter path { fill: none; stroke: #8a7a5c; stroke-width: .8; }
 .ls-letter:not(.in) { opacity: .35; }
 .ls-seal { fill: #a32a1e; filter: drop-shadow(0 0 2px rgba(163, 42, 30, .6)); }
+
+.ls-tricks { position: absolute; left: 14px; bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; font-size: 10px; color: var(--bone-faint); letter-spacing: .06em; }
+.ls-tricks span.on { color: var(--lamp); }

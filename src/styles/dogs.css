@@ -67,3 +67,16 @@
 @media (prefers-reduced-motion: reduce) {
   .dog .wag, .dog-breathe, .zzz text, .ear-hound, .ear-terrier, .dog-eyes, .dog-leg, .pose-walk .dog-bob, .dog.hopping .dog-bob, .patrol { animation: none; }
 }
+
+/* the years: a grey muzzle */
+.dog-muzzle { fill: rgba(205, 205, 212, calc(var(--grey, 0) * .55)); pointer-events: none; }
+/* tricks */
+.dog.trick-spin .dog-bob { animation: trick-spin 1.2s cubic-bezier(.4, .1, .3, 1); transform-box: fill-box; transform-origin: center; }
+@keyframes trick-spin { 50% { transform: scaleX(-1) translateY(-6px); } 100% { transform: scaleX(1); } }
+.dog.trick-roll .dog-bob { animation: trick-roll 1.2s ease-in-out; transform-box: fill-box; transform-origin: 50% 80%; }
+@keyframes trick-roll { 40% { transform: rotate(-180deg) translateY(-4px); } 100% { transform: rotate(-360deg); } }
+.dog.trick-shake .dog-bob { animation: trick-shake .4s ease-in-out 3; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes trick-shake { 50% { transform: rotate(-4deg); } }
+.dog.trick-howl .dog-bob { animation: trick-howl 1.4s ease-in-out; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes trick-howl { 30%, 70% { transform: rotate(-10deg); } }
+@media (prefers-reduced-motion: reduce) { .dog.trick-spin .dog-bob, .dog.trick-roll .dog-bob, .dog.trick-shake .dog-bob, .dog.trick-howl .dog-bob { animation: none; } }

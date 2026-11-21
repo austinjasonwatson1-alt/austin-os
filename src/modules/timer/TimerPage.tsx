@@ -3,6 +3,7 @@ import { chime, setAmbient } from '../../core/ambient';
 import { todayISO } from '../../core/dates';
 import { useSky } from '../../core/skyStore';
 import { embers } from '../../shell/fx';
+import { DogsAtFeet } from '../../shell/DogsAtFeet';
 import { CAT } from '../../shell/lamp';
 import { go } from '../../shell/router';
 import { dayTotal, fmtMins, gradeOf, GRADE_LABEL, lampHeat } from '../ledger/logic';
@@ -181,6 +182,7 @@ export default function TimerPage() {
         )}
       </main>
 
+      {run && <DogsAtFeet minutes={runMins} />}
       <footer className="lm-foot">
         <div className="lm-pick" role="radiogroup" aria-label="Ambient sound">
           {AMBIENTS.map((a) => (

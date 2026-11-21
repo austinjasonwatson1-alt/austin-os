@@ -1,5 +1,6 @@
 import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react';
 import type { DogName, DogPose } from '../modules/lounge/logic';
+import type { Trick } from './worldLogic';
 import '../styles/dogs.css';
 
 /** Every way the dogs can be drawn. The day decides sleep/rest/proud; scenes add the rest. */
@@ -14,25 +15,41 @@ export type AnyPose = DogPose | 'walk' | 'play' | 'beg';
  * `playful`: clicking makes the dog hop into a play bow for a moment (with a heart) before
  * settling back, and `onClick` still fires.
  */
-export function Dog({ who, pose, onClick, playful = false }: { who: DogName; pose: AnyPose; onClick?: () => void; playful?: boolean }) {
+export function Dog({ who, pose, onClick, playful = false, grey = 0, tricks = [], onTrick }: {
+  who: DogName; pose: AnyPose; onClick?: () => void; playful?: boolean;
+  /** 0–1: how grey the muzzle has gone over the years. */
+  grey?: number;
+  /** Tricks this dog knows; a playful click sometimes shows one off. */
+  tricks?: Trick[];
+  onTrick?: (t: Trick) => void;
+}) {
   const cooper = who === 'cooper';
   const id = useId().replace(/:/g, '');
   const [hop, setHop] = useState(0);
+  const [trick, setTrick] = useState<Trick | null>(null);
   useEffect(() => {
     if (!hop) return;
-    const t = setTimeout(() => setHop(0), 1700);
+    const t = setTimeout(() => { setHop(0); setTrick(null); }, 1700);
     return () => clearTimeout(t);
   }, [hop]);
-  const shown: AnyPose = hop && playful ? 'play' : pose;
+  const shown: AnyPose = trick ? (trick === 'shake' ? 'proud' : trick === 'howl' ? 'proud' : 'walk') : hop && playful ? 'play' : pose;
   const click = () => {
-    if (playful) setHop(Date.now());
+    if (playful) {
+      // Show off a trick about half the time once some are learned; otherwise a play bow.
+      if (tricks.length && Math.random() < 0.6) {
+        const t = tricks[Math.floor(Math.random() * tricks.length)];
+        setTrick(t);
+        onTrick?.(t);
+      }
+      setHop(Date.now());
+    }
     onClick?.();
   };
   const fur = `url(#fur-${id})`;
   const ear = `url(#ear-${id})`;
 
   return (
-    <g className={`dog dog-${who} pose-${shown}${hop ? ' hopping' : ''}`} onClick={onClick || playful ? click : undefined}
+    <g className={`dog dog-${who} pose-${shown}${hop ? ' hopping' : ''}${trick ? ` trick-${trick}` : ''}`} style={{ '--grey': grey } as CSSProperties} onClick={onClick || playful ? click : undefined}
       role={onClick || playful ? 'button' : undefined} tabIndex={onClick || playful ? 0 : undefined}
       aria-label={onClick || playful ? (cooper ? 'Cooper' : 'Shadow') : undefined}
       onKeyDown={(e) => { if ((onClick || playful) && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); click(); } }}>
@@ -57,7 +74,7 @@ export function Dog({ who, pose, onClick, playful = false }: { who: DogName; pos
         {shown === 'walk' && <Walking cooper={cooper} fur={fur} ear={ear} />}
         {shown === 'play' && <PlayBow cooper={cooper} fur={fur} ear={ear} />}
       </g></g>
-      {hop ? <text key={hop} className="dog-heart" x="-20" y={cooper ? -96 : -80}>♥</text> : null}
+      {hop ? <text key={hop} className="dog-heart" x="-20" y={cooper ? -96 : -80}>{trick === 'howl' ? '\u266a' : '\u2665'}</text> : null}
     </g>
   );
 }
@@ -103,6 +120,7 @@ function Head({ cooper, fur, ear, x, y, tilt = 0, shut = false, earDown = false 
     <g transform={`translate(${x} ${y}) rotate(${tilt})`}>
       <circle r="15" fill={fur} className="dog-body" />
       <path d={snout} fill={fur} className="dog-body" />
+      <path d={snout} className="dog-muzzle" />
       <path className="dog-sheen" d="M-6 -12 C0 -15 8 -13 11 -8" />
       <circle className="dog-nose" cx={cooper ? -30 : -26} cy="5" r="3.2" />
       <circle className="dog-nose-shine" cx={cooper ? -31 : -27} cy="3.8" r=".9" />

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { mondayOf, parseISO, todayISO } from '../../core/dates';
 import { CountUp, embers } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
+import { RoomSound } from '../../shell/RoomSound';
 import { fmtMins } from '../ledger/logic';
 import { candleHeat, carried, chapelMinutes, chapelStreak, chapelWeek, sortPrayers } from './logic';
 import { useChapel } from './store';
@@ -43,6 +44,7 @@ export default function ChapelPage() {
           <div className="page-eyebrow">The Homestead · The Chapel</div>
           <h1 className="hero-title">The<br /><em>Chapel.</em></h1>
           <p className="hero-line">“Be still, and know that I am God.” Time here is kept on its own, apart from the writing.</p>
+          <div style={{ marginBottom: 14 }}><RoomSound kind="organ" label="an organ hum" /></div>
           <div className="chapel-log">
             {(['prayer', 'scripture'] as const).map((k) => (
               <div key={k} className="clog">
