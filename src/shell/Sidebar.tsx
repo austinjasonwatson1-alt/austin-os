@@ -2,6 +2,7 @@ import { go, useRoute } from './router';
 import { AREAS, MODULES } from '../modules/registry';
 import { AutoBackupFoot } from './AutoBackup';
 import { AppStatus } from './AppStatus';
+import { openPalette } from './CommandPalette';
 import { useEffect, useState } from 'react';
 import { useTimer } from '../modules/timer/store';
 import { elapsedMs, fmtClock } from '../modules/timer/logic';
@@ -44,8 +45,10 @@ export function Sidebar() {
           <div className="brand-sub">the homestead</div>
         </div>
       </div>
+      <button className="rail-search" onClick={openPalette} aria-label="Search and commands"><span aria-hidden>⌕</span><span>Search, go, log…</span><kbd>⌘K</kbd></button>
       {item('/home', '◈', 'Home')}
       {item('/review', '◷', 'Weekly review')}
+      {item('/year', '◎', 'Year in review')}
       <div className="nav-label">Writer's Cabin</div>
       {item(cabin.path, cabin.glyph, 'The Cabin')}
       {MODULES.filter((m) => m.section === 'cabin').map((m) => (m.id === 'timer' ? <TimerNav key={m.id} current={route === m.path} /> : item(m.path, m.glyph, m.name, !m.component)))}

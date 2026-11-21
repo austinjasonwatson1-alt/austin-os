@@ -98,3 +98,74 @@ export const describeReview: Describer = {
     return `${Object.keys(r).length} week${Object.keys(r).length === 1 ? '' : 's'} · ${sealed} sealed`;
   },
 };
+
+/* ---------------- the year in review ---------------- */
+
+export interface YearReview {
+  year: number;
+  minutes: number;
+  logged: number;
+  elapsed: number;
+  elite: number;
+  zero: number;
+  longest: { days: number; from: string; to: string } | null;
+  months: number[];
+  bestMonth: { m: number; mins: number } | null;
+  bestDay: { date: string; mins: number } | null;
+  byCat: { k: CatKey; mins: number }[];
+  chapel: { minutes: number; days: number };
+  answered: number;
+  books: Book[];
+  pages: number;
+  words: number | null;
+}
+
+/** The whole year at a glance, counting only days up to `today`. */
+export function yearReview(w: WeekInputs & { answeredOn?: string[] }, year: number, today: string): YearReview {
+  const start = `${year}-01-01`;
+  const end = `${year}-12-31` < today ? `${year}-12-31` : today;
+  const months = Array(12).fill(0);
+  const cats: Record<string, number> = {};
+  let minutes = 0, logged = 0, elite = 0, zero = 0, elapsed = 0, chapelMin = 0, chapelDays = 0;
+  let bestDay: YearReview['bestDay'] = null;
+  let run = 0, runFrom = '';
+  let longest: YearReview['longest'] = null;
+  for (let d = start; d <= end; d = addDays(d, 1)) {
+    elapsed++;
+    const e = w.days[d];
+    const mins = dayTotal(e);
+    minutes += mins;
+    months[Number(d.slice(5, 7)) - 1] += mins;
+    for (const c of CATS) cats[c.k] = (cats[c.k] ?? 0) + (Number(e?.[c.k]) || 0);
+    if (mins) {
+      logged++;
+      if (gradeOf(mins, w.thresholds) === 'elite') elite++;
+      if (!bestDay || mins > bestDay.mins) bestDay = { date: d, mins };
+      if (!run) runFrom = d;
+      run++;
+      if (!longest || run > longest.days) longest = { days: run, from: runFrom, to: d };
+    } else {
+      zero++;
+      run = 0;
+    }
+    const cm = chapelMinutes(w.chapel[d]);
+    chapelMin += cm;
+    if (cm) chapelDays++;
+  }
+  const bm = months.reduce<YearReview['bestMonth']>((b, mins, m) => (mins > (b?.mins ?? 0) ? { m, mins } : b), null);
+  const books = w.books.filter((b) => b.status === 'read' && b.finished && b.finished >= start && b.finished <= end);
+  let words: number | null = null;
+  for (const m of w.manuscripts) {
+    const a = wordsAt(m.history, addDays(start, -1)) ?? 0;
+    const b = wordsAt(m.history, end);
+    if (b !== null) words = (words ?? 0) + (b - a);
+  }
+  return {
+    year, minutes, logged, elapsed, elite, zero, longest, months,
+    bestMonth: bm, bestDay,
+    byCat: CATS.map((c) => ({ k: c.k, mins: cats[c.k] ?? 0 })).filter((x) => x.mins > 0).sort((a, b) => b.mins - a.mins),
+    chapel: { minutes: chapelMin, days: chapelDays },
+    answered: (w.answeredOn ?? []).filter((d) => d >= start && d <= end).length,
+    books, pages: books.reduce((s, b) => s + (b.pages ?? 0), 0), words,
+  };
+}

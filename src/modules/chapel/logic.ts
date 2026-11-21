@@ -58,3 +58,6 @@ export const describeChapel: Describer = {
     return `${Object.keys(d.days ?? {}).length} days · ${p.length} prayers (${answered} answered) · ${(d.verses ?? []).length} verses`;
   },
 };
+
+/** From 7pm, if the candle hasn't been lit today, Home offers a gentle reminder. */
+export const chapelNudge = (now: Date, minsToday: number) => now.getHours() >= 19 && minsToday === 0;

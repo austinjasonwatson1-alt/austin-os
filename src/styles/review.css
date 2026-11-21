@@ -71,3 +71,25 @@
   .journal::before { left: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .wk-bar-track span { animation: none; } }
+
+/* ---------- year in review ---------- */
+.year-months { margin-bottom: 0; }
+.ym { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; height: 240px; }
+.ym-m { display: grid; grid-template-rows: auto 1fr auto; gap: 6px; justify-items: center; border: 0; background: none; padding: 0; }
+.ym-v { font-size: 10.5px; color: var(--bone-dim); }
+.ym-bar { position: relative; width: 100%; max-width: 44px; border-radius: 10px; background: rgba(233, 228, 216, .04); display: flex; align-items: flex-end; overflow: hidden; }
+.ym-bar span { width: 100%; border-radius: 10px; background: linear-gradient(180deg, #ffd88a, var(--lamp) 40%, #b8701f); box-shadow: 0 0 18px rgba(232, 168, 75, .35); animation: bar-up 1s cubic-bezier(.2, .7, .2, 1) backwards; }
+.ym-m.best .ym-bar span { background: linear-gradient(180deg, #fff1c8, #ffd27a 40%, var(--lamp)); box-shadow: 0 0 26px rgba(255, 210, 122, .6); }
+.ym-m.best .ym-n { color: var(--lamp); }
+.ym-m.future { opacity: .3; }
+.ym-n { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--bone-faint); }
+.year-else ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.year-else li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; font-size: 14.5px; color: var(--bone-dim); }
+.year-else li span { color: var(--lamp); font-size: 16px; }
+.year-else b { font-family: var(--display); font-size: 20px; color: var(--bone); margin-right: 4px; }
+@media (max-width: 860px) { .ym { height: 180px; gap: 3px; } .ym-v { font-size: 8.5px; } .ym-n { font-size: 8.5px; letter-spacing: 0; } }
+@media (prefers-reduced-motion: reduce) { .ym-bar span { animation: none; } }
+.chapel-nudge { border-color: rgba(242, 196, 106, .35); background: linear-gradient(90deg, rgba(60, 80, 190, .12), rgba(242, 196, 106, .05)); }
+.chapel-nudge-c { width: 34px; display: grid; justify-items: center; }
+.chapel-nudge-b { flex: 1; border: 0; background: none; text-align: left; padding: 0; color: inherit; }
+.year-else li p { margin: 0; }

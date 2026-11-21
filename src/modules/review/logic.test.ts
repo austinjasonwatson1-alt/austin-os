@@ -48,3 +48,25 @@ describe('weekly review', () => {
     expect(describeReview.detail({ reviews: { a: { sealedAt: 'x' }, b: {} } })).toBe('2 weeks · 1 sealed');
   });
 });
+
+import { yearReview } from './logic';
+
+describe('year in review', () => {
+  it('adds up the year so far', () => {
+    const y = yearReview({
+      days: { '2026-01-01': { writing: 200 }, '2026-01-02': { writing: 40 }, '2026-01-03': { reading: 30 }, '2026-03-10': { editing: 90 }, '2025-12-31': { writing: 999 } },
+      thresholds: { elite: 180, good: 80, warn: 30 }, weekly: { elite: 700, good: 450, warn: 250 },
+      chapel: { '2026-01-02': { prayer: 10 } }, manuscripts: [{ id: 'm', title: '', target: 1, chapters: [], history: { '2025-12-20': 1000, '2026-02-01': 4000 } }],
+      books: [{ id: 'b', title: 'R', author: '', genre: '', status: 'read', rating: 5, craft: [], addedAt: '', finished: '2026-02-02', pages: 300 }],
+      answeredOn: ['2026-02-01', '2025-06-01'],
+    }, 2026, '2026-03-31');
+    expect(y.minutes).toBe(360);
+    expect([y.logged, y.elite, y.elapsed, y.zero]).toEqual([4, 1, 90, 86]);
+    expect(y.longest).toEqual({ days: 3, from: '2026-01-01', to: '2026-01-03' });
+    expect(y.bestMonth).toEqual({ m: 0, mins: 270 });
+    expect(y.bestDay).toEqual({ date: '2026-01-01', mins: 200 });
+    expect(y.months[2]).toBe(90);
+    expect(y.chapel).toEqual({ minutes: 10, days: 1 });
+    expect([y.answered, y.books.length, y.pages, y.words]).toEqual([1, 1, 300, 3000]);
+  });
+});

@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { OWNER } from '../config';
 import { parseISO, todayISO } from '../core/dates';
 import { AREAS } from '../modules/registry';
-import { candleHeat, chapelMinutes, chapelStreak } from '../modules/chapel/logic';
+import { candleHeat, chapelMinutes, chapelNudge, chapelStreak } from '../modules/chapel/logic';
 import { useChapel } from '../modules/chapel/store';
 import { reviewTime, reviewWeek } from '../modules/review/logic';
 import { useReview } from '../modules/review/store';
@@ -40,6 +40,9 @@ export default function Home() {
   const prayers = useChapel((st) => st.prayers);
   const chapelToday = chapelMinutes(chapelDays[today]);
   const openPrayers = prayers.filter((p) => !p.answeredOn).length;
+  // "Not tonight" only lasts for today, and only on this device.
+  const [hushed, setHushed] = useState(() => { try { return localStorage.getItem('chapel.hushed'); } catch { return null; } });
+  const hush = (d: string) => { setHushed(d); try { localStorage.setItem('chapel.hushed', d); } catch { /* fine */ } };
 
   return (
     <div className="home homestead">
@@ -61,6 +64,16 @@ export default function Home() {
           <span><b>{now.getDay() === 0 ? 'It’s Sunday.' : 'A new week.'}</b><br /><span>Time to look back at the week and set one intention for the next.</span></span>
           <span className="go" aria-hidden>→</span>
         </button>
+      )}
+
+      {chapelNudge(now, chapelToday) && hushed !== today && (
+        <div className="review-nudge chapel-nudge rise" style={rise(1)}>
+          <span className="chapel-nudge-c" aria-hidden><Candle heat={0} size={0.34} /></span>
+          <button className="chapel-nudge-b" onClick={() => go('/chapel')}>
+            <b>The candle's still unlit.</b><br /><span>A few minutes with God before the day ends?</span>
+          </button>
+          <button className="btn ghost sm" onClick={() => hush(today)}>Not tonight</button>
+        </div>
       )}
 
       <div className="hs-areas">

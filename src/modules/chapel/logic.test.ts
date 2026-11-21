@@ -30,3 +30,13 @@ describe('the chapel', () => {
     expect(describeChapel.detail({ days, prayers: [{ answeredOn: 'x' }, {}], verses: [{}] })).toBe('3 days · 2 prayers (1 answered) · 1 verses');
   });
 });
+
+import { chapelNudge } from './logic';
+
+describe('chapelNudge', () => {
+  it('only in the evening, only before any time today', () => {
+    expect(chapelNudge(new Date('2026-11-21T20:00:00'), 0)).toBe(true);
+    expect(chapelNudge(new Date('2026-11-21T20:00:00'), 10)).toBe(false);
+    expect(chapelNudge(new Date('2026-11-21T15:00:00'), 0)).toBe(false);
+  });
+});

@@ -18,15 +18,18 @@ import { useRoute } from './shell/router';
 import { Sidebar } from './shell/Sidebar';
 import { Sky } from './shell/Sky';
 import { Celebrations } from './shell/Celebrations';
+import { CommandPalette } from './shell/CommandPalette';
 import { useSky } from './core/skyStore';
 import { Soon } from './shell/Soon';
 
 const ReviewPage = lazy(() => import('./modules/review/ReviewPage'));
+const YearPage = lazy(() => import('./modules/review/YearPage'));
 
 function Screen({ route }: { route: string }) {
   if (route === '/home') return <Home />;
   if (route === '/cabin') return <CabinHome />;
   if (route === '/review') return <ReviewPage />;
+  if (route === '/year') return <YearPage />;
   const area = areaByPath(route);
   if (area && !area.live) return <AreaSoon a={area} />;
   if (area?.component) { const A = area.component; return <A />; }
@@ -63,6 +66,7 @@ export default function App() {
     <>
       <Sky />
       <Celebrations />
+      <CommandPalette />
       <div className="app">
         <Sidebar />
         <main className="main">
