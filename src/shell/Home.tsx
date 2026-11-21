@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { areaHeat, areaMinutes } from '../modules/areas/logic';
+import { areaHeat, areaMinutes, money, moneyYear } from '../modules/areas/logic';
 import { AREA_STORES } from '../modules/areas/store';
-import { OBSERVATORY, OFFICE } from '../modules/areas/types';
+import { AREA_CONFIGS, OBSERVATORY, OFFICE } from '../modules/areas/types';
 import { OWNER } from '../config';
 import { parseISO, todayISO } from '../core/dates';
 import { AREAS } from '../modules/registry';
@@ -43,12 +43,17 @@ export default function Home() {
   const prayers = useChapel((st) => st.prayers);
   const chapelToday = chapelMinutes(chapelDays[today]);
   const openPrayers = prayers.filter((p) => !p.answeredOn).length;
-  const office = AREA_STORES.office();
-  const obs = AREA_STORES.observatory();
+  const areaStates = {
+    office: AREA_STORES.office(), observatory: AREA_STORES.observatory(), forge: AREA_STORES.forge(), bank: AREA_STORES.bank(), hearth: AREA_STORES.hearth(),
+  };
+  const office = areaStates.office;
+  const obs = areaStates.observatory;
   const officeToday = areaMinutes(office.days[today]);
   const obsToday = areaMinutes(obs.days[today]);
-  const lit = [mins > 0, chapelToday > 0, officeToday > 0, obsToday > 0].filter(Boolean).length;
-  const lineAround = lit === 0 ? 'Every window on the homestead is dark so far.' : lit === 4 ? 'Every building on the homestead is lit tonight.' : `${lit} of 4 buildings lit today.`;
+  const forgeToday = areaMinutes(areaStates.forge.days[today]);
+  const hearthToday = areaMinutes(areaStates.hearth.days[today]);
+  const lit = [mins > 0, chapelToday > 0, officeToday > 0, obsToday > 0, forgeToday > 0, hearthToday > 0].filter(Boolean).length;
+  const lineAround = lit === 0 ? 'Every window on the homestead is dark so far.' : lit === 6 ? 'Every building on the homestead is lit tonight.' : `${lit} of 6 buildings lit today.`;
   // "Not tonight" only lasts for today, and only on this device.
   const [hushed, setHushed] = useState(() => { try { return localStorage.getItem('chapel.hushed'); } catch { return null; } });
   const hush = (d: string) => { setHushed(d); try { localStorage.setItem('chapel.hushed', d); } catch { /* fine */ } };
@@ -64,7 +69,7 @@ export default function Home() {
             {building.length ? `${building.length} more building${building.length === 1 ? ' is' : 's are'} going up on the homestead.` : lineAround}
           </p>
         </div>
-        <Homestead heat={lampHeat(mins, thresholds)} chapelHeat={candleHeat(chapelToday)} officeHeat={areaHeat(officeToday, OFFICE.fullDay)} obsHeat={areaHeat(obsToday, OBSERVATORY.fullDay)} pose={dogPose(g)} />
+        <Homestead heat={lampHeat(mins, thresholds)} chapelHeat={candleHeat(chapelToday)} officeHeat={areaHeat(officeToday, OFFICE.fullDay)} obsHeat={areaHeat(obsToday, OBSERVATORY.fullDay)} forgeHeat={areaHeat(forgeToday, AREA_CONFIGS.forge.fullDay)} hearthHeat={areaHeat(hearthToday, AREA_CONFIGS.hearth.fullDay)} pose={dogPose(g)} />
       </section>
 
       {reviewTime(now) && !reviewSealed && (
@@ -126,14 +131,17 @@ export default function Home() {
             </span>
             <span className="chip live">Open</span>
           </button>
-          {([[OFFICE, officeToday, office], [OBSERVATORY, obsToday, obs]] as const).map(([cfg, today2, st], i) => {
-            const open = st.items.filter((x) => !x.done)[0];
+          {(['office', 'observatory', 'forge', 'hearth', 'bank'] as const).map((id, i) => {
+            const cfg = AREA_CONFIGS[id];
+            const st = areaStates[id];
+            const today2 = areaMinutes(st.days[today]);
+            const open = st.items.filter((x) => !x.done && x.list !== 'out' && x.list !== 'in')[0];
             return (
               <button key={cfg.id} className="area-plan area-live rise tilt" style={{ ...rise(3 + i), '--ac': cfg.accent } as CSSProperties} onClick={() => go(`/${cfg.id}`)} {...tilt(4)}>
                 <span className="area-glyph" aria-hidden style={{ color: cfg.accent, borderColor: `${cfg.accent}66` }}>{cfg.glyph}</span>
                 <span className="area-plan-body">
                   <span className="area-plan-name">{cfg.name}</span>
-                  <span className="area-plan-blurb">{today2 ? `${fmtMins(today2)} today` : 'Quiet today'}{open ? ` · next: ${open.text}` : ''}</span>
+                  <span className="area-plan-blurb">{cfg.kinds.length ? (today2 ? `${fmtMins(today2)} today` : 'Quiet today') : `${money(moneyYear(st.items, { out: -1, in: 1 }, Number(today.slice(0, 4))).net)} net this year`}{open ? ` · ${open.text}` : ''}</span>
                 </span>
                 <span className="chip live">Open</span>
               </button>

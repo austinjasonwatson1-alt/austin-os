@@ -70,3 +70,23 @@
   .aw { height: 140px; gap: 4px; }
 }
 @media (prefers-reduced-motion: reduce) { .aa-star, .aw-bar span { animation: none; } }
+
+/* new buildings and list kinds */
+.al-add .al-amt { width: 90px; }
+.al-add .al-when { width: 150px; color-scheme: dark; }
+.al-add { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+.al-bullet { width: 22px; text-align: center; color: var(--ac); font-family: var(--mono); font-size: 14px; }
+.al li.nocheck .al-t { text-decoration: none; }
+.al-money { margin-left: 10px; font-family: var(--mono); font-weight: 500; font-size: 13px; }
+.al-money.in { color: var(--good); }
+.al-money.out { color: var(--bone-dim); }
+.money-sum .big { font-size: 46px; }
+.aa-forge { fill: #1a0f08; stroke: rgba(224, 122, 63, .5); filter: drop-shadow(0 0 calc(4px + var(--heat) * 18px) #e07a3f); }
+.aa-anvil { fill: #2a2a33; stroke: rgba(233, 228, 216, .25); }
+.aa-spark { fill: #ffb347; animation: ember-rise 1.8s ease-out infinite; opacity: calc(var(--heat) * 1); }
+.aa-col { fill: #141a28; stroke: rgba(201, 162, 39, .45); }
+.aa-coin { font-family: var(--display); font-size: 30px; fill: #c9a227; }
+.aa-door { fill: #0a0d16; stroke: rgba(233, 228, 216, .2); }
+.aa-heart { fill: #d97ba4; opacity: calc(.3 + var(--heat) * .7); filter: drop-shadow(0 0 8px rgba(217, 123, 164, .7)); }
+@media (max-width: 860px) { .al-add { grid-template-columns: minmax(0, 1fr) auto; } .al-add .al-amt, .al-add .al-when { width: auto; } }
+@media (prefers-reduced-motion: reduce) { .aa-spark { animation: none; } }

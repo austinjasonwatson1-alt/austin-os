@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from 'react';
 
-export type AreaId = 'cabin' | 'chapel' | 'office' | 'observatory';
+export type AreaId = 'cabin' | 'chapel' | 'office' | 'observatory' | 'forge' | 'bank' | 'hearth';
 
 /** A building on the homestead: one part of life. Without `live` it shows as being built. */
 export interface AreaDef {
@@ -39,6 +39,21 @@ export const AREAS: AreaDef[] = [
     component: lazy(() => import('./areas/ObservatoryPage')),
     blurb: 'AI study and learning: courses, notes, hours.',
     plans: ['Study hours, logged like the Ledger but counted on their own', 'Courses and papers with progress', 'Notes and experiments worth coming back to'],
+  },
+  {
+    id: 'forge', path: '/forge', name: 'The Forge', glyph: '\u2692', live: true,
+    blurb: 'Health and training: workouts, walks, goals with a finish line.',
+    plans: [], component: lazy(() => import('./areas/ForgePage')),
+  },
+  {
+    id: 'bank', path: '/bank', name: 'The Ledger House', glyph: '\u00a4', live: true,
+    blurb: 'Money and the writing life: what it costs and what it pays.',
+    plans: [], component: lazy(() => import('./areas/BankPage')),
+  },
+  {
+    id: 'hearth', path: '/hearth', name: 'The Hearth', glyph: '\u2665', live: true,
+    blurb: 'Family: time together, dates to remember, moments worth keeping.',
+    plans: [], component: lazy(() => import('./areas/HearthPage')),
   },
 ];
 

@@ -31,3 +31,28 @@ export const describeArea = (name: string): Describer => ({
     return `${Object.keys(d.days ?? {}).length} days · ${Math.round(mins / 6) / 10}h · ${(d.items ?? []).length} items`;
   },
 });
+
+/** The next time a date comes round: itself if one-off, or this/next year's anniversary if yearly. */
+export function nextOccurrence(when: string, today: string, yearly: boolean): string {
+  if (!yearly) return when;
+  const y = Number(today.slice(0, 4));
+  const md = when.slice(5);
+  const thisYear = `${y}-${md}`;
+  return thisYear >= today ? thisYear : `${y + 1}-${md}`;
+}
+
+/** Days from `today` to `date` (negative if past). */
+export const daysTo = (date: string, today: string) => Math.round((Date.parse(`${date}T12:00:00`) - Date.parse(`${today}T12:00:00`)) / 86_400_000);
+
+/** Money in, out and net for a year, from lists marked with a sign. */
+export function moneyYear(items: { list: string; amount?: number; date: string; when?: string }[], signs: Record<string, 1 | -1>, year: number) {
+  let inn = 0, out = 0;
+  for (const i of items) {
+    const sign = signs[i.list];
+    if (!sign || !i.amount || !(i.when ?? i.date).startsWith(String(year))) continue;
+    if (sign > 0) inn += i.amount; else out += i.amount;
+  }
+  return { in: inn, out, net: inn - out };
+}
+
+export const money = (n: number) => `${n < 0 ? '\u2212' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: Math.abs(n) % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;

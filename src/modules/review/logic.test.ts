@@ -70,3 +70,25 @@ describe('year in review', () => {
     expect([y.answered, y.books.length, y.pages, y.words]).toEqual([1, 1, 300, 3000]);
   });
 });
+
+import { archive } from './logic';
+
+describe('the Library of You', () => {
+  it('gathers each month, newest first', () => {
+    const a = archive({
+      days: { '2026-10-03': { writing: 60 }, '2026-11-01': { reading: 30 }, '2026-11-02': { writing: 0 } },
+      chapel: {},
+      books: [{ id: 'b', title: 'Rebecca', author: '', genre: '', status: 'read', rating: 5, craft: [], addedAt: '', finished: '2026-11-10' }],
+      prayers: [{ text: 'A new job', answer: 'The offer came', answeredOn: '2026-10-13' }, { text: 'Open' }],
+      milestones: [{ name: 'Seven Sisters', earnedOn: '2026-10-09' }, { name: 'Later', earnedOn: null }],
+      reviews: { '2026-11-09': { intention: 'Finish ch 7', sealedAt: 'x' }, '2026-11-16': { intention: 'unsealed' } },
+      moments: [{ text: 'Cooper stole the pancake', date: '2026-11-05' }],
+      wins: [],
+    });
+    expect(a.map((x) => x.key)).toEqual(['2026-11', '2026-10']);
+    expect(a[0]).toMatchObject({ minutes: 30, logged: 1, books: ['Rebecca'], moments: ['Cooper stole the pancake'] });
+    expect(a[0].reviews.map((r) => r.intention)).toEqual(['Finish ch 7']);
+    expect(a[1]).toMatchObject({ minutes: 60, milestones: ['Seven Sisters'] });
+    expect(a[1].answered[0].text).toBe('A new job');
+  });
+});

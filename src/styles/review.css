@@ -93,3 +93,29 @@
 .chapel-nudge-c { width: 34px; display: grid; justify-items: center; }
 .chapel-nudge-b { flex: 1; border: 0; background: none; text-align: left; padding: 0; color: inherit; }
 .year-else li p { margin: 0; }
+
+/* ---------- the Library of You ---------- */
+.lib-hero { padding: 10px 0 24px; }
+.lib-hero .seg { margin-top: 6px; }
+.spine-list { display: grid; gap: 18px; }
+.page {
+  position: relative; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 26px; padding: 24px 28px; border-radius: 6px 16px 16px 6px;
+  border: 1px solid rgba(232, 168, 75, .18); border-left: 10px solid #2a1f17;
+  background: repeating-linear-gradient(180deg, transparent 0 31px, rgba(233, 228, 216, .03) 31px 32px), radial-gradient(80% 100% at 0% 0%, rgba(232, 168, 75, .08), transparent 60%), linear-gradient(170deg, #17130f, #0e0b09);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .4);
+}
+.page header { display: grid; align-content: start; gap: 2px; }
+.page-month { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1; }
+.page-year { font-size: 11px; letter-spacing: .2em; color: var(--lamp); }
+.page-hours { margin-top: 14px; display: grid; gap: 2px; text-align: left; border: 0; background: none; padding: 0; color: var(--bone); font-family: var(--display); font-size: 26px; }
+.page-hours small { font-size: 10.5px; color: var(--bone-faint); }
+.page-body { display: grid; gap: 8px; align-content: start; }
+.pg { margin: 0; font-family: 'Literata', Georgia, serif; font-size: 15.5px; line-height: 1.6; color: var(--bone-dim); }
+.pg b { font-family: var(--mono); font-weight: 500; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; margin-right: 8px; color: var(--lamp); }
+.pg i { color: var(--bone); }
+.pg-prayer b { color: #f2c46a; }
+.pg-review b { color: var(--aurora); }
+.pg-win b { color: #6fb3f2; }
+.pg-moment { font-style: italic; color: var(--bone); }
+.pg-moment::before { content: '\2665  '; color: #d97ba4; font-style: normal; }
+@media (max-width: 860px) { .page { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 18px 16px; } .page header { grid-template-columns: auto auto 1fr; align-items: baseline; gap: 10px; } .page-hours { margin: 0; justify-self: end; font-size: 20px; } }

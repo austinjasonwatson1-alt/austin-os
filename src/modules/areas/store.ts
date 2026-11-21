@@ -7,7 +7,7 @@ export interface AreaState extends AreaData {
   loaded: boolean;
   load: (force?: boolean) => Promise<void>;
   setMinutes: (date: string, kind: string, mins: number) => void;
-  addItem: (list: string, text: string, body?: string) => void;
+  addItem: (list: string, text: string, extra?: Partial<AreaItem>) => void;
   patchItem: (id: string, p: Partial<AreaItem>) => void;
   removeItem: (id: string) => void;
 }
@@ -34,9 +34,9 @@ function makeStore(key: string): UseBoundStore<StoreApi<AreaState>> {
         set({ days });
         persist();
       },
-      addItem(list, text, body) {
+      addItem(list, text, extra = {}) {
         if (!text.trim()) return;
-        set({ items: [{ id: newId(), list, text: text.trim(), body: body?.trim() || undefined, date: todayISO(), progress: undefined }, ...get().items] });
+        set({ items: [{ id: newId(), list, text: text.trim(), date: todayISO(), ...extra, body: extra.body?.trim() || undefined }, ...get().items] });
         persist();
       },
       patchItem(id, p) {
@@ -54,4 +54,7 @@ function makeStore(key: string): UseBoundStore<StoreApi<AreaState>> {
 export const AREA_STORES: Record<AreaKey, UseBoundStore<StoreApi<AreaState>>> = {
   office: makeStore(AREA_CONFIGS.office.key),
   observatory: makeStore(AREA_CONFIGS.observatory.key),
+  forge: makeStore(AREA_CONFIGS.forge.key),
+  bank: makeStore(AREA_CONFIGS.bank.key),
+  hearth: makeStore(AREA_CONFIGS.hearth.key),
 };

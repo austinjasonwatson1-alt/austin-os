@@ -3,7 +3,7 @@ import { mondayOf, parseISO, todayISO } from '../../core/dates';
 import { CountUp, embers } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { fmtMins } from '../ledger/logic';
-import { areaMinutes, areaStreak, areaWeek } from './logic';
+import { areaMinutes, areaStreak, areaWeek, daysTo, money, moneyYear, nextOccurrence } from './logic';
 import { AREA_STORES } from './store';
 import type { AreaConfig, AreaItem, AreaList } from './types';
 import '../../styles/cabin.css';
@@ -36,7 +36,7 @@ export function AreaPage({ config }: { config: AreaConfig }) {
           <div className="page-eyebrow">The Homestead · {config.name}</div>
           <h1 className="hero-title">The<br /><em>{config.word}</em></h1>
           <p className="hero-line">{config.lede}</p>
-          <div className="area-log">
+          {config.kinds.length > 0 && <div className="area-log">
             {config.kinds.map((k) => (
               <div key={k.k} className="clog" style={{ '--kc': k.color } as CSSProperties}>
                 <span className="clog-n">{k.label}</span>
@@ -49,16 +49,16 @@ export function AreaPage({ config }: { config: AreaConfig }) {
                 </span>
               </div>
             ))}
-          </div>
+          </div>}
         </div>
-        <div className="area-today">
+        {config.kinds.length > 0 ? <div className="area-today">
           <span className="big">{mins ? <CountUp value={mins} format={fmtMins} /> : '—'}</span>
           <span className="mono">today</span>
           <span className="mono faint">{fmtMins(weekTotal)} this week{streak > 1 ? ` · ${streak}-day streak` : ''}</span>
-        </div>
+        </div> : <MoneySummary config={config} items={a.items} />}
       </section>
 
-      <section className="panel area-week rise" style={rise(1)}>
+      {config.kinds.length > 0 && <section className="panel area-week rise" style={rise(1)}>
         <div className="panel-h"><p className="panel-t">This week</p>
           <span className="area-legend mono">{config.kinds.map((k) => <span key={k.k}><i style={{ background: k.color }} />{k.label}</span>)}</span>
         </div>
@@ -73,7 +73,7 @@ export function AreaPage({ config }: { config: AreaConfig }) {
             </div>
           ))}
         </div>
-      </section>
+      </section>}
 
       <div className="area-lists">
         {config.lists.map((l, i) => <ListPanel key={l.id} list={l} items={a.items.filter((x) => x.list === l.id)} config={config} delay={2 + i} />)}
@@ -84,21 +84,38 @@ export function AreaPage({ config }: { config: AreaConfig }) {
 
 function ListPanel({ list, items, config, delay }: { list: AreaList; items: AreaItem[]; config: AreaConfig; delay: number }) {
   const a = AREA_STORES[config.id].getState();
+  const today = todayISO();
   const [text, setText] = useState('');
   const [body, setBody] = useState('');
-  const open = items.filter((i) => !i.done);
-  const done = items.filter((i) => i.done);
+  const [amount, setAmount] = useState('');
+  const [when, setWhen] = useState('');
+  const ok = text.trim() && (!list.amount || Number(amount) > 0) && (!list.when || !list.yearly || when);
+  // Dated lists sort by when they come round next; others newest first, done at the bottom.
+  const sorted = list.when
+    ? [...items].sort((x, y) => (x.when ? daysTo(nextOccurrence(x.when, today, Boolean(list.yearly)), today) : 9e9) - (y.when ? daysTo(nextOccurrence(y.when, today, Boolean(list.yearly)), today) : 9e9))
+    : [...items.filter((i) => !i.done), ...items.filter((i) => i.done)];
+  const total = list.amount ? items.filter((i) => (i.when ?? i.date).startsWith(today.slice(0, 4))).reduce((t, i) => t + (i.amount ?? 0), 0) : 0;
   return (
     <section className="panel area-list rise" style={rise(delay)}>
-      <div className="panel-h"><p className="panel-t">{list.title}</p><span className="mono faint" style={{ fontSize: 11 }}>{items.length || ''}</span></div>
-      <form className="al-add" onSubmit={(e) => { e.preventDefault(); a.addItem(list.id, text, body); setText(''); setBody(''); }}>
+      <div className="panel-h">
+        <p className="panel-t">{list.title}</p>
+        <span className="mono faint" style={{ fontSize: 11 }}>{list.amount ? `${money(total)} this year` : items.length || ''}</span>
+      </div>
+      <form className="al-add" onSubmit={(e) => {
+        e.preventDefault();
+        if (!ok) return;
+        a.addItem(list.id, text, { body, amount: list.amount ? Number(amount) : undefined, when: list.when && when ? when : undefined });
+        setText(''); setBody(''); setAmount(''); setWhen('');
+      }}>
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder={list.placeholder} aria-label={`Add to ${list.title}`} />
+        {list.amount && <input className="al-amt" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))} placeholder="$" aria-label="Amount" />}
+        {list.when && <input className="al-when" type="date" value={when} onChange={(e) => setWhen(e.target.value)} aria-label="Date" />}
         {list.body && text && <textarea className="ruled" rows={2} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Details (optional)" />}
-        <button className="btn primary sm" disabled={!text.trim()}>Add</button>
+        <button className="btn primary sm" disabled={!ok}>Add</button>
       </form>
       {items.length === 0 && <p className="dim" style={{ fontSize: 13.5, margin: 0 }}>{list.empty}</p>}
       <ul className="al">
-        {[...open, ...done].map((i) => <Item key={i.id} i={i} list={list} config={config} />)}
+        {sorted.map((i) => <Item key={i.id} i={i} list={list} config={config} />)}
       </ul>
     </section>
   );
@@ -107,12 +124,18 @@ function ListPanel({ list, items, config, delay }: { list: AreaList; items: Area
 function Item({ i, list, config }: { i: AreaItem; list: AreaList; config: AreaConfig }) {
   const a = AREA_STORES[config.id].getState();
   const [sure, setSure] = useState(false);
+  const today = todayISO();
+  const check = list.check !== false;
+  const next = i.when ? nextOccurrence(i.when, today, Boolean(list.yearly)) : null;
+  const left = next ? daysTo(next, today) : null;
   return (
-    <li className={i.done ? 'done' : ''}>
-      <button className="al-check" aria-label={i.done ? 'Mark not done' : 'Mark done'} aria-pressed={Boolean(i.done)}
-        onClick={(e) => { if (!i.done) embers(e.currentTarget, 8); a.patchItem(i.id, { done: !i.done, progress: !i.done && list.progress ? 100 : i.progress }); }}>{i.done ? '✓' : ''}</button>
+    <li className={`${i.done ? 'done' : ''}${check ? '' : ' nocheck'}`}>
+      {check ? (
+        <button className="al-check" aria-label={i.done ? 'Mark not done' : 'Mark done'} aria-pressed={Boolean(i.done)}
+          onClick={(e) => { if (!i.done) embers(e.currentTarget, 8); a.patchItem(i.id, { done: !i.done, progress: !i.done && list.progress ? 100 : i.progress }); }}>{i.done ? '\u2713' : ''}</button>
+      ) : <span className="al-bullet" aria-hidden>{list.amount ? (list.sign === 1 ? '+' : '\u2212') : list.yearly ? '\u2665' : '\u2726'}</span>}
       <div className="al-b">
-        <span className="al-t">{i.text}</span>
+        <span className="al-t">{i.text}{list.amount && i.amount ? <b className={`al-money ${list.sign === 1 ? 'in' : 'out'}`}>{money(i.amount)}</b> : null}</span>
         {i.body && <span className="al-body">{i.body}</span>}
         {list.progress && (
           <span className="al-prog">
@@ -121,12 +144,27 @@ function Item({ i, list, config }: { i: AreaItem; list: AreaList; config: AreaCo
             <span className="mono">{i.progress ?? 0}%</span>
           </span>
         )}
-        <span className="al-m mono">{short(i.date)}</span>
+        <span className="al-m mono">
+          {next && left !== null ? (left === 0 ? 'today! ' : left > 0 ? `in ${left} day${left === 1 ? '' : 's'} \u00b7 ${short(next)} ` : `${short(next)} \u00b7 passed `) : `${short(i.date)} `}
+        </span>
       </div>
       {sure
         ? <button className="btn danger sm" onClick={() => a.removeItem(i.id)}>Remove</button>
-        : <button className="btn ghost sm" aria-label="Remove" onClick={() => setSure(true)}>✕</button>}
+        : <button className="btn ghost sm" aria-label="Remove" onClick={() => setSure(true)}>\u2715</button>}
     </li>
+  );
+}
+
+function MoneySummary({ config, items }: { config: AreaConfig; items: AreaItem[] }) {
+  const y = Number(todayISO().slice(0, 4));
+  const signs = Object.fromEntries(config.lists.filter((l) => l.sign).map((l) => [l.id, l.sign!])) as Record<string, 1 | -1>;
+  const m = moneyYear(items, signs, y);
+  return (
+    <div className="area-today money-sum">
+      <span className={`big ${m.net >= 0 ? 'g-good' : ''}`}>{money(m.net)}</span>
+      <span className="mono">net in {y}</span>
+      <span className="mono faint">{money(m.in)} in \u00b7 {money(m.out)} out</span>
+    </div>
   );
 }
 
@@ -141,6 +179,30 @@ function AreaArt({ id, heat }: { id: AreaConfig['id']; heat: number }) {
           {[0, 1, 2, 3].map((r) => [0, 1, 2, 3].map((c) => (
             <rect key={`${r}${c}`} x={78 + c * 40} y={48 + r * 40} width="26" height="26" className={(r * 4 + c) / 16 < heat ? 'aa-win lit' : 'aa-win'} />
           )))}
+        </g>
+      ) : id === 'forge' ? (
+        <g>
+          <path d="M60 220 V110 L150 60 L240 110 V220 Z" className="aa-wall" />
+          <rect x="120" y="150" width="60" height="70" className="aa-forge" />
+          <path d="M110 220 h80 v-12 h-24 l8 -14 h-48 l8 14 h-24 Z" className="aa-anvil" />
+          {[0, 1, 2, 3, 4].map((i) => <circle key={i} cx={140 + i * 5} cy={150} r="1.6" className="aa-spark" style={{ animationDelay: `${-i * 0.35}s` }} />)}
+        </g>
+      ) : id === 'bank' ? (
+        <g>
+          <path d="M40 92 L150 40 L260 92 Z" className="aa-wall" />
+          <rect x="50" y="92" width="200" height="12" className="aa-wall" />
+          {[70, 115, 160, 205].map((x) => <rect key={x} x={x} y="108" width="22" height="92" className="aa-col" />)}
+          <rect x="40" y="200" width="220" height="16" className="aa-wall" />
+          <text x="150" y="80" textAnchor="middle" className="aa-coin">\u00a4</text>
+        </g>
+      ) : id === 'hearth' ? (
+        <g>
+          <path d="M50 220 V120 L150 50 L250 120 V220 Z" className="aa-wall" />
+          <rect x="196" y="56" width="20" height="44" className="aa-wall" />
+          <rect x="80" y="130" width="50" height="44" className={heat > 0.1 ? 'aa-win lit' : 'aa-win'} />
+          <rect x="170" y="130" width="50" height="44" className={heat > 0.4 ? 'aa-win lit' : 'aa-win'} />
+          <rect x="132" y="170" width="36" height="50" className="aa-door" />
+          <path d="M150 92 c-10 -12 -26 -2 -14 12 l14 12 l14 -12 c12 -14 -4 -24 -14 -12 Z" className="aa-heart" />
         </g>
       ) : (
         <g>

@@ -28,12 +28,14 @@ import { Soon } from './shell/Soon';
 const ReviewPage = lazy(() => import('./modules/review/ReviewPage'));
 const YearPage = lazy(() => import('./modules/review/YearPage'));
 const WritePage = lazy(() => import('./modules/drafts/WritePage'));
+const LibraryPage = lazy(() => import('./modules/review/LibraryPage'));
 
 function Screen({ route }: { route: string }) {
   if (route === '/home') return <Home />;
   if (route === '/cabin') return <CabinHome />;
   if (route === '/review') return <ReviewPage />;
   if (route === '/year') return <YearPage />;
+  if (route === '/library') return <LibraryPage />;
   if (route.startsWith('/cabin/write/')) return <WritePage />;
   const area = areaByPath(route);
   if (area && !area.live) return <AreaSoon a={area} />;
@@ -70,6 +72,9 @@ export default function App() {
     void usePub.getState().load();
     void AREA_STORES.office.getState().load();
     void AREA_STORES.observatory.getState().load();
+    void AREA_STORES.forge.getState().load();
+    void AREA_STORES.bank.getState().load();
+    void AREA_STORES.hearth.getState().load();
   }, []);
   return (
     <>

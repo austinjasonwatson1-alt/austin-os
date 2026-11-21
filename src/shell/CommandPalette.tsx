@@ -40,6 +40,7 @@ export function CommandPalette() {
       nav('/home', 'Home', 'homestead dashboard'),
       nav('/review', 'Weekly review', 'sunday week'),
       nav('/year', 'Year in review', 'annual stats'),
+      nav('/library', 'Library of You', 'archive journal months memories'),
       nav('/cabin', "The Writer's Cabin", 'writing dashboard'),
       ...MODULES.filter((m) => m.component).map((m) => nav(m.path, m.name, m.blurb)),
       ...AREAS.filter((a) => a.id !== 'cabin').map((a) => nav(a.path, a.name, a.blurb, a.live ? '' : 'being built')),

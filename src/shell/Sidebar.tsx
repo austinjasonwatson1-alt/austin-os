@@ -49,6 +49,7 @@ export function Sidebar() {
       {item('/home', '◈', 'Home')}
       {item('/review', '◷', 'Weekly review')}
       {item('/year', '◎', 'Year in review')}
+      {item('/library', '❦', 'Library of You')}
       <div className="nav-label">Writer's Cabin</div>
       {item(cabin.path, cabin.glyph, 'The Cabin')}
       {MODULES.filter((m) => m.section === 'cabin').map((m) => (m.id === 'timer' ? <TimerNav key={m.id} current={route === m.path} /> : item(m.path, m.glyph, m.name, !m.component)))}

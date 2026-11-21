@@ -169,3 +169,51 @@ export function yearReview(w: WeekInputs & { answeredOn?: string[] }, year: numb
     books, pages: books.reduce((s, b) => s + (b.pages ?? 0), 0), words,
   };
 }
+
+/* ---------------- the Library of You ---------------- */
+
+export interface ArchiveMonth {
+  key: string;
+  minutes: number;
+  logged: number;
+  books: string[];
+  answered: { text: string; answer?: string }[];
+  milestones: string[];
+  reviews: { monday: string; worked?: string; intention?: string }[];
+  moments: string[];
+  wins: string[];
+}
+
+export interface ArchiveInputs {
+  days: DayMap;
+  chapel: Record<string, ChapelDay>;
+  books: Book[];
+  prayers: { text: string; answer?: string; answeredOn?: string }[];
+  milestones: { name: string; earnedOn: string | null }[];
+  reviews: Record<string, { worked?: string; intention?: string; sealedAt?: string }>;
+  moments: { text: string; date: string }[];
+  wins: { text: string; date: string }[];
+}
+
+/** Every month with anything in it, newest first: the journal of a life, read back. */
+export function archive(a: ArchiveInputs): ArchiveMonth[] {
+  const months = new Map<string, ArchiveMonth>();
+  const m = (key: string) => {
+    if (!months.has(key)) months.set(key, { key, minutes: 0, logged: 0, books: [], answered: [], milestones: [], reviews: [], moments: [], wins: [] });
+    return months.get(key)!;
+  };
+  for (const [d, e] of Object.entries(a.days)) {
+    const mins = dayTotal(e);
+    if (!mins) continue;
+    const x = m(d.slice(0, 7));
+    x.minutes += mins;
+    x.logged++;
+  }
+  for (const b of a.books) if (b.status === 'read' && b.finished) m(b.finished.slice(0, 7)).books.push(b.title);
+  for (const p of a.prayers) if (p.answeredOn) m(p.answeredOn.slice(0, 7)).answered.push({ text: p.text, answer: p.answer });
+  for (const s of a.milestones) if (s.earnedOn) m(s.earnedOn.slice(0, 7)).milestones.push(s.name);
+  for (const [monday, r] of Object.entries(a.reviews)) if (r.sealedAt && (r.worked || r.intention)) m(monday.slice(0, 7)).reviews.push({ monday, worked: r.worked, intention: r.intention });
+  for (const x of a.moments) m(x.date.slice(0, 7)).moments.push(x.text);
+  for (const x of a.wins) m(x.date.slice(0, 7)).wins.push(x.text);
+  return [...months.values()].sort((x, y) => y.key.localeCompare(x.key));
+}

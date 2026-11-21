@@ -9,7 +9,7 @@ import type { DogPose } from '../modules/lounge/logic';
  * lit windows; buildings still on the list are drawn as glowing blueprints. Each one is a door.
  * `heat` (0–1) is how much of today's writing is done; the cabin windows burn with it.
  */
-export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, pose, children }: { heat: number; chapelHeat?: number; officeHeat?: number; obsHeat?: number; pose: DogPose; children?: ReactNode }) {
+export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, forgeHeat = 0, hearthHeat = 0, pose, children }: { heat: number; chapelHeat?: number; officeHeat?: number; obsHeat?: number; forgeHeat?: number; hearthHeat?: number; pose: DogPose; children?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Layers drift at different speeds with the pointer. Off for reduced motion.
@@ -87,6 +87,34 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, p
             {[180, 236, 384, 520, 548, 712, 738, 880, 996, 1110].map((x, i) => (
               <path key={x} d={`M${x} ${310 + (i % 3) * 4} l3 -9 l2 9 l3 -12 l2 12 l3 -8 l2 8`} />
             ))}
+          </g>
+        </g>
+
+        {/* the newer buildings, smaller, up on the far ridge */}
+        <g className="hs-layer" data-depth="2">
+          <g transform="translate(330 262) scale(.62)">
+            <Building area={area('forge')} x={0} y={0} heat={forgeHeat}>
+              <circle cx="0" cy="-30" r="60" fill="url(#hs-glow)" className="hs-cabin-glow" />
+              <path d="M-46 0 V-50 L0 -78 L46 -50 V0 Z" className="hs-wall" />
+              <rect x="-16" y="-34" width="32" height="34" className="hs-win" />
+              <rect x="24" y="-92" width="12" height="30" className="hs-wall" />
+            </Building>
+          </g>
+          <g transform="translate(935 262) scale(.62)">
+            <Building area={area('hearth')} x={0} y={0} heat={hearthHeat}>
+              <circle cx="0" cy="-34" r="60" fill="url(#hs-glow)" className="hs-cabin-glow" />
+              <path d="M-50 0 V-48 L0 -84 L50 -48 V0 Z" className="hs-wall" />
+              <rect x="-36" y="-40" width="22" height="20" className="hs-win" />
+              <rect x="14" y="-40" width="22" height="20" className="hs-win" />
+              <rect x="-9" y="-28" width="18" height="28" className="hs-door" />
+            </Building>
+          </g>
+          <g transform="translate(1160 250) scale(.55)">
+            <Building area={area('bank')} x={0} y={0} heat={0.6}>
+              <path d="M-56 -70 L0 -98 L56 -70 Z" className="hs-wall hs-roof" />
+              {[-40, -14, 12, 38].map((x) => <rect key={x} x={x - 5} y={-66} width="10" height="58" className="hs-wall" />)}
+              <rect x="-60" y="-8" width="120" height="8" className="hs-wall" />
+            </Building>
           </g>
         </g>
 

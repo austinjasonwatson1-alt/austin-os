@@ -11,3 +11,19 @@ describe('office and observatory', () => {
     expect(describeArea('The Office').detail({ days, items: [{}] })).toBe('2 days · 3h · 1 items');
   });
 });
+
+import { daysTo, money, moneyYear, nextOccurrence } from './logic';
+
+describe('dates and money', () => {
+  it('brings birthdays round every year', () => {
+    expect(nextOccurrence('1960-12-02', '2026-11-21', true)).toBe('2026-12-02');
+    expect(nextOccurrence('1960-03-02', '2026-11-21', true)).toBe('2027-03-02');
+    expect(nextOccurrence('2027-04-10', '2026-11-21', false)).toBe('2027-04-10');
+    expect(daysTo('2026-12-02', '2026-11-21')).toBe(11);
+  });
+  it('adds up the writing life money', () => {
+    const m = moneyYear([{ list: 'out', amount: 15, date: '2026-03-01' }, { list: 'in', amount: 250, date: '2026-06-01' }, { list: 'out', amount: 800, date: '2025-12-01' }], { out: -1, in: 1 }, 2026);
+    expect(m).toEqual({ in: 250, out: 15, net: 235 });
+    expect([money(235), money(-12.5)]).toEqual(['$235', '\u2212$12.50']);
+  });
+});
