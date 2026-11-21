@@ -103,6 +103,7 @@ export function parseShelfJson(parsed: unknown, now: string): Book[] | null {
       finished,
       pages,
       notes: str(pick(o, 'notes', 'review', 'note', 'myreview', 'thoughts')) || undefined,
+      cover: /^https:\/\//.test(str(pick(o, 'cover', 'coverurl', 'image', 'img'))) ? str(pick(o, 'cover', 'coverurl', 'image', 'img')) : undefined,
       craft: Array.isArray(craftRaw) ? craftRaw.map(str).filter(Boolean) : str(craftRaw) ? str(craftRaw).split(/\n+/).map((s) => s.trim()).filter(Boolean) : [],
       addedAt: now,
     } satisfies Book;
@@ -137,4 +138,48 @@ export function csvToObjects(rows: string[][]): Record<string, string>[] {
   const [head, ...rest] = rows;
   if (!head) return [];
   return rest.filter((r) => r.some((c) => c.trim())).map((r) => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ''])));
+}
+
+/* ---------------- covers (Open Library, free, no key) ---------------- */
+
+export interface CoverHit { cover: string; title: string; author: string; pages?: number; year?: number }
+
+export const coverUrl = (coverId: number, size: 'M' | 'L' = 'L') => `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`;
+
+export function coverSearchUrl(title: string, author: string): string {
+  const q = new URLSearchParams({ title: title.trim(), limit: '12', fields: 'title,author_name,cover_i,number_of_pages_median,first_publish_year' });
+  if (author.trim()) q.set('author', author.trim());
+  return `https://openlibrary.org/search.json?${q}`;
+}
+
+/** Turn an Open Library search response into cover choices (only results that have a cover, no repeats). */
+export function parseCoverResults(json: unknown): CoverHit[] {
+  const docs = (json as { docs?: unknown })?.docs;
+  if (!Array.isArray(docs)) return [];
+  const seen = new Set<number>();
+  const out: CoverHit[] = [];
+  for (const d of docs as Record<string, unknown>[]) {
+    const id = Number(d.cover_i);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      cover: coverUrl(id), title: String(d.title ?? ''),
+      author: Array.isArray(d.author_name) ? String(d.author_name[0] ?? '') : '',
+      pages: Number(d.number_of_pages_median) || undefined, year: Number(d.first_publish_year) || undefined,
+    });
+  }
+  return out.slice(0, 8);
+}
+
+/** Every book read, newest year first, newest finish first; ones with no finish date last. */
+export function readWall(books: Book[]): { year: string; books: Book[] }[] {
+  const read = books.filter((b) => b.status === 'read');
+  const groups = new Map<string, Book[]>();
+  for (const b of read) {
+    const y = b.finished?.slice(0, 4) ?? 'Undated';
+    groups.set(y, [...(groups.get(y) ?? []), b]);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => (a === 'Undated' ? 1 : b === 'Undated' ? -1 : b.localeCompare(a)))
+    .map(([year, bs]) => ({ year, books: bs.sort((a, b) => (b.finished ?? '').localeCompare(a.finished ?? '') || a.title.localeCompare(b.title)) }));
 }

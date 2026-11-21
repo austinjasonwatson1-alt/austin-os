@@ -13,7 +13,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== SHELL && k !== RUNTIME).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== SHELL && k !== RUNTIME && k !== 'austin-os-covers').map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -25,6 +25,17 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // Book covers: keep a copy once seen, so the shelf still shows them offline.
+  if (url.hostname === 'covers.openlibrary.org') {
+    e.respondWith(caches.open('austin-os-covers').then(async (c) => {
+      const hit = await c.match(req, { ignoreVary: true });
+      if (hit) return hit;
+      const res = await fetch(req);
+      if (res.ok || res.type === 'opaque') c.put(req, res.clone());
+      return res;
+    }));
+    return;
+  }
   // Only the app itself and its fonts. Anything else (e.g. the weather service) goes straight to the network.
   const fonts = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
   if (url.origin !== self.location.origin && !fonts) return;

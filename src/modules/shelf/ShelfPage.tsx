@@ -3,7 +3,7 @@ import { todayISO } from '../../core/dates';
 import { CountUp, embers, tilt } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { parseCsvRows } from '../ledger/logic';
-import { csvToObjects, filterBooks, genres, parseShelfJson, previewImport, readingYear, shelfOrder, spine } from './logic';
+import { coverSearchUrl, csvToObjects, filterBooks, genres, parseCoverResults, parseShelfJson, previewImport, readingYear, readWall, shelfOrder, spine, type CoverHit } from './logic';
 import { useShelf } from './store';
 import { STATUS_LABEL, type Book, type BookStatus } from './types';
 import '../../styles/cabin.css';
@@ -22,6 +22,7 @@ export default function ShelfPage() {
   const [open, setOpen] = useState<Book | 'new' | null>(null);
   const year = new Date().getFullYear();
   const y = readingYear(books, year);
+  const wall = useMemo(() => readWall(books), [books]);
   const shown = useMemo(() => shelfOrder(filterBooks(books, { q, status: tab, genre })), [books, q, tab, genre]);
   const reading = books.filter((b) => b.status === 'reading');
 
@@ -81,10 +82,15 @@ export default function ShelfPage() {
         </div>
       </section>
 
-      {y.books.length > 0 && (
-        <section className="rise" style={rise(3)}>
-          <h2 className="section-h">{year} in books · {y.count} read{y.pages ? ` · ${y.pages.toLocaleString('en-US')} pages` : ''}</h2>
-          <div className="covers small">{y.books.map((b) => <Cover key={b.id} b={b} onOpen={() => setOpen(b)} />)}</div>
+      {wall.length > 0 && (
+        <section className="rise read-wall" style={rise(3)}>
+          <h2 className="section-h">Every book I’ve read · {wall.reduce((n, g) => n + g.books.length, 0)}{y.count ? ` · ${y.count} this year` : ''}{y.pages ? ` · ${y.pages.toLocaleString('en-US')} pages` : ''}</h2>
+          {wall.map((g) => (
+            <div key={g.year} className="wall-year">
+              <div className="wall-y"><span className="mono">{g.year}</span><i /><span className="mono faint">{g.books.length} {g.books.length === 1 ? 'book' : 'books'}</span></div>
+              <div className="covers">{g.books.map((b) => <Cover key={b.id} b={b} onOpen={() => setOpen(b)} />)}</div>
+            </div>
+          ))}
         </section>
       )}
 
@@ -115,14 +121,24 @@ function Spine({ b, onOpen }: { b: Book; onOpen: () => void }) {
 function Cover({ b, onOpen }: { b: Book; onOpen: () => void }) {
   const s = spine(b);
   return (
-    <button className="cover tilt" style={{ '--c': s.color } as CSSProperties} onClick={onOpen} {...tilt(8)}>
-      <span className="cover-frame">
-        <span className="cover-t">{b.title}</span>
-        <span className="cover-rule" />
-        <span className="cover-a mono">{b.author}</span>
-      </span>
-      {b.rating > 0 && <span className="cover-stars" aria-label={`${b.rating} stars`}>{stars(b.rating)}</span>}
+    <button className={b.cover ? 'cover tilt has-art' : 'cover tilt'} style={{ '--c': s.color } as CSSProperties} onClick={onOpen} {...tilt(8)}
+      aria-label={`${b.title} by ${b.author}${b.rating ? `, ${b.rating} stars` : ''}`}>
+      <CoverArt b={b} />
+      {b.rating > 0 && <span className="cover-stars" aria-hidden>{stars(b.rating)}</span>}
     </button>
+  );
+}
+
+/** The real cover if there is one (falls back to the drawn cover if the image won't load). */
+function CoverArt({ b }: { b: Pick<Book, 'title' | 'author' | 'cover'> }) {
+  const [bad, setBad] = useState<string | null>(null);
+  if (b.cover && bad !== b.cover) return <img className="cover-img" src={b.cover} alt="" loading="lazy" onError={() => setBad(b.cover!)} />;
+  return (
+    <span className="cover-frame">
+      <span className="cover-t">{b.title || 'Untitled'}</span>
+      <span className="cover-rule" />
+      <span className="cover-a mono">{b.author || 'Author'}</span>
+    </span>
   );
 }
 
@@ -160,12 +176,10 @@ function BookSheet({ book, onClose }: { book: Book | null; onClose: () => void }
   return (
     <dialog ref={ref} className="sheet book-sheet" onClose={onClose} aria-labelledby="book-title">
       <div className="book-grid">
-        <div className="sheet-cover" style={{ '--c': s.color } as CSSProperties}>
-          <span className="cover-frame">
-            <span className="cover-t">{b.title || 'Untitled'}</span>
-            <span className="cover-rule" />
-            <span className="cover-a mono">{b.author || 'Author'}</span>
-          </span>
+        <div className="sheet-side">
+          <div className={b.cover ? 'sheet-cover has-art' : 'sheet-cover'} style={{ '--c': s.color } as CSSProperties}><CoverArt b={b} /></div>
+          <CoverFinder title={b.title} author={b.author} current={b.cover}
+            onPick={(h) => setB((x) => ({ ...x, cover: h?.cover, author: x.author.trim() ? x.author : h?.author ?? x.author, pages: x.pages ?? h?.pages }))} />
         </div>
         <div className="book-fields">
           <div className="page-eyebrow" style={{ fontSize: 10.5 }}>{book ? 'From the shelf' : 'A new book'}</div>
@@ -281,5 +295,49 @@ function ImportShelf() {
         </dialog>
       )}
     </>
+  );
+}
+
+/* ---------------- finding the real cover ---------------- */
+
+function CoverFinder({ title, author, current, onPick }: { title: string; author: string; current?: string; onPick: (h: CoverHit | null) => void }) {
+  const [hits, setHits] = useState<CoverHit[] | null>(null);
+  const [state, setState] = useState<'idle' | 'busy' | 'none' | 'offline'>('idle');
+  const [paste, setPaste] = useState(false);
+  const find = async () => {
+    setState('busy');
+    try {
+      const r = await fetch(coverSearchUrl(title, author));
+      const found = parseCoverResults(await r.json());
+      setHits(found);
+      setState(found.length ? 'idle' : 'none');
+    } catch { setState('offline'); }
+  };
+  return (
+    <div className="cover-finder">
+      <button className="btn sm" disabled={!title.trim() || state === 'busy'} onClick={() => void find()}>
+        {state === 'busy' ? 'Looking…' : current ? 'Change the cover' : 'Find the cover'}
+      </button>
+      {state === 'none' && <p className="mono faint">No covers found. Check the title, or paste an image link.</p>}
+      {state === 'offline' && <p className="mono faint">Couldn’t reach Open Library. Are you online?</p>}
+      {hits && hits.length > 0 && (
+        <div className="cover-hits" role="listbox" aria-label="Choose a cover">
+          {hits.map((h) => (
+            <button key={h.cover} role="option" aria-selected={current === h.cover} className={current === h.cover ? 'on' : ''}
+              title={`${h.title}${h.author ? ` · ${h.author}` : ''}${h.year ? ` · ${h.year}` : ''}`} onClick={() => onPick(h)}>
+              <img src={h.cover.replace('-L.jpg', '-M.jpg')} alt={h.title}
+                onLoad={(e) => { if (e.currentTarget.naturalWidth < 20) (e.currentTarget.parentElement as HTMLElement).hidden = true; }}
+                onError={(e) => { (e.currentTarget.parentElement as HTMLElement).hidden = true; }} />
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="cover-more">
+        {paste
+          ? <input autoFocus placeholder="https://… image link" aria-label="Cover image link" onChange={(e) => { const v = e.target.value.trim(); if (/^https:\/\/\S+$/.test(v)) onPick({ cover: v, title, author }); }} />
+          : <button className="linkish" onClick={() => setPaste(true)}>Paste a link instead</button>}
+        {current && <button className="linkish" onClick={() => { onPick(null); setHits(null); }}>Use the drawn cover</button>}
+      </div>
+    </div>
   );
 }

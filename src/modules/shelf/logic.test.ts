@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookKey, describeShelf, filterBooks, genres, parseShelfJson, previewImport, readingYear, shelfOrder, spine } from './logic';
+import { bookKey, describeShelf, filterBooks, genres, parseShelfJson, previewImport, readingYear, shelfOrder, spine, coverSearchUrl, coverUrl, parseCoverResults, readWall } from './logic';
 import type { Book } from './types';
 
 const B = (p: Partial<Book>): Book => ({ id: p.title ?? 'x', title: 'T', author: 'A', genre: '', status: 'want', rating: 0, craft: [], addedAt: '', ...p });
@@ -57,5 +57,32 @@ describe('csv shelves', () => {
     const books = parseShelfJson(objs, 'now')!;
     expect(books).toHaveLength(1);
     expect(books[0]).toMatchObject({ title: 'Rebecca', rating: 5, status: 'read', finished: '2024-10-31' });
+  });
+});
+
+describe('covers', () => {
+  it('builds the search url', () => {
+    const u = coverSearchUrl(' The Silent Patient ', 'Alex Michaelides');
+    expect(u).toContain('title=The+Silent+Patient');
+    expect(u).toContain('author=Alex+Michaelides');
+    expect(coverSearchUrl('Rebecca', ' ')).not.toContain('author=');
+  });
+  it('keeps only results with covers, once each', () => {
+    const hits = parseCoverResults({ docs: [
+      { title: 'A', author_name: ['X'], cover_i: 5, number_of_pages_median: 300, first_publish_year: 2019 },
+      { title: 'A2', cover_i: 5 }, { title: 'B' }, { title: 'C', cover_i: 9 },
+    ] });
+    expect(hits.map((h) => h.cover)).toEqual([coverUrl(5), coverUrl(9)]);
+    expect(hits[0]).toMatchObject({ author: 'X', pages: 300, year: 2019 });
+    expect(parseCoverResults(null)).toEqual([]);
+  });
+});
+
+describe('readWall', () => {
+  const bk = (title: string, status: Book['status'], finished?: string): Book => ({ id: title, title, author: 'a', genre: '', status, rating: 0, craft: [], addedAt: '', finished });
+  it('groups read books by year, newest first, undated last', () => {
+    const w = readWall([bk('a', 'read', '2025-03-01'), bk('b', 'read', '2026-01-02'), bk('c', 'read'), bk('d', 'reading'), bk('e', 'read', '2026-05-01')]);
+    expect(w.map((g) => g.year)).toEqual(['2026', '2025', 'Undated']);
+    expect(w[0].books.map((b) => b.id)).toEqual(['e', 'b']);
   });
 });

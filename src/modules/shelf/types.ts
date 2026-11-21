@@ -14,6 +14,8 @@ export interface Book {
   notes?: string;
   /** What this book taught about the craft: one line each. */
   craft: string[];
+  /** Cover image URL (Open Library, or one pasted in). */
+  cover?: string;
   addedAt: string;
 }
 
