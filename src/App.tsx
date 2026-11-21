@@ -11,6 +11,7 @@ import { useChapel } from './modules/chapel/store';
 import { useManuscripts } from './modules/manuscripts/store';
 import { useReview } from './modules/review/store';
 import { useDrafts } from './modules/drafts/store';
+import { usePub } from './modules/pub/store';
 import { AREA_STORES } from './modules/areas/store';
 import { areaByPath, byPath } from './modules/registry';
 import { AreaSoon } from './shell/AreaSoon';
@@ -66,6 +67,7 @@ export default function App() {
     void useManuscripts.getState().load();
     void useReview.getState().load();
     void useDrafts.getState().load();
+    void usePub.getState().load();
     void AREA_STORES.office.getState().load();
     void AREA_STORES.observatory.getState().load();
   }, []);

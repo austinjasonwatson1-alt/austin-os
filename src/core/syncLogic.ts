@@ -45,6 +45,14 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
     ...l,
     sessions: unionById(arr<WithId>(l.sessions), arr<WithId>(r.sessions)).sort((a, b) => Number(b.startedAt) - Number(a.startedAt)),
   }),
+  'pub.v1': (l, r) => ({
+    ...l,
+    queries: unionById(arr<WithId>(l.queries), arr<WithId>(r.queries)),
+    contests: unionById(arr<WithId>(l.contests), arr<WithId>(r.contests)),
+    feedback: unionById(arr<WithId>(l.feedback), arr<WithId>(r.feedback)),
+    outreach: unionById(arr<WithId>(l.outreach), arr<WithId>(r.outreach)),
+    road: fill(isObj(l.road) ? l.road : {}, isObj(r.road) ? r.road : {}),
+  }),
   'shelf.v1': (l, r) => ({ ...l, books: unionById(arr<WithId>(l.books), arr<WithId>(r.books)) }),
   'manuscripts.v1': (l, r) => ({
     ...l,

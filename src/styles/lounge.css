@@ -167,3 +167,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ls-flames path, .ls-fireglow, .ls-vinyl.spin, .ls-notes text, .ls-rain line, .ls-snow circle, .dog .wag, .dog-breathe, .zzz text { animation: none; }
 }
+.ls-letter rect { fill: #d9ccb0; stroke: #8a7a5c; stroke-width: .8; }
+.ls-letter path { fill: none; stroke: #8a7a5c; stroke-width: .8; }
+.ls-letter:not(.in) { opacity: .35; }
+.ls-seal { fill: #a32a1e; filter: drop-shadow(0 0 2px rgba(163, 42, 30, .6)); }

@@ -11,6 +11,8 @@ import { useLedger } from '../ledger/store';
 import { dogLine, dogPose, type DogName } from './logic';
 import { spine } from '../shelf/logic';
 import { useShelf } from '../shelf/store';
+import { upcomingContests } from '../pub/logic';
+import { usePub } from '../pub/store';
 
 const WINDOW_SKY: Record<string, [string, string]> = {
   night: ['#0a0f22', '#141a33'], dawn: ['#1d1a35', '#b5707a'], day: ['#3a5a8a', '#8fb0d6'], golden: ['#2a2a4a', '#e09a50'], dusk: ['#1a1433', '#8a4a74'],
@@ -36,6 +38,9 @@ export function LoungeScene() {
   const chair = earned(ms, 'hundred');
   const fullShelf = earned(ms, 'hearth');
   const allBooks = useShelf((st) => st.books);
+  const pub = usePub();
+  const requests = pub.queries.filter((q) => q.status === 'partial' || q.status === 'full' || q.status === 'offer').length;
+  const upcoming = upcomingContests(pub.contests, todayISO()).length;
   const shelfBooks = useMemo(() => allBooks.filter((b) => b.status === 'read'), [allBooks]);
   const [say, setSay] = useState<{ text: string; x: number } | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -116,12 +121,24 @@ export function LoungeScene() {
         </Thing>
 
         {/* corkboard → Contests */}
-        <Thing label="Contests" sub="coming soon" onOpen={() => go('/cabin/contests')} x={540} y={70}>
+        <Thing label="Contests" sub={upcoming ? `${upcoming} deadline${upcoming === 1 ? '' : 's'} pinned` : 'nothing pinned yet'} onOpen={() => go('/cabin/contests')} x={540} y={70}>
           <rect width="120" height="86" rx="3" className="ls-cork" />
           <rect x="12" y="12" width="40" height="30" fill="#e9e4d8" opacity=".75" transform="rotate(-4 32 27)" />
           <rect x="62" y="16" width="44" height="26" fill="#f0d9a0" opacity=".7" transform="rotate(3 84 29)" />
           <rect x="30" y="50" width="52" height="26" fill="#cfe0f0" opacity=".6" transform="rotate(-2 56 63)" />
           <circle cx="32" cy="14" r="2.5" fill="#d1503f" /><circle cx="84" cy="18" r="2.5" fill="#4fbf87" /><circle cx="56" cy="52" r="2.5" fill="#6fb3f2" />
+        </Thing>
+
+        {/* the letter tray: an envelope for every agent who's asked for pages */}
+        <Thing label="Letters" sub={requests ? `${requests} agent${requests === 1 ? '' : 's'} asked for pages` : 'no requests yet · Query Tracker'} onOpen={() => go('/cabin/queries')} x={722} y={238}>
+          <rect x="0" y="22" width="44" height="10" rx="2" className="ls-wood-d" />
+          {Array.from({ length: Math.min(4, Math.max(1, requests)) }, (_, i) => (
+            <g key={i} transform={`translate(${2 + i * 2} ${16 - i * 5}) rotate(${(i % 2 ? 4 : -3)})`} className={requests ? 'ls-letter in' : 'ls-letter'}>
+              <rect width="38" height="24" rx="1.5" />
+              <path d="M0 0 L19 13 L38 0" />
+              {requests > 0 && <circle cx="19" cy="13" r="3.4" className="ls-seal" />}
+            </g>
+          ))}
         </Thing>
 
         {/* desk, typewriter, lamp → Lamp Mode */}

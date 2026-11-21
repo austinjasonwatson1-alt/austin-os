@@ -8,6 +8,7 @@ import { useLedger } from '../modules/ledger/store';
 import { CAT, GRADE_VAR, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
 import { cabinRooms, Room } from './Rooms';
 import { Constellations } from './Constellations';
+import { RoadMap } from '../modules/pub/RoadMap';
 import { WeekSky } from './WeekSky';
 import { CountUp, tilt } from './fx';
 import '../styles/cabin.css';
@@ -49,6 +50,7 @@ export default function CabinHome() {
         <Mix today={today} />
       </div>
 
+      <div className="rise" style={rise(6)}><RoadMap /></div>
       <div className="rise" style={rise(6)}><Constellations /></div>
 
       <h2 className="section-h rise" style={rise(6)}>Rooms in the cabin</h2>

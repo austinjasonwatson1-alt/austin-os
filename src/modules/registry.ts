@@ -80,10 +80,14 @@ export const MODULES: ModuleDef[] = [
     id: 'manuscripts', path: '/cabin/manuscripts', name: 'Manuscripts', glyph: '❡', section: 'cabin', blurb: 'The Life I Deserve and Silence Speaks — chapter boards and word counts.',
     component: lazy(() => import('./manuscripts/ManuscriptsPage')),
   },
-  { id: 'queries', path: '/cabin/queries', name: 'Query Tracker', glyph: '✉', section: 'cabin', blurb: 'Agents, submissions, responses, follow-ups.' },
-  { id: 'contests', path: '/cabin/contests', name: 'Contests', glyph: '✧', section: 'cabin', blurb: 'Short-story contests: deadlines, rules, what you entered.' },
-  { id: 'editorial', path: '/cabin/editorial', name: 'Editorial Vault', glyph: '✎', section: 'cabin', blurb: 'Feedback, craft notes, and your standing editing brief.' },
-  { id: 'marketing', path: '/cabin/marketing', name: 'Outreach', glyph: '◎', section: 'cabin', blurb: 'Who you plan to reach for the debut, and where each stands.' },
+  { id: 'queries', path: '/cabin/queries', name: 'Query Tracker', glyph: '✉', section: 'cabin', blurb: 'Agents, submissions, responses, follow-ups.',
+    component: lazy(() => import('./pub/PubPages').then((m) => ({ default: m.QueriesPage }))) },
+  { id: 'contests', path: '/cabin/contests', name: 'Contests', glyph: '✧', section: 'cabin', blurb: 'Short-story contests: deadlines, rules, what you entered.',
+    component: lazy(() => import('./pub/PubPages').then((m) => ({ default: m.ContestsPage }))) },
+  { id: 'editorial', path: '/cabin/editorial', name: 'Editorial Vault', glyph: '✎', section: 'cabin', blurb: 'Feedback, craft notes, and your standing editing brief.',
+    component: lazy(() => import('./pub/PubPages').then((m) => ({ default: m.EditorialPage }))) },
+  { id: 'marketing', path: '/cabin/marketing', name: 'Outreach', glyph: '◎', section: 'cabin', blurb: 'Who you plan to reach for the debut, and where each stands.',
+    component: lazy(() => import('./pub/PubPages').then((m) => ({ default: m.OutreachPage }))) },
 ];
 
 export const byPath = (p: string) => MODULES.find((m) => m.path === p);
