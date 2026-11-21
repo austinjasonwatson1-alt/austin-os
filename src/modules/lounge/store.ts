@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { kvGet, saveWithSnapshot } from '../../core/storage';
+import { kvGet, saveWithSnapshot, markDeleted } from '../../core/storage';
 import { DEFAULT_LOUNGE, type Claim, type LoungeData, type Rates, type Reward } from './types';
 
 export const KEY = 'lounge.v1';
@@ -54,6 +54,7 @@ export const useLounge = create<LoungeState>((set, get) => {
     },
 
     removeReward(id) {
+      void markDeleted(KEY, id);
       set({ rewards: get().rewards.filter((r) => r.id !== id) });
       persist();
     },
@@ -68,6 +69,7 @@ export const useLounge = create<LoungeState>((set, get) => {
     },
 
     cancelClaim(id) {
+      void markDeleted(KEY, id);
       set({ claims: get().claims.filter((c) => c.id !== id) });
       persist();
     },

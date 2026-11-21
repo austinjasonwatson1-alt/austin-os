@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { kvGet, saveWithSnapshot } from '../../core/storage';
+import { kvGet, saveWithSnapshot, markDeleted } from '../../core/storage';
 import { DEFAULT_PUB, type PubData } from './types';
 
 export const KEY = 'pub.v1';
@@ -37,6 +37,7 @@ export const usePub = create<PubState>((set, get) => {
       persist();
     },
     remove(list, id) {
+      void markDeleted(KEY, id);
       set({ [list]: (get()[list] as { id: string }[]).filter((x) => x.id !== id) } as Partial<PubState>);
       persist();
     },

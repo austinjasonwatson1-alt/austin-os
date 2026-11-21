@@ -16,6 +16,8 @@ export interface Prefs {
   chime: boolean;
   /** Each room plays its own quiet sound while you're in it. */
   roomSound?: boolean;
+  /** System notifications for the streak, the candle, the review, follow-ups and deadlines. */
+  reminders?: boolean;
 }
 interface WxSaved { lat: number; lon: number; kind: Weather | null; temp: number | null; at: number }
 
@@ -28,6 +30,7 @@ interface SkyState {
   load: () => Promise<void>;
   setChime: (on: boolean) => void;
   setRoomSound: (on: boolean) => void;
+  setReminders: (on: boolean) => void;
   /** Ask for location (must run from a click), then fetch the weather. */
   enableWeather: () => Promise<void>;
   disableWeather: () => Promise<void>;
@@ -57,6 +60,12 @@ export const useSky = create<SkyState>((set, get) => ({
 
   setChime(chime) {
     const prefs = { ...get().prefs, chime };
+    set({ prefs });
+    void saveWithSnapshot(PREFS, prefs);
+  },
+
+  setReminders(reminders) {
+    const prefs = { ...get().prefs, reminders };
     set({ prefs });
     void saveWithSnapshot(PREFS, prefs);
   },

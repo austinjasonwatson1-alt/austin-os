@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { kvGet, saveWithSnapshot } from '../../core/storage';
+import { kvGet, saveWithSnapshot, markDeleted } from '../../core/storage';
 import { useLedger } from '../ledger/store';
 import type { CatKey } from '../ledger/types';
 import { creditDays, elapsedMs } from './logic';
@@ -115,6 +115,7 @@ export const useTimer = create<TimerState>((set, get) => {
       for (const [day, n] of Object.entries(s.credit)) {
         ledger.setMinutes(day, s.cat, Math.max(0, (Number(useLedger.getState().days[day]?.[s.cat]) || 0) - n));
       }
+      void markDeleted(KEY, id);
       set({ sessions: get().sessions.filter((x) => x.id !== id) });
       persist();
     },

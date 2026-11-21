@@ -110,3 +110,16 @@ export async function dumpAll(): Promise<Record<string, unknown>> {
   }
   return out;
 }
+
+/**
+ * Note that an item was deleted, so other devices drop it too when they sync.
+ * Kept under 'sync.deleted' as { storeKey: { itemId: when } }.
+ */
+export function markDeleted(storeKey: string, id: string): Promise<void> {
+  return queued(async () => {
+    const cur = (await kvGet<Record<string, Record<string, string>>>('sync.deleted')) ?? {};
+    const next = { ...cur, [storeKey]: { ...(cur[storeKey] ?? {}), [id]: new Date().toISOString() } };
+    await kvSet('sync.deleted', next);
+    saveListeners.forEach((fn) => fn('sync.deleted'));
+  });
+}

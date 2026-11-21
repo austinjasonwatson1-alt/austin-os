@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { todayISO } from '../../core/dates';
-import { kvGet, saveWithSnapshot } from '../../core/storage';
+import { kvGet, saveWithSnapshot, markDeleted } from '../../core/storage';
 import { DEFAULT_CHAPEL, type ChapelData, type ChapelDay, type Prayer, type Verse } from './types';
 
 export const KEY = 'chapel.v1';
@@ -64,6 +64,7 @@ export const useChapel = create<ChapelState>((set, get) => {
     answer: (id, answer, on = todayISO()) => patchPrayer(id, (p) => ({ ...p, answeredOn: on, answer: answer.trim() || undefined })),
     unanswer: (id) => patchPrayer(id, ({ answeredOn: _a, answer: _b, ...p }) => p),
     removePrayer(id) {
+      void markDeleted(KEY, id);
       set({ prayers: get().prayers.filter((p) => p.id !== id) });
       persist();
     },
@@ -74,6 +75,7 @@ export const useChapel = create<ChapelState>((set, get) => {
       persist();
     },
     removeVerse(id) {
+      void markDeleted(KEY, id);
       set({ verses: get().verses.filter((v) => v.id !== id) });
       persist();
     },

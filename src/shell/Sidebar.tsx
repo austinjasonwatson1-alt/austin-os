@@ -55,6 +55,7 @@ export function Sidebar() {
       {MODULES.filter((m) => m.section === 'cabin').map((m) => (m.id === 'timer' ? <TimerNav key={m.id} current={route === m.path} /> : item(m.path, m.glyph, m.name, !m.component)))}
       <div className="nav-label">The Homestead</div>
       {AREAS.filter((a) => a.id !== 'cabin').map((a) => item(a.path, a.glyph, a.name, !a.live))}
+      {item('/settings', '⚙', 'Settings')}
       <div className="rail-foot"><AppStatus /><AutoBackupFoot /></div>
     </nav>
   );

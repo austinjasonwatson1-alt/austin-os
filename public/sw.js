@@ -56,3 +56,13 @@ self.addEventListener('fetch', (e) => {
     }),
   );
 });
+
+// Clicking a reminder opens Austin OS on the right page.
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const path = (e.notification.data && e.notification.data.path) || '/home';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+    for (const c of list) { if ('focus' in c) { c.navigate(`./#${path}`); return c.focus(); } }
+    return self.clients.openWindow(`./#${path}`);
+  }));
+});

@@ -1,6 +1,6 @@
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import { todayISO } from '../../core/dates';
-import { kvGet, saveWithSnapshot } from '../../core/storage';
+import { kvGet, saveWithSnapshot, markDeleted } from '../../core/storage';
 import { AREA_CONFIGS, DEFAULT_AREA, type AreaData, type AreaItem, type AreaKey } from './types';
 
 export interface AreaState extends AreaData {
@@ -44,6 +44,7 @@ function makeStore(key: string): UseBoundStore<StoreApi<AreaState>> {
         persist();
       },
       removeItem(id) {
+        void markDeleted(key, id);
         set({ items: get().items.filter((i) => i.id !== id) });
         persist();
       },

@@ -31,7 +31,7 @@ export interface RestorePlan {
 }
 
 /** Keys a backup may carry that a restore should leave alone. */
-const SKIP = (k: string) => k.startsWith('snap:') || k.startsWith('sys:') || k === 'os.backupMeta';
+const SKIP = (k: string) => k.startsWith('snap:') || k.startsWith('sys:') || k === 'os.backupMeta' || k === 'sync.deleted';
 
 const fallback = (key: string): Describer => ({
   name: key,

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { todayISO } from '../../core/dates';
-import { kvGet, saveWithSnapshot } from '../../core/storage';
+import { kvGet, saveWithSnapshot, markDeleted } from '../../core/storage';
 import { moveChapter, recordHistory, totalWords } from './logic';
 import { DEFAULT_MANUSCRIPTS, type Chapter, type ChapterStatus, type Manuscript, type ManuscriptsData } from './types';
 
@@ -59,6 +59,7 @@ export const useManuscripts = create<MsState>((set, get) => {
     },
 
     removeManuscript(id) {
+      void markDeleted(KEY, id);
       const manuscripts = get().manuscripts.filter((m) => m.id !== id);
       set({ manuscripts, active: manuscripts[0]?.id ?? null });
       persist();
@@ -69,7 +70,7 @@ export const useManuscripts = create<MsState>((set, get) => {
       patchChapters(msId, (chs) => (chs.some((x) => x.id === clean.id) ? chs.map((x) => (x.id === clean.id ? clean : x)) : [...chs, clean]));
     },
 
-    removeChapter: (msId, id) => patchChapters(msId, (chs) => chs.filter((c) => c.id !== id)),
+    removeChapter: (msId, id) => (void markDeleted(KEY, id), patchChapters(msId, (chs) => chs.filter((c) => c.id !== id))),
     move: (msId, id, status, beforeId) => patchChapters(msId, (chs) => moveChapter(chs, id, status, beforeId)),
   };
 });

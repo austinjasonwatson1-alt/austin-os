@@ -104,21 +104,53 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
 };
 
 /** Settings and device-local keys are never synced. */
-const SKIP = (k: string) => k.startsWith('snap:') || k.startsWith('sys:') || k === 'os.backupMeta';
+const SKIP = (k: string) => k.startsWith('snap:') || k.startsWith('sys:') || k === 'os.backupMeta' || k === DELETED;
+
+/** Deletions: { storeKey: { itemId: deletedAt } }. Shared between devices so a delete on one sticks on the other. */
+export const DELETED = 'sync.deleted';
+export type Tombstones = Record<string, Record<string, string>>;
+
+export function mergeTombstones(a: unknown, b: unknown): Tombstones {
+  const out: Tombstones = {};
+  for (const t of [a, b]) {
+    if (!isObj(t)) continue;
+    for (const [k, ids] of Object.entries(t)) if (isObj(ids)) out[k] = { ...(out[k] ?? {}), ...(ids as Record<string, string>) };
+  }
+  return out;
+}
+
+/** Remove deleted items (by id) anywhere inside a value, a few levels deep (e.g. manuscripts → chapters). */
+export function prune(v: unknown, dead: Record<string, string> | undefined, depth = 0): unknown {
+  if (!dead || depth > 4) return v;
+  if (Array.isArray(v)) return v.filter((x) => !(isObj(x) && typeof x.id === 'string' && dead[x.id])).map((x) => prune(x, dead, depth + 1));
+  if (isObj(v)) {
+    const out: Obj = {};
+    for (const [k, x] of Object.entries(v)) out[k] = prune(x, dead, depth + 1);
+    return out;
+  }
+  return v;
+}
 
 /** Merge everything from the other device's backup into this device's data. Returns only keys that change. */
 export function syncMerge(local: Record<string, unknown>, remote: Record<string, unknown>): Record<string, unknown> {
   const writes: Record<string, unknown> = {};
-  for (const [key, rv] of Object.entries(remote)) {
-    if (SKIP(key) || rv === undefined) continue;
+  const tomb = mergeTombstones(local[DELETED], remote[DELETED]);
+  const keys = new Set([...Object.keys(remote), ...Object.keys(tomb)]);
+  for (const key of keys) {
+    if (SKIP(key)) continue;
+    const rv = remote[key];
     const lv = local[key];
     let next: unknown;
-    if (lv === undefined) next = rv;
+    if (rv === undefined) next = lv;
+    else if (lv === undefined) next = rv;
     else if (MERGERS[key] && isObj(lv) && isObj(rv)) next = MERGERS[key](lv, rv);
     else if (key.startsWith('area.') && isObj(lv) && isObj(rv)) next = mergeArea(lv, rv);
-    else continue; // unknown or settings: this device's copy stands
+    else next = lv; // unknown or settings: this device's copy stands
+    if (next === undefined) continue;
+    next = prune(next, tomb[key]);
     if (JSON.stringify(next) !== JSON.stringify(lv)) writes[key] = next;
   }
+  if (Object.keys(tomb).length && JSON.stringify(tomb) !== JSON.stringify(local[DELETED] ?? {})) writes[DELETED] = tomb;
   return writes;
 }
 

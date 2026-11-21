@@ -22,6 +22,10 @@ import { Sidebar } from './shell/Sidebar';
 import { Sky } from './shell/Sky';
 import { Celebrations } from './shell/Celebrations';
 import { CommandPalette } from './shell/CommandPalette';
+import { Notifier } from './shell/Notifier';
+import { DeepLinkPage } from './shell/DeepLinkPage';
+import { parseDeepLink } from './shell/deepLink';
+import { useCloud } from './shell/cloud';
 import { useSky } from './core/skyStore';
 import { Soon } from './shell/Soon';
 
@@ -29,8 +33,12 @@ const ReviewPage = lazy(() => import('./modules/review/ReviewPage'));
 const YearPage = lazy(() => import('./modules/review/YearPage'));
 const WritePage = lazy(() => import('./modules/drafts/WritePage'));
 const LibraryPage = lazy(() => import('./modules/review/LibraryPage'));
+const SettingsPage = lazy(() => import('./shell/SettingsPage'));
 
 function Screen({ route }: { route: string }) {
+  const link = parseDeepLink(route);
+  if (link) return <DeepLinkPage link={link} />;
+  if (route === '/settings') return <SettingsPage />;
   if (route === '/home') return <Home />;
   if (route === '/cabin') return <CabinHome />;
   if (route === '/review') return <ReviewPage />;
@@ -59,6 +67,7 @@ export default function App() {
   useEffect(() => {
     void useBackup.getState().load();
     startSync();
+    void useCloud.getState().start();
     void useAutoBackup.getState().start();
     void useLedger.getState().load();
     void useLounge.getState().load();
@@ -81,6 +90,7 @@ export default function App() {
       <Sky />
       <Celebrations />
       <CommandPalette />
+      <Notifier />
       <div className="app">
         <Sidebar />
         <main className="main">

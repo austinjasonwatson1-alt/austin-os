@@ -61,3 +61,23 @@ describe('drafts sync', () => {
     expect(w['drafts.v1'].versions['m/1'].map((v: any) => v.at)).toEqual(['b', 'a']);
   });
 });
+
+import { prune } from './syncLogic';
+
+describe('deletions sync', () => {
+  it('a delete on one computer sticks on the other', () => {
+    const local = { 'shelf.v1': { books: [{ id: 'a' }, { id: 'b' }] }, 'sync.deleted': {} };
+    const remote = { 'shelf.v1': { books: [{ id: 'a' }] }, 'sync.deleted': { 'shelf.v1': { b: '2026-11-21T10:00:00Z' } } };
+    const w = syncMerge(local, remote) as Record<string, any>;
+    expect(w['shelf.v1'].books.map((x: any) => x.id)).toEqual(['a']);
+    expect(w['sync.deleted']).toEqual({ 'shelf.v1': { b: '2026-11-21T10:00:00Z' } });
+  });
+  it('the deleting computer does not get the item back', () => {
+    const local = { 'shelf.v1': { books: [{ id: 'a' }] }, 'sync.deleted': { 'shelf.v1': { b: 'x' } } };
+    const remote = { 'shelf.v1': { books: [{ id: 'a' }, { id: 'b' }] } };
+    expect(syncMerge(local, remote)).toEqual({});
+  });
+  it('prunes nested items like chapters', () => {
+    expect(prune({ manuscripts: [{ id: 'm', chapters: [{ id: '1' }, { id: '2' }] }] }, { '2': 'x' })).toEqual({ manuscripts: [{ id: 'm', chapters: [{ id: '1' }] }] });
+  });
+});

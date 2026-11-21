@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { kvGet, saveWithSnapshot, snapshotNow } from '../../core/storage';
+import { kvGet, saveWithSnapshot, snapshotNow, markDeleted } from '../../core/storage';
 import { previewImport } from './logic';
 import { DEFAULT_SHELF, type Book, type ShelfData } from './types';
 
@@ -41,6 +41,7 @@ export const useShelf = create<ShelfState>((set, get) => {
     },
 
     remove(id) {
+      void markDeleted(KEY, id);
       set({ books: get().books.filter((b) => b.id !== id) });
       persist();
     },
