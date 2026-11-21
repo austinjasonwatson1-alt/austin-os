@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAutoBackup } from '../core/autoBackup';
-import { autoBackupStatus } from '../core/autoBackupLogic';
+import { autoBackupStatus, timeAgo } from '../core/autoBackupLogic';
 import { daysSinceBackup, useBackup } from '../core/backup';
 import { go } from './router';
 import { RestoreButton } from './RestoreBackup';
@@ -18,13 +18,13 @@ function useNow(ms = 30_000) {
 function useStatus() {
   const ab = useAutoBackup();
   const now = useNow();
-  return { ab, status: autoBackupStatus({ ...ab, now }) };
+  return { ab, now, status: autoBackupStatus({ ...ab, now }) };
 }
 
 const GLYPH = { ok: '◉', warn: '◎', bad: '◬', off: '○' } as const;
 
 export function AutoBackupPanel() {
-  const { ab, status } = useStatus();
+  const { ab, now, status } = useStatus();
   const backup = useBackup();
   const age = daysSinceBackup(backup.lastBackupAt);
   const manualLine = !backup.loaded ? '' : age === null ? 'You have never backed up.' : `Last backup was ${age === 0 ? 'today' : `${age} day${age === 1 ? '' : 's'} ago`}.`;
@@ -47,14 +47,15 @@ export function AutoBackupPanel() {
     actions = (
       <>
         <button className="btn primary" onClick={() => void backup.exportAll()}>Back up now</button>
-        <RestoreButton label="Restore from a file…" />
+        <RestoreButton label="Bring in a file…" />
       </>
     );
   } else if (!ab.fileName) {
-    body = <>Everything lives in this browser, and clearing site data erases it. Pick a backup file once — ideally in iCloud Drive, Dropbox or OneDrive — and every change is copied there automatically. {manualLine}</>;
+    body = <>Everything lives in this browser, and clearing site data erases it. Pick a backup file once — ideally in iCloud Drive, Dropbox or OneDrive — and every change is copied there automatically. Already using Austin OS on another computer? Join its file instead, and the two stay in sync. {manualLine}</>;
     actions = (
       <>
         <button className="btn primary" onClick={() => void ab.choose()}>Choose backup file</button>
+        <button className="btn" onClick={() => void ab.connect()}>Join another device's file</button>
         <button className="btn ghost" onClick={() => void backup.exportAll()}>Download once</button>
         <RestoreButton label="Restore from a file…" />
       </>
@@ -93,9 +94,15 @@ export function AutoBackupPanel() {
       </>
     );
   } else {
-    body = <>Every change is copied to <b>{ab.fileName}</b> a couple of seconds after you make it. If this browser's data is ever cleared, that file still has everything.</>;
+    body = (
+      <>
+        Every change is copied to <b>{ab.fileName}</b> a couple of seconds after you make it, and anything another computer added to it comes in when you open the app.
+        {ab.lastSync ? <> Last brought in {timeAgo(ab.lastSync.at, now)}: {ab.lastSync.changes.join('; ')}.</> : null}
+      </>
+    );
     actions = (
       <>
+        <button className="btn ghost" onClick={() => void ab.pull()}>Sync now</button>
         <button className="btn ghost" onClick={() => void ab.choose()}>Change file</button>
         <RestoreButton label="Restore…" />
         <button className="btn ghost" onClick={turnOff}>Turn off</button>

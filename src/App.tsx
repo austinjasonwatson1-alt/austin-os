@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { routeMotion } from './shell/routeLogic';
 import { useAutoBackup } from './core/autoBackup';
+import { startSync } from './shell/sync';
 import { useBackup } from './core/backup';
 import { useLedger } from './modules/ledger/store';
 import { useLounge } from './modules/lounge/store';
@@ -47,6 +48,7 @@ export default function App() {
   }, [route]);
   useEffect(() => {
     void useBackup.getState().load();
+    startSync();
     void useAutoBackup.getState().start();
     void useLedger.getState().load();
     void useLounge.getState().load();

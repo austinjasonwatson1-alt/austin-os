@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAutoBackup } from '../core/autoBackup';
 import { planRestore, type Change, type Describer, type RestorePlan } from '../core/restoreLogic';
 import { dumpAll, saveWithSnapshot, snapshotNow } from '../core/storage';
+import { syncMerge } from '../core/syncLogic';
 import { describeLedger } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
 import { describeLounge } from '../modules/lounge/logic';
@@ -18,10 +19,10 @@ import { useReview } from '../modules/review/store';
 import { useTimer } from '../modules/timer/store';
 
 /** Every module's stored key → how to describe it. Add new modules here. */
-const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge, 'timer.v1': describeTimer, 'shelf.v1': describeShelf, 'manuscripts.v1': describeManuscripts, 'chapel.v1': describeChapel, 'review.v1': describeReview };
+export const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge, 'timer.v1': describeTimer, 'shelf.v1': describeShelf, 'manuscripts.v1': describeManuscripts, 'chapel.v1': describeChapel, 'review.v1': describeReview };
 
 /** After a restore, every store re-reads what it holds. Add new modules here. */
-const reloadStores = () => Promise.all([useLedger.getState().load(true), useLounge.getState().load(true), useTimer.getState().load(true), useShelf.getState().load(true), useManuscripts.getState().load(true), useChapel.getState().load(true), useReview.getState().load(true)]);
+export const reloadStores = () => Promise.all([useLedger.getState().load(true), useLounge.getState().load(true), useTimer.getState().load(true), useShelf.getState().load(true), useManuscripts.getState().load(true), useChapel.getState().load(true), useReview.getState().load(true)]);
 
 const TAG: Record<Change, { text: string; cls: string }> = {
   new: { text: 'Brings back', cls: 'back' },
@@ -33,6 +34,16 @@ const TAG: Record<Change, { text: string; cls: string }> = {
 
 const when = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'unknown date';
+
+/** Merge a file in: only adds what this device doesn't have. Restore points first. */
+export async function applyMerge(writes: Record<string, unknown>, fileName: string) {
+  const current = await dumpAll();
+  for (const [key, value] of Object.entries(writes)) {
+    if (current[key] !== undefined) await snapshotNow(key, current[key], `Before merging ${fileName}`);
+    await saveWithSnapshot(key, value);
+  }
+  await reloadStores();
+}
 
 async function applyRestore(plan: RestorePlan) {
   const current = await dumpAll();
@@ -84,6 +95,8 @@ function RestoreDialog({ source, onClose }: { source: Source; onClose: () => voi
   const ref = useRef<HTMLDialogElement>(null);
   const [plan, setPlan] = useState<RestorePlan | { error: string } | null>(null);
   const [state, setState] = useState<'idle' | 'working' | 'done'>('idle');
+  const [merged, setMerged] = useState<Record<string, unknown> | null>(null);
+  const [how, setHow] = useState<'merge' | 'replace'>('merge');
 
   useEffect(() => {
     ref.current?.showModal();
@@ -93,7 +106,13 @@ function RestoreDialog({ source, onClose }: { source: Source; onClose: () => voi
     } catch {
       /* planRestore reports it */
     }
-    void dumpAll().then((cur) => setPlan(planRestore(cur, parsed, DESCRIBERS)));
+    void dumpAll().then((cur) => {
+      setPlan(planRestore(cur, parsed, DESCRIBERS));
+      const data = (parsed as { data?: Record<string, unknown> } | null)?.data;
+      const m = data && typeof data === 'object' ? syncMerge(cur, data) : null;
+      setMerged(m);
+      if (!m || Object.keys(m).length === 0) setHow('replace');
+    });
   }, [source]);
 
   const close = () => { ref.current?.close(); onClose(); };
@@ -103,9 +122,11 @@ function RestoreDialog({ source, onClose }: { source: Source; onClose: () => voi
   const run = async () => {
     if (!ok) return;
     setState('working');
-    await applyRestore(ok);
+    if (how === 'merge' && merged) await applyMerge(merged, source.name);
+    else await applyRestore(ok);
     setState('done');
   };
+  const mergeCount = merged ? Object.keys(merged).length : 0;
 
   return (
     <dialog ref={ref} className="sheet" onClose={onClose} aria-labelledby="restore-title">
@@ -142,6 +163,15 @@ function RestoreDialog({ source, onClose }: { source: Source; onClose: () => voi
             <p className="dim" style={{ fontSize: 13.5 }}>This backup matches what you already have — nothing to restore.</p>
           ) : (
             <>
+              <div className="seg wide" role="radiogroup" aria-label="How" style={{ marginTop: 14 }}>
+                <button role="radio" aria-checked={how === 'merge'} onClick={() => setHow('merge')} disabled={!mergeCount}>Merge in{mergeCount ? '' : ' (nothing new)'}</button>
+                <button role="radio" aria-checked={how === 'replace'} onClick={() => setHow('replace')}>Replace with the file</button>
+              </div>
+              {how === 'merge' ? (
+                <p className="dim" style={{ fontSize: 13.5, margin: '12px 0 0' }}>
+                  Adds what the file has that this device doesn't (from your phone, say) and keeps everything here as it is. Safe either way: a restore point is saved first.
+                </p>
+              ) : <>
               {ok.shrinks.length > 0 && (
                 <p className="sheet-warn">
                   This backup holds <b>less</b> than you have now in {ok.shrinks.join(', ')}. Restoring replaces what's here with the older copy.
@@ -150,6 +180,7 @@ function RestoreDialog({ source, onClose }: { source: Source; onClose: () => voi
               <p className="dim" style={{ fontSize: 13.5, margin: '12px 0 0' }}>
                 Restoring replaces {changes === 1 ? 'that area' : `those ${changes} areas`} with the file's copy. What you have now is saved as a restore point first, so you can undo it.
               </p>
+              </>}
             </>
           )}
         </>
@@ -161,8 +192,8 @@ function RestoreDialog({ source, onClose }: { source: Source; onClose: () => voi
         ) : (
           <>
             <button className="btn ghost" onClick={close} disabled={state === 'working'}>Cancel</button>
-            <button className={ok.shrinks.length ? 'btn danger-solid' : 'btn primary'} onClick={() => void run()} disabled={state === 'working'}>
-              {state === 'working' ? 'Restoring…' : ok.shrinks.length ? 'Replace with older copy' : 'Restore'}
+            <button className={how === 'replace' && ok.shrinks.length ? 'btn danger-solid' : 'btn primary'} onClick={() => void run()} disabled={state === 'working' || (how === 'merge' && !mergeCount)}>
+              {state === 'working' ? 'Working…' : how === 'merge' ? 'Merge in' : ok.shrinks.length ? 'Replace with older copy' : 'Restore'}
             </button>
           </>
         )}
