@@ -41,6 +41,7 @@ export function CommandPalette() {
       nav('/review', 'Weekly review', 'sunday week'),
       nav('/year', 'Year in review', 'annual stats'),
       nav('/library', 'Library of You', 'archive journal months memories'),
+      nav('/keeper', 'The Keeper', 'ai mentor ask help coach query letter craft'),
       nav('/settings', 'Settings', 'reminders notifications siri shortcuts cloud sync phone'),
       nav('/cabin', "The Writer's Cabin", 'writing dashboard'),
       ...MODULES.filter((m) => m.component).map((m) => nav(m.path, m.name, m.blurb)),

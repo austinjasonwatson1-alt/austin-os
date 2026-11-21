@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import '../styles/keeper.css';
 import { SETUP_SQL } from '../core/cloudCrypto';
 import { useSky } from '../core/skyStore';
 import { CATS } from '../modules/ledger/types';
@@ -6,6 +7,8 @@ import { useCloud } from './cloud';
 import { logLink } from './deepLink';
 import { rise } from './lamp';
 import { SkyPanel } from './SkyPanel';
+import { useKeeper } from '../modules/keeper/store';
+import type { Allow } from '../modules/keeper/logic';
 import '../styles/cabin.css';
 import '../styles/homestead.css';
 import '../styles/settings.css';
@@ -24,6 +27,7 @@ export default function SettingsPage() {
         <SkyPanel />
         <QuickLinks />
         <CloudSync />
+        <KeeperSettings />
       </div>
     </div>
   );
@@ -143,6 +147,43 @@ function CloudSync() {
           </div>
         </>
       )}
+    </section>
+  );
+}
+
+const ALLOW_LABEL: Record<keyof Allow, string> = {
+  ledger: 'The Ledger (minutes, streak, day notes)', manuscripts: 'Manuscripts (titles, chapters, word counts)', chapterText: 'Chapter text (only the one you ask about)',
+  reviews: 'Weekly reviews', shelf: 'The Shelf (books and craft notes)', publishing: 'Queries, contests and editorial notes', chapel: 'The Chapel (minutes only, never prayer text)',
+};
+
+function KeeperSettings() {
+  const k = useKeeper();
+  useEffect(() => { void k.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [key, setKey] = useState('');
+  return (
+    <section className="panel cloud rise" style={rise(4)}>
+      <div className="panel-h"><p className="panel-t">The Keeper · AI mentor</p><span className={`mono ${k.enabled ? 'g-good' : 'faint'}`} style={{ fontSize: 11 }}>{k.enabled ? 'on' : 'off'}</span></div>
+      <p className="set-note" style={{ marginTop: 0 }}>
+        The Keeper uses Claude through your own Anthropic API key (console.anthropic.com → API keys). The key stays on this device only, never in backups or sync. Each question sends Anthropic a short briefing built only from what you allow below; typical use costs cents a day.
+      </p>
+      {!k.enabled ? (
+        <div className="keeper-key">
+          <input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="sk-ant-…" aria-label="Anthropic API key" autoComplete="off" />
+          <button className="btn primary sm" disabled={key.trim().length < 20} onClick={() => { void k.setKey(key); setKey(''); }}>Wake the Keeper</button>
+        </div>
+      ) : (
+        <div className="rates-foot" style={{ marginTop: 10 }}><button className="btn ghost sm" onClick={() => void k.forget()}>Remove the key from this device</button></div>
+      )}
+      <p className="panel-t" style={{ margin: '16px 0 8px' }}>What it may read</p>
+      <div className="sky-toggles">
+        {(Object.keys(ALLOW_LABEL) as (keyof Allow)[]).map((a) => (
+          <label key={a} className="switch">
+            <input type="checkbox" checked={k.allow[a]} onChange={(e) => void k.setAllow({ ...k.allow, [a]: e.target.checked })} />
+            <span className="switch-ui" aria-hidden />
+            <span><b>{ALLOW_LABEL[a]}</b></span>
+          </label>
+        ))}
+      </div>
     </section>
   );
 }

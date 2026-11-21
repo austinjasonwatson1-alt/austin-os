@@ -10,6 +10,7 @@ import { useManuscripts } from '../manuscripts/store';
 import { useShelf } from '../shelf/store';
 import { reviewWeek, vsLast, weekSummary } from './logic';
 import { useReview } from './store';
+import { useKeeper } from '../keeper/store';
 import '../../styles/cabin.css';
 import '../../styles/ledger.css';
 import '../../styles/review.css';
@@ -121,6 +122,7 @@ export default function ReviewPage() {
         <Prompt label="What worked this week?" value={r.worked} onSave={(v) => rv.patch(monday, { worked: v })} placeholder="The 6am sessions. Writing before checking the phone…" disabled={Boolean(r.sealedAt)} />
         <Prompt label="What got in the way?" value={r.didnt} onSave={(v) => rv.patch(monday, { didnt: v })} placeholder="Late nights. Saying yes to too much…" disabled={Boolean(r.sealedAt)} />
         <Prompt label="One intention for next week" value={r.intention} onSave={(v) => rv.patch(monday, { intention: v })} placeholder="Finish chapter 7 by Thursday." disabled={Boolean(r.sealedAt)} />
+        <KeeperWeek />
         <div className="seal-row">
           {r.sealedAt ? (
             <>
@@ -169,5 +171,23 @@ function Prompt({ label, value, onSave, placeholder, disabled }: { label: string
       <span className="mono">{label}</span>
       <textarea value={v} onChange={(e) => setV(e.target.value)} onBlur={() => { if ((value ?? '') !== v) onSave(v); }} placeholder={placeholder} rows={2} readOnly={disabled} />
     </label>
+  );
+}
+
+/** If the Keeper is on: a read of the last few weeks, to help with the three questions. */
+function KeeperWeek() {
+  const k = useKeeper();
+  useEffect(() => { void k.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (!k.enabled) return null;
+  return (
+    <div className="keeper-week">
+      {text ? <p className="keeper-week-t"><span className="mono">The Keeper</span>{text}</p> : (
+        <button className="btn sm" disabled={busy} onClick={async () => { setBusy(true); try { setText(await k.ask('week')); } catch (e) { setText(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); } }}>
+          {busy ? 'The Keeper is reading…' : 'Ask the Keeper what it sees in your weeks'}
+        </button>
+      )}
+    </div>
   );
 }

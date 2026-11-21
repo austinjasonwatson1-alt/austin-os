@@ -47,6 +47,7 @@ export function Sidebar() {
       </div>
       <button className="rail-search" onClick={openPalette} aria-label="Search and commands"><span aria-hidden>⌕</span><span>Search, go, log…</span><kbd>⌘K</kbd></button>
       {item('/home', '◈', 'Home')}
+      {item('/keeper', '♨', 'The Keeper')}
       {item('/review', '◷', 'Weekly review')}
       {item('/year', '◎', 'Year in review')}
       {item('/library', '❦', 'Library of You')}

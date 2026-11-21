@@ -1,0 +1,42 @@
+/* ================= The Keeper ================= */
+.keeper-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 26px; align-items: center; margin-bottom: 18px; }
+.keeper-lantern { position: relative; width: 90px; height: 120px; border-radius: 40px 40px 14px 14px; border: 2px solid rgba(232, 168, 75, .55);
+  background: radial-gradient(circle at 50% 60%, rgba(255, 220, 150, .55), rgba(232, 168, 75, .12) 45%, transparent 70%), rgba(10, 12, 20, .6);
+  box-shadow: 0 0 50px rgba(232, 168, 75, .3); }
+.keeper-lantern i { position: absolute; left: 50%; top: 50%; width: 18px; height: 30px; border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%; transform: translate(-50%, -40%);
+  background: radial-gradient(circle at 50% 75%, #fff8e0, #ffd27a 40%, #f08a24 75%, transparent 78%); animation: candle 1.8s ease-in-out infinite alternate; }
+.keeper-lantern.sm { width: 34px; height: 46px; border-radius: 16px 16px 6px 6px; flex: none; }
+.keeper-lantern.sm i { width: 8px; height: 13px; }
+.keeper-off { display: grid; gap: 12px; justify-items: start; }
+.keeper-off p { margin: 0; color: var(--bone-dim); }
+.keeper-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.kp { padding: 9px 14px; border-radius: 99px; border: 1px solid rgba(232, 168, 75, .35); background: var(--lamp-soft); color: var(--bone); font-size: 13.5px; }
+.kp:hover:not(:disabled), .kp.on { border-color: rgba(232, 168, 75, .7); box-shadow: 0 0 16px rgba(232, 168, 75, .2); }
+.kp:disabled { opacity: .5; }
+.keeper-form { display: grid; gap: 10px; margin-bottom: 14px; }
+.convo { display: grid; gap: 14px; margin: 10px 0 16px; }
+.turn { max-width: 760px; padding: 14px 18px; border-radius: 16px; }
+.turn .mono { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--bone-faint); }
+.turn p { margin: 6px 0 0; white-space: pre-wrap; line-height: 1.65; }
+.turn.you { justify-self: end; background: rgba(233, 228, 216, .05); border: 1px solid var(--line); }
+.turn.keeper { justify-self: start; border: 1px solid rgba(232, 168, 75, .25);
+  background: repeating-linear-gradient(180deg, transparent 0 29px, rgba(233, 228, 216, .03) 29px 30px), linear-gradient(170deg, #17130f, #0e0b09); }
+.turn.keeper .mono { color: var(--lamp); }
+.turn.keeper p { font-family: 'Literata', Georgia, serif; font-size: 16px; }
+.turn.thinking p { display: flex; gap: 6px; }
+.turn.thinking i { width: 7px; height: 7px; border-radius: 50%; background: var(--lamp); animation: dot-pulse .7s ease-in-out infinite alternate; }
+.turn.thinking i:nth-child(2) { animation-delay: .2s; }
+.turn.thinking i:nth-child(3) { animation-delay: .4s; }
+.keeper-ask { position: sticky; bottom: 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 8px; border-radius: 16px; border: 1px solid var(--line-strong); background: rgba(10, 13, 21, .94); backdrop-filter: blur(10px); }
+.keeper-ask input { min-width: 0; border: 0; background: none; outline: none; padding: 8px 10px; font-size: 15px; }
+.keeper-foot { font-size: 10.5px; margin-top: 10px; }
+.keeper-note { display: flex; gap: 14px; align-items: flex-start; width: 100%; margin: 0 0 16px; padding: 16px 18px; border-radius: 16px; text-align: left; color: inherit;
+  border: 1px solid rgba(232, 168, 75, .3); background: repeating-linear-gradient(180deg, transparent 0 29px, rgba(233, 228, 216, .03) 29px 30px), linear-gradient(170deg, #17130f, #0e0b09); }
+.keeper-note:hover { border-color: rgba(232, 168, 75, .6); }
+.keeper-note .mono { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--lamp); }
+.keeper-note p { margin: 6px 0 0; font-family: 'Literata', Georgia, serif; font-size: 15.5px; line-height: 1.6; }
+@media (prefers-reduced-motion: reduce) { .keeper-lantern i, .turn.thinking i { animation: none; } }
+@media (max-width: 860px) { .keeper-hero { grid-template-columns: minmax(0, 1fr); } .keeper-lantern { width: 60px; height: 80px; } }
+@keyframes candle { 0% { transform: translate(-50%, -40%) rotate(-2deg); } 100% { transform: translate(-50%, -40%) rotate(2deg) scaleY(1.06); } }
+.keeper-key { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 12px; max-width: 560px; padding: 6px; border-radius: 14px; border: 1px solid rgba(232, 168, 75, .35); background: rgba(10, 12, 20, .7); }
+.keeper-key input { min-width: 0; border: 0; background: none; outline: none; padding: 8px 10px; font-family: var(--mono); font-size: 13px; color: var(--bone); }

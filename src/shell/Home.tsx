@@ -21,6 +21,7 @@ import { useWallet } from '../modules/lounge/useWallet';
 import { CountUp, tilt } from './fx';
 import { AutoBackupPanel } from './AutoBackup';
 import { Homestead, type World } from './Homestead';
+import { KeeperNote } from '../modules/keeper/KeeperNote';
 import { SkyPanel } from './SkyPanel';
 import { GRADE_VAR, greeting, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
 import { go } from './router';
@@ -94,6 +95,8 @@ export default function Home() {
           <span className="go" aria-hidden>→</span>
         </button>
       )}
+
+      <KeeperNote />
 
       {years && (
         <div className="review-nudge anniv rise" style={rise(1)}>

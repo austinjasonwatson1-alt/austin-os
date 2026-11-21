@@ -34,11 +34,13 @@ const YearPage = lazy(() => import('./modules/review/YearPage'));
 const WritePage = lazy(() => import('./modules/drafts/WritePage'));
 const LibraryPage = lazy(() => import('./modules/review/LibraryPage'));
 const SettingsPage = lazy(() => import('./shell/SettingsPage'));
+const KeeperPage = lazy(() => import('./modules/keeper/KeeperPage'));
 
 function Screen({ route }: { route: string }) {
   const link = parseDeepLink(route);
   if (link) return <DeepLinkPage link={link} />;
   if (route === '/settings') return <SettingsPage />;
+  if (route === '/keeper') return <KeeperPage />;
   if (route === '/home') return <Home />;
   if (route === '/cabin') return <CabinHome />;
   if (route === '/review') return <ReviewPage />;
