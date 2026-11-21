@@ -59,3 +59,10 @@ export const bedtime = (d: Date) => d.getHours() >= 23 || d.getHours() < 5;
 export function daylight(p: Phase): { wall: number; glow: number } {
   return { night: { wall: 0, glow: 1 }, dusk: { wall: 0.25, glow: 0.85 }, dawn: { wall: 0.3, glow: 0.7 }, golden: { wall: 0.45, glow: 0.6 }, day: { wall: 0.6, glow: 0.35 } }[p];
 }
+
+/** A book finished today or yesterday, for Cooper and Shadow to make a fuss about (the newest one). */
+export function freshFinish(books: { title: string; status: string; finished?: string }[], today: string, yesterday: string): string | null {
+  const hit = books.filter((b) => b.status === 'read' && (b.finished === today || b.finished === yesterday))
+    .sort((a, b) => (b.finished ?? '').localeCompare(a.finished ?? ''))[0];
+  return hit?.title ?? null;
+}

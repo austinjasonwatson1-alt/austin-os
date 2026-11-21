@@ -12,7 +12,7 @@ import type { DogPose } from '../modules/lounge/logic';
  * `heat` (0–1) is how much of today's writing is done; the cabin windows burn with it.
  */
 /** What the scene needs to know about the life around it. */
-export interface World { growth: Growth; phase: Phase; sleeping: boolean; grey: number }
+export interface World { growth: Growth; phase: Phase; sleeping: boolean; grey: number; /** A book just finished: the dogs make a fuss about it. */ newBook?: string | null }
 
 export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, forgeHeat = 0, hearthHeat = 0, world, pose, children }: { heat: number; chapelHeat?: number; officeHeat?: number; obsHeat?: number; forgeHeat?: number; hearthHeat?: number; world?: World; pose: DogPose; children?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -220,7 +220,20 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
           {world && <Garden g={world.growth} />}
           <rect x="-60" y="270" width="1320" height="60" fill="url(#hs-mist)" className="hs-mist" />
           {/* Cooper and Shadow out front of the cabin; click them to go in to the Lounge */}
-          {pose === 'sleep' ? (
+          {world?.newBook && !world.sleeping ? (
+            // A book just finished: they sit proud by the cabin with it, tails going, until tomorrow's done.
+            <g className="dogs-proud" role="button" tabIndex={0} aria-label={`Cooper and Shadow heard you finished ${world.newBook}`}
+              onClick={() => go('/cabin/shelf')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('/cabin/shelf'); } }}>
+              <title>{`They heard you finished ${world.newBook}`}</title>
+              <g transform="translate(598 244)"><g className="dp-bubble">
+                <rect x={-Math.min(150, 34 + world.newBook.length * 3.6)} y="-15" width={Math.min(300, 68 + world.newBook.length * 7.2)} height="26" rx="13" />
+                <text x="0" y="3">{`\u2605 ${world.newBook.length > 34 ? `${world.newBook.slice(0, 33)}\u2026` : world.newBook}`}</text>
+              </g></g>
+              <g transform="translate(572 304) scale(.42)"><g className="dp-wag"><Dog who="cooper" grey={world.grey} pose="proud" /></g></g>
+              <g className="dp-book" transform="translate(597 300)"><rect x="-7" y="-10" width="14" height="10" rx="1.5" /><line x1="0" y1="-10" x2="0" y2="0" /></g>
+              <g transform="translate(624 306) scale(.42)"><g className="dp-wag d2"><Dog who="shadow" grey={world.grey} pose="proud" /></g></g>
+            </g>
+          ) : pose === 'sleep' ? (
             <>
               <g transform="translate(560 304) scale(.42)"><Dog who="cooper" grey={world?.grey} pose="sleep" onClick={() => go('/cabin/lounge')} /></g>
               <g transform="translate(612 306) scale(.42)"><Dog who="shadow" grey={world?.grey} pose="sleep" onClick={() => go('/cabin/lounge')} /></g>

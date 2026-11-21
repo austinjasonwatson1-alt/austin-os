@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anniversary, bedtime, daylight, greyness, growth, tricks } from './worldLogic';
+import { anniversary, bedtime, daylight, greyness, growth, tricks , freshFinish } from './worldLogic';
 
 describe('the living homestead', () => {
   it('grows with the hours and the streak', () => {
@@ -20,5 +20,13 @@ describe('the living homestead', () => {
   it('knows bedtime and daylight', () => {
     expect([bedtime(new Date('2026-11-21T23:30:00')), bedtime(new Date('2026-11-21T21:00:00'))]).toEqual([true, false]);
     expect(daylight('day').wall).toBeGreaterThan(daylight('night').wall);
+  });
+});
+
+describe('freshFinish', () => {
+  it('finds the newest book finished today or yesterday', () => {
+    const b = (title: string, finished?: string, status = 'read') => ({ title, finished, status });
+    expect(freshFinish([b('old', '2026-11-01'), b('y', '2026-11-20'), b('t', '2026-11-21'), b('r', '2026-11-21', 'reading')], '2026-11-21', '2026-11-20')).toBe('t');
+    expect(freshFinish([b('old', '2026-11-01')], '2026-11-21', '2026-11-20')).toBeNull();
   });
 });

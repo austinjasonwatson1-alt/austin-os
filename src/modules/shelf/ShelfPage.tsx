@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { todayISO } from '../../core/dates';
 import { CountUp, embers, tilt } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { parseCsvRows } from '../ledger/logic';
-import { coverSearchUrl, csvToObjects, filterBooks, genres, parseCoverResults, parseShelfJson, previewImport, readingYear, readWall, shelfOrder, spine, type CoverHit } from './logic';
+import { coverSearchUrl, finishMilestone, type Milestone, csvToObjects, filterBooks, genres, parseCoverResults, parseShelfJson, previewImport, readingYear, readWall, shelfOrder, spine, type CoverHit } from './logic';
 import { useShelf } from './store';
 import { STATUS_LABEL, type Book, type BookStatus } from './types';
 import '../../styles/cabin.css';
@@ -20,6 +20,7 @@ export default function ShelfPage() {
   const [tab, setTab] = useState<BookStatus | 'all'>('all');
   const [genre, setGenre] = useState<string | null>(null);
   const [open, setOpen] = useState<Book | 'new' | null>(null);
+  const [cele, setCele] = useState<{ book: Book; from: DOMRect | null; m: Milestone } | null>(null);
   const year = new Date().getFullYear();
   const y = readingYear(books, year);
   const wall = useMemo(() => readWall(books), [books]);
@@ -94,7 +95,9 @@ export default function ShelfPage() {
         </section>
       )}
 
-      {open && <BookSheet book={open === 'new' ? null : open} onClose={() => setOpen(null)} />}
+      {open && <BookSheet book={open === 'new' ? null : open} onClose={() => setOpen(null)}
+        onFinished={(book, from) => setCele({ book, from, m: finishMilestone(useShelf.getState().books, book) })} />}
+      {cele && <Celebration key={cele.book.id + cele.from?.x} {...cele} onDone={() => setCele(null)} />}
     </div>
   );
 }
@@ -105,7 +108,7 @@ function Spine({ b, onOpen }: { b: Book; onOpen: () => void }) {
   const s = spine(b);
   return (
     <div className="slot">
-      <button className={`spine st-${b.status}`} style={{ '--c': s.color, height: s.height, width: s.width } as CSSProperties} onClick={onOpen}
+      <button data-spine={b.id} className={`spine st-${b.status}`} style={{ '--c': s.color, height: s.height, width: s.width } as CSSProperties} onClick={onOpen}
         title={`${b.title} — ${b.author}`} aria-label={`${b.title} by ${b.author}, ${STATUS_LABEL[b.status]}`}>
         <i className="band top" /><i className="band bottom" />
         <span className="spine-t">{b.title}</span>
@@ -121,10 +124,10 @@ function Spine({ b, onOpen }: { b: Book; onOpen: () => void }) {
 function Cover({ b, onOpen }: { b: Book; onOpen: () => void }) {
   const s = spine(b);
   return (
-    <button className={b.cover ? 'cover tilt has-art' : 'cover tilt'} style={{ '--c': s.color } as CSSProperties} onClick={onOpen} {...tilt(8)}
+    <button data-book={b.id} className={b.cover ? 'cover tilt has-art' : 'cover tilt'} style={{ '--c': s.color } as CSSProperties} onClick={onOpen} {...tilt(8)}
       aria-label={`${b.title} by ${b.author}${b.rating ? `, ${b.rating} stars` : ''}`}>
       <CoverArt b={b} />
-      {b.rating > 0 && <span className="cover-stars" aria-hidden>{stars(b.rating)}</span>}
+      {b.rating > 0 && <span className="cover-stars" aria-hidden>{starList(b.rating).map((st, i) => <span key={i} style={{ '--i': i } as CSSProperties}>{st}</span>)}</span>}
     </button>
   );
 }
@@ -142,11 +145,11 @@ function CoverArt({ b }: { b: Pick<Book, 'title' | 'author' | 'cover'> }) {
   );
 }
 
-const stars = (r: number) => '★'.repeat(Math.floor(r)) + (r % 1 ? '½' : '');
+const starList = (r: number) => [...Array(Math.floor(r)).fill('★'), ...(r % 1 ? ['½'] : [])];
 
 /* ---------------- the book sheet: view and edit ---------------- */
 
-function BookSheet({ book, onClose }: { book: Book | null; onClose: () => void }) {
+function BookSheet({ book, onClose, onFinished }: { book: Book | null; onClose: () => void; onFinished: (b: Book, from: DOMRect | null) => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const all = useShelf((s) => s.books);
   const [b, setB] = useState<Omit<Book, 'id' | 'addedAt'> & { id?: string }>(
@@ -168,9 +171,10 @@ function BookSheet({ book, onClose }: { book: Book | null; onClose: () => void }
   const save = () => {
     if (!ok) return;
     const finishedNow = b.status === 'read' && book?.status !== 'read';
-    useShelf.getState().save(b);
-    if (finishedNow) embers(ref.current?.querySelector('.sheet-cover') as HTMLElement, 22);
-    setTimeout(close, finishedNow ? 500 : 0);
+    const from = (ref.current?.querySelector('.sheet-cover') as HTMLElement | null)?.getBoundingClientRect() ?? null;
+    const saved = useShelf.getState().save(b);
+    close();
+    if (finishedNow) onFinished(saved, from);
   };
 
   return (
@@ -339,5 +343,73 @@ function CoverFinder({ title, author, current, onPick }: { title: string; author
         {current && <button className="linkish" onClick={() => { onPick(null); setHits(null); }}>Use the drawn cover</button>}
       </div>
     </div>
+  );
+}
+
+/* ---------------- finishing a book: the ceremony ---------------- */
+
+/**
+ * The cover lifts out of the sheet and flies to its place on the read wall (which opens up to
+ * make room), the stars stamp in, the spine drops onto the shelf, and a card marks the moment.
+ */
+function Celebration({ book, from, m, onDone }: { book: Book; from: DOMRect | null; m: Milestone; onDone: () => void }) {
+  const fly = useRef<HTMLDivElement>(null);
+  const [card, setCard] = useState(false);
+  useLayoutEffect(() => {
+    const target = document.querySelector<HTMLElement>(`.read-wall [data-book="${book.id}"]`);
+    const spineEl = document.querySelector<HTMLElement>(`[data-spine="${book.id}"]`);
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timers: number[] = [];
+    const land = () => {
+      if (target) { target.style.visibility = ''; target.classList.add('landed'); embers(target, m.big ? 30 : 16); }
+      if (spineEl) spineEl.classList.add('shelved');
+      setCard(true);
+      timers.push(window.setTimeout(() => { target?.classList.remove('landed', 'making-room'); spineEl?.classList.remove('shelved'); }, 2600));
+    };
+    if (!target || !from || !fly.current || still) { if (target) target.scrollIntoView({ block: 'center' }); land(); return () => timers.forEach(clearTimeout); }
+    target.classList.add('making-room');
+    target.style.visibility = 'hidden';
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const el = fly.current;
+    // Wait a beat for the scroll and the gap to open, then fly to wherever the cover ended up.
+    timers.push(window.setTimeout(() => {
+      const to = target.getBoundingClientRect();
+      const sx = to.width / from.width, sy = to.height / from.height;
+      const dx = to.left - from.left, dy = to.top - from.top;
+      const lift = Math.min(dy, 0) - 120;
+      const a = el.animate([
+        { transform: 'translate(0,0) scale(1) rotate(0deg)', offset: 0 },
+        { transform: `translate(${dx * 0.45}px, ${lift}px) scale(${(1 + sx) / 2 * 1.12}) rotate(-6deg)`, offset: 0.45 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy}) rotate(0deg)`, offset: 1 },
+      ], { duration: 1100, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards' });
+      a.onfinish = () => { el.style.display = 'none'; land(); };
+    }, 520));
+    return () => timers.forEach(clearTimeout);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!card) return;
+    const t = setTimeout(onDone, m.big ? 6000 : 4200);
+    return () => clearTimeout(t);
+  }, [card]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sp = spine(book);
+  return (
+    <>
+      {from && (
+        <div ref={fly} className={book.cover ? 'flying-cover has-art' : 'flying-cover'} aria-hidden
+          style={{ left: from.left, top: from.top, width: from.width, height: from.height, '--c': sp.color } as CSSProperties}>
+          <CoverArt b={book} />
+        </div>
+      )}
+      {card && (
+        <div className={m.big ? 'finish-card big' : 'finish-card'} role="status">
+          <span className="fc-seal" aria-hidden>✦</span>
+          <div>
+            <p className="fc-h">{m.headline}</p>
+            <p className="fc-l mono">{m.line}</p>
+          </div>
+          <button className="btn ghost sm" onClick={onDone} aria-label="Dismiss">✕</button>
+        </div>
+      )}
+    </>
   );
 }

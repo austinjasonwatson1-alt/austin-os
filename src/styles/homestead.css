@@ -244,3 +244,17 @@
 .lh-beam { fill: url(#hs-glow); opacity: .35; transform-origin: 0 -77px; animation: beam 6s ease-in-out infinite alternate; }
 @keyframes beam { from { transform: rotate(-14deg); opacity: .15; } to { transform: rotate(10deg); opacity: .4; } }
 @media (prefers-reduced-motion: reduce) { .hs-garden .flower, .lh-beam { animation: none; } }
+
+/* a book just finished: the dogs sit proud with it */
+.dogs-proud { cursor: pointer; outline: none; }
+.dp-wag { animation: dp-wag 1.1s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.dp-wag.d2 { animation-delay: -.5s; }
+@keyframes dp-wag { 0%, 100% { transform: rotate(0) translateY(0); } 25% { transform: rotate(-2deg) translateY(-3px); } 50% { transform: rotate(0) translateY(0); } 75% { transform: rotate(2deg) translateY(-2px); } }
+.dp-book rect { fill: #8a3a2a; stroke: #e8a84b; stroke-width: .8; }
+.dp-book line { stroke: rgba(255, 230, 180, .7); stroke-width: .8; }
+.dp-bubble { animation: dp-float 3s ease-in-out infinite; }
+.dp-bubble rect { fill: rgba(12, 10, 8, .9); stroke: rgba(232, 168, 75, .6); }
+.dp-bubble text { fill: #f4ead2; font-family: var(--display); font-size: 13px; font-weight: 700; text-anchor: middle; }
+.dogs-proud:hover .dp-bubble rect, .dogs-proud:focus-visible .dp-bubble rect { stroke: #ffd27a; }
+@keyframes dp-float { 50% { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .dp-wag, .dp-bubble { animation: none; } }

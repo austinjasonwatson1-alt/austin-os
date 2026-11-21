@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { anniversary, bedtime, greyness, growth } from './worldLogic';
+import { anniversary, bedtime, freshFinish, greyness, growth } from './worldLogic';
+import { useShelf } from '../modules/shelf/store';
 import { skyPhase, type Phase } from '../core/skyLogic';
 import { usePub } from '../modules/pub/store';
 import { areaHeat, areaMinutes, money, moneyYear } from '../modules/areas/logic';
 import { AREA_STORES } from '../modules/areas/store';
 import { AREA_CONFIGS, OBSERVATORY, OFFICE } from '../modules/areas/types';
 import { OWNER } from '../config';
-import { parseISO, todayISO } from '../core/dates';
+import { addDays, parseISO, todayISO } from '../core/dates';
 import { AREAS } from '../modules/registry';
 import { candleHeat, chapelMinutes, chapelNudge, chapelStreak } from '../modules/chapel/logic';
 import { useChapel } from '../modules/chapel/store';
@@ -42,8 +43,10 @@ export default function Home() {
   const building = AREAS.filter((a) => !a.live);
   const firstDay = useMemo(() => Object.keys(days).filter((k) => dayTotal(days[k]) > 0).sort()[0] ?? null, [days]);
   const totalMins = useMemo(() => Object.values(days).reduce((t, e) => t + dayTotal(e), 0), [days]);
+  const shelfBooks = useShelf((st) => st.books);
+  useEffect(() => { void useShelf.getState().load(); }, []);
   const hasOffer = usePub((st) => st.queries.some((q) => q.status === 'offer'));
-  const world: World = { growth: growth(totalMins, streak, hasOffer), phase: (new URLSearchParams(window.location.search).get('sky') as Phase | null) ?? skyPhase(now), sleeping: bedtime(now), grey: greyness(firstDay, today) };
+  const world: World = { growth: growth(totalMins, streak, hasOffer), phase: (new URLSearchParams(window.location.search).get('sky') as Phase | null) ?? skyPhase(now), sleeping: bedtime(now), grey: greyness(firstDay, today), newBook: freshFinish(shelfBooks, today, addDays(today, -1)) };
   const years = anniversary(firstDay, today);
   // On the anniversary, the sky replays its best: a shooting star once per day.
   useEffect(() => {

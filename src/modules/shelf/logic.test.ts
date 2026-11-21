@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookKey, describeShelf, filterBooks, genres, parseShelfJson, previewImport, readingYear, shelfOrder, spine, coverSearchUrl, coverUrl, parseCoverResults, readWall } from './logic';
+import { bookKey, describeShelf, filterBooks, genres, parseShelfJson, previewImport, readingYear, shelfOrder, spine, coverSearchUrl, coverUrl, parseCoverResults, readWall, finishMilestone } from './logic';
 import type { Book } from './types';
 
 const B = (p: Partial<Book>): Book => ({ id: p.title ?? 'x', title: 'T', author: 'A', genre: '', status: 'want', rating: 0, craft: [], addedAt: '', ...p });
@@ -84,5 +84,20 @@ describe('readWall', () => {
     const w = readWall([bk('a', 'read', '2025-03-01'), bk('b', 'read', '2026-01-02'), bk('c', 'read'), bk('d', 'reading'), bk('e', 'read', '2026-05-01')]);
     expect(w.map((g) => g.year)).toEqual(['2026', '2025', 'Undated']);
     expect(w[0].books.map((b) => b.id)).toEqual(['e', 'b']);
+  });
+});
+
+describe('finishMilestone', () => {
+  const bk = (id: string, finished: string, extra: Partial<Book> = {}): Book => ({ id, title: id, author: 'a', genre: '', status: 'read', rating: 4, craft: [], addedAt: '', finished, pages: 100, ...extra });
+  it('places the book in its year', () => {
+    const books = [bk('a', '2026-01-02'), bk('b', '2026-03-02'), bk('c', '2025-03-02')];
+    expect(finishMilestone(books, books[1])).toEqual({ headline: 'Finished.', line: 'b · Book 2 of 2026 · 200 pages this year', big: false });
+  });
+  it('celebrates the first of a year, favorites and round numbers', () => {
+    expect(finishMilestone([bk('a', '2026-01-02')], bk('a', '2026-01-02')).headline).toBe('The first book of 2026.');
+    const two = [bk('x', '2026-01-01'), bk('y', '2026-02-01', { rating: 5 })];
+    expect(finishMilestone(two, two[1]).headline).toBe('A new favorite.');
+    const ten = Array.from({ length: 10 }, (_, i) => bk(`b${i}`, `2026-0${(i % 9) + 1}-01`));
+    expect(finishMilestone(ten, ten[9])).toMatchObject({ headline: '10 books in 2026.', big: true });
   });
 });

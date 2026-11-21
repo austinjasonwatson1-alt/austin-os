@@ -183,3 +183,26 @@ export function readWall(books: Book[]): { year: string; books: Book[] }[] {
     .sort(([a], [b]) => (a === 'Undated' ? 1 : b === 'Undated' ? -1 : b.localeCompare(a)))
     .map(([year, bs]) => ({ year, books: bs.sort((a, b) => (b.finished ?? '').localeCompare(a.finished ?? '') || a.title.localeCompare(b.title)) }));
 }
+
+/* ---------------- finishing a book ---------------- */
+
+export interface Milestone { headline: string; line: string; big: boolean }
+
+const ROUND = [10, 25, 50, 75, 100, 150, 200, 250, 300, 400, 500];
+
+/** What to say when a book is just marked read: its place in the year, and any round number it hits. */
+export function finishMilestone(books: Book[], book: Book): Milestone {
+  const read = books.filter((b) => b.status === 'read');
+  const year = (book.finished ?? '').slice(0, 4);
+  const inYear = year ? read.filter((b) => b.finished?.startsWith(year)) : [];
+  const nth = inYear.length;
+  const pages = inYear.reduce((n, b) => n + (b.pages ?? 0), 0);
+  const total = read.length;
+  const bits = [year ? `Book ${nth} of ${year}` : `Book ${total}`, pages ? `${pages.toLocaleString('en-US')} pages this year` : ''].filter(Boolean);
+  const line = `${book.title} · ${bits.join(' · ')}`;
+  if (year && ROUND.includes(nth)) return { headline: `${nth} books in ${year}.`, line, big: true };
+  if (ROUND.includes(total)) return { headline: `${total} books, all time.`, line, big: true };
+  if (book.rating === 5) return { headline: 'A new favorite.', line, big: true };
+  if (nth === 1 && year) return { headline: `The first book of ${year}.`, line, big: true };
+  return { headline: 'Finished.', line, big: false };
+}
