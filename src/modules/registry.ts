@@ -29,12 +29,14 @@ export const AREAS: AreaDef[] = [
     plans: ['Daily prayer and Bible-reading time, kept apart from writing minutes', 'A prayer list with dates, so answered prayers can be marked and remembered', 'Verses and notes worth keeping'],
   },
   {
-    id: 'office', path: '/office', name: 'The Office', glyph: '▣', live: false,
+    id: 'office', path: '/office', name: 'The Office', glyph: '▣', live: true,
+    component: lazy(() => import('./areas/OfficePage')),
     blurb: 'The PM job: focus blocks, weekly wins, notes.',
     plans: ['Deep-work focus blocks with the lamp timer', 'Weekly wins and a running brag list for reviews', 'Meeting notes and follow-ups'],
   },
   {
-    id: 'observatory', path: '/observatory', name: 'The Observatory', glyph: '◐', live: false,
+    id: 'observatory', path: '/observatory', name: 'The Observatory', glyph: '◐', live: true,
+    component: lazy(() => import('./areas/ObservatoryPage')),
     blurb: 'AI study and learning: courses, notes, hours.',
     plans: ['Study hours, logged like the Ledger but counted on their own', 'Courses and papers with progress', 'Notes and experiments worth coming back to'],
   },

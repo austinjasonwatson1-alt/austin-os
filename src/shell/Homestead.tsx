@@ -9,7 +9,7 @@ import type { DogPose } from '../modules/lounge/logic';
  * lit windows; buildings still on the list are drawn as glowing blueprints. Each one is a door.
  * `heat` (0–1) is how much of today's writing is done; the cabin windows burn with it.
  */
-export function Homestead({ heat, chapelHeat = 0, pose, children }: { heat: number; chapelHeat?: number; pose: DogPose; children?: ReactNode }) {
+export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, pose, children }: { heat: number; chapelHeat?: number; officeHeat?: number; obsHeat?: number; pose: DogPose; children?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Layers drift at different speeds with the pointer. Off for reduced motion.
@@ -92,7 +92,8 @@ export function Homestead({ heat, chapelHeat = 0, pose, children }: { heat: numb
 
         {/* buildings */}
         <g className="hs-layer" data-depth="3">
-          <Building area={area('observatory')} x={150} y={272}>
+          <Building area={area('observatory')} x={150} y={272} heat={obsHeat}>
+            <circle cx="0" cy="-40" r="70" fill="url(#hs-glow)" className="hs-cabin-glow" />
             <rect x="-38" y="-46" width="76" height="46" className="hs-wall" />
             <path d="M-44 -46 A44 44 0 0 1 44 -46 Z" className="hs-wall hs-dome" />
             <rect x="-6" y="-88" width="12" height="40" className="hs-slit" transform="rotate(18 0 -46)" />
@@ -158,7 +159,8 @@ export function Homestead({ heat, chapelHeat = 0, pose, children }: { heat: numb
             <path d="M-6 -126 V-138 A6 6 0 0 1 6 -138 V-126 Z" className="hs-win" />
           </Building>
 
-          <Building area={area('office')} x={1050} y={282}>
+          <Building area={area('office')} x={1050} y={282} heat={officeHeat}>
+            <circle cx="0" cy="-60" r="90" fill="url(#hs-glow)" className="hs-cabin-glow" />
             <rect x="-58" y="-112" width="116" height="112" className="hs-wall" />
             <path d="M-66 -110 H66 L56 -126 H-56 Z" className="hs-wall hs-roof" />
             {[-96, -66, -36].map((y) => [-42, -14, 14].map((x) => <rect key={`${x}${y}`} x={x} y={y} width="20" height="18" className="hs-win" />))}

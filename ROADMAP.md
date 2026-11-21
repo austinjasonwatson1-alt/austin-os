@@ -33,10 +33,12 @@ A few weeks of Claude Code practice. Each item is a good self-contained session:
 
 ## The homestead
 - [x] **The Chapel**: prayer time (kept apart from writing minutes), prayer list, answered prayers
-- [ ] **The Office**: focus blocks, weekly wins, notes
-- [ ] **The Observatory**: AI study hours, courses, notes
+- [x] **The Office**: focus blocks, weekly wins, notes
+- [x] **The Observatory**: AI study hours, courses, notes
 
 ## Week 4 — the business of writing
 - [ ] **Query Tracker**, **Contests**, **Editorial Vault**, **Outreach**
-- [ ] Command palette (⌘K) and global search across modules
+- [x] Command palette (⌘K) with quick logging
+- [x] Year in review
+- [x] Two-computer sync through the shared backup file
 - [x] Weekly review screen (Sundays)

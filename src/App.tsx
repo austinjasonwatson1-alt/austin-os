@@ -10,6 +10,7 @@ import { useShelf } from './modules/shelf/store';
 import { useChapel } from './modules/chapel/store';
 import { useManuscripts } from './modules/manuscripts/store';
 import { useReview } from './modules/review/store';
+import { AREA_STORES } from './modules/areas/store';
 import { areaByPath, byPath } from './modules/registry';
 import { AreaSoon } from './shell/AreaSoon';
 import CabinHome from './shell/CabinHome';
@@ -61,6 +62,8 @@ export default function App() {
     void useChapel.getState().load();
     void useManuscripts.getState().load();
     void useReview.getState().load();
+    void AREA_STORES.office.getState().load();
+    void AREA_STORES.observatory.getState().load();
   }, []);
   return (
     <>
