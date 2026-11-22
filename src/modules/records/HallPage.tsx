@@ -6,6 +6,7 @@ import { useLedger } from '../ledger/store';
 import { useManuscripts } from '../manuscripts/store';
 import { usePub } from '../pub/store';
 import { useShelf } from '../shelf/store';
+import { useDrafts } from '../drafts/store';
 import { hallOfRecords, latest, nearest, WINGS, type Trophy, type Wing } from './logic';
 import '../../styles/cabin.css';
 import '../../styles/hall.css';
@@ -20,14 +21,15 @@ export default function HallPage() {
   const mss = useManuscripts();
   const pub = usePub();
   const chapel = useChapel();
-  useEffect(() => { void ledger.load(); void shelf.load(); void mss.load(); void pub.load(); void chapel.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const ready = ledger.loaded && shelf.loaded && mss.loaded && pub.loaded && chapel.loaded;
+  const drafts = useDrafts();
+  useEffect(() => { void ledger.load(); void shelf.load(); void mss.load(); void pub.load(); void chapel.load(); void drafts.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const ready = ledger.loaded && shelf.loaded && mss.loaded && pub.loaded && chapel.loaded && drafts.loaded;
 
   const hall = useMemo(() => hallOfRecords({
     days: ledger.days, thresholds: ledger.thresholds, weekly: ledger.weekly,
     books: shelf.books, goals: shelf.goals ?? {}, manuscripts: mss.manuscripts,
-    queries: pub.queries, contests: pub.contests, chapel: chapel.days, prayers: chapel.prayers,
-  }), [ledger.days, ledger.thresholds, ledger.weekly, shelf.books, shelf.goals, mss.manuscripts, pub.queries, pub.contests, chapel.days, chapel.prayers]);
+    queries: pub.queries, contests: pub.contests, chapel: chapel.days, prayers: chapel.prayers, sprints: drafts.sprints,
+  }), [drafts.sprints, ledger.days, ledger.thresholds, ledger.weekly, shelf.books, shelf.goals, mss.manuscripts, pub.queries, pub.contests, chapel.days, chapel.prayers]);
 
   if (!ready) return null;
   const earned = hall.trophies.filter((t) => t.earned).length;

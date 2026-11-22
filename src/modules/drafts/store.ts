@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { kvGet, saveWithSnapshot } from '../../core/storage';
 import { useManuscripts } from '../manuscripts/store';
 import { countWords, maybeVersion } from './logic';
-import { DEFAULT_DRAFTS, type DraftsData } from './types';
+import { DEFAULT_DRAFTS, type DraftsData, type Sprint } from './types';
 
 export const KEY = 'drafts.v1';
 
@@ -16,10 +16,12 @@ interface DraftsState extends DraftsData {
   /** Put an old version back. The current text is kept as a version first. */
   restoreVersion: (ms: string, ch: string, at: string) => void;
   setAuthor: (a: DraftsData['author']) => void;
+  /** Record a finished (or stopped) word sprint. */
+  addSprint: (s: Omit<Sprint, 'id'>) => Sprint;
 }
 
 export const useDrafts = create<DraftsState>((set, get) => {
-  const persist = () => { if (get().loaded) void saveWithSnapshot(KEY, { drafts: get().drafts, versions: get().versions, author: get().author } satisfies DraftsData); };
+  const persist = () => { if (get().loaded) void saveWithSnapshot(KEY, { drafts: get().drafts, versions: get().versions, author: get().author, sprints: get().sprints } satisfies DraftsData); };
   const syncWords = (ms: string, ch: string, text: string) => {
     const m = useManuscripts.getState();
     const c = m.manuscripts.find((x) => x.id === ms)?.chapters.find((x) => x.id === ch);
@@ -62,5 +64,11 @@ export const useDrafts = create<DraftsState>((set, get) => {
       syncWords(ms, ch, v.text);
     },
     setAuthor(author) { set({ author }); persist(); },
+    addSprint(sp) {
+      const sprint: Sprint = { ...sp, id: `sp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}` };
+      set({ sprints: [...(get().sprints ?? []), sprint] });
+      persist();
+      return sprint;
+    },
   };
 });

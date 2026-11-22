@@ -7,6 +7,7 @@ import type { DayMap, Thresholds } from '../ledger/types';
 import type { Manuscript } from '../manuscripts/types';
 import type { Contest, Query } from '../pub/types';
 import type { Book } from '../shelf/types';
+import type { Sprint } from '../drafts/types';
 
 /** Everything the Hall reads. Each piece is optional so a missing store never breaks it. */
 export interface HallInput {
@@ -20,6 +21,7 @@ export interface HallInput {
   contests: Contest[];
   chapel: Record<string, ChapelDay>;
   prayers: Prayer[];
+  sprints?: Sprint[];
 }
 
 export type Wing = 'writing' | 'reading' | 'manuscript' | 'road' | 'chapel';
@@ -152,6 +154,15 @@ export function hallOfRecords(h: HallInput): { records: Record_[]; trophies: Tro
   if (bestWordDay) { const b = bestWordDay as { date: string; n: number }; if (b.n > 0) records.push({ wing: 'manuscript', name: 'Best word day', value: `+${words(b.n)}`, date: b.date }); }
   const drafted = totals.find((t) => t.m.target > 0 && t.words >= t.m.target);
   const allDone = h.manuscripts.find((m) => m.chapters.length >= 3 && m.chapters.every((c) => c.status === 'done'));
+  const sprints = (h.sprints ?? []).filter((x) => x.completed && x.words > 0);
+  const bestSp = sprints.reduce<Sprint | null>((a, b) => (!a || b.words > a.words ? b : a), null);
+  const fastest = sprints.reduce<Sprint | null>((a, b) => (!a || b.words / b.minutes > a.words / a.minutes ? b : a), null);
+  if (bestSp) records.push({ wing: 'manuscript', name: 'Best sprint', value: `${words(bestSp.words)} words`, detail: `${bestSp.minutes} min ·`, date: bestSp.day });
+  if (fastest) records.push({ wing: 'manuscript', name: 'Fastest sprint', value: `${Math.round(fastest.words / fastest.minutes)} wpm`, date: fastest.day });
+  const firstAt = (pred: (x: Sprint) => boolean) => sprints.filter(pred).map((x) => x.day).sort()[0];
+  add({ id: 'sprint-first', wing: 'manuscript', name: 'Off the Blocks', desc: 'A first word sprint, run to the bell.', earned: sprints.length > 0, date: firstAt(() => true), tier: 1 });
+  add({ id: 'sprint-1000', wing: 'manuscript', name: 'The Thousand', desc: '1,000 words in a single sprint.', earned: sprints.some((x) => x.words >= 1000), date: firstAt((x) => x.words >= 1000), tier: 2, have: bestSp?.words ?? 0, need: 1000 });
+  add({ id: 'sprint-25', wing: 'manuscript', name: 'Twenty-Five Bells', desc: 'Twenty-five sprints finished.', earned: sprints.length >= 25, date: nthDate(sprints.map((x) => x.day), 25), tier: 2, have: sprints.length, need: 25 });
   add({ id: 'ms-10k', wing: 'manuscript', name: 'Ten Thousand', desc: '10,000 words in one manuscript.', earned: top >= 10000, date: crossing(10000), tier: 1, have: top, need: 10000 });
   add({ id: 'ms-50k', wing: 'manuscript', name: 'The Middle', desc: '50,000 words: past the sagging middle.', earned: top >= 50000, date: crossing(50000), tier: 2, have: top, need: 50000 });
   add({ id: 'ms-draft', wing: 'manuscript', name: 'The End', desc: 'A full draft, at its target length.', earned: Boolean(drafted), date: drafted ? crossing(drafted.m.target) : undefined, tier: 3, have: top, need: most?.m.target || 85000 });

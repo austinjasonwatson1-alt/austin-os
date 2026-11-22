@@ -1,5 +1,5 @@
 import type { Describer } from '../../core/restoreLogic';
-import { KEEP_VERSIONS, VERSION_EVERY_MS, type DraftsData, type Version } from './types';
+import { KEEP_VERSIONS, VERSION_EVERY_MS, type DraftsData, type Sprint, type Version } from './types';
 
 /** Words the way publishers count them: runs of letters/digits, with apostrophes and hyphens inside words. */
 export function countWords(text: string): number {
@@ -40,3 +40,31 @@ export const describeDrafts: Describer = {
     return `${Object.keys(d).length} chapter${Object.keys(d).length === 1 ? '' : 's'} · ${words.toLocaleString('en-US')} words`;
   },
 };
+
+/* ---------------- word sprints ---------------- */
+
+/** Words a minute, to one decimal. */
+export const wpm = (words: number, minutes: number) => (minutes > 0 ? Math.round((words / minutes) * 10) / 10 : 0);
+
+/** The best sprint so far: most words in a completed sprint. */
+export function bestSprint(sprints: Sprint[]): Sprint | null {
+  return sprints.filter((s) => s.completed).reduce<Sprint | null>((a, b) => (!a || b.words > a.words ? b : a), null);
+}
+
+/** Lounge points for sprints: 5 for each completed sprint, 10 more each time one beats the best before it. */
+export const SPRINT_POINTS = { done: 5, best: 10 };
+export function sprintPoints(sprints: Sprint[]): { total: number; done: number; bests: number } {
+  let best = 0, done = 0, bests = 0;
+  for (const s of [...sprints].sort((a, b) => a.at.localeCompare(b.at))) {
+    if (!s.completed || s.words <= 0) continue;
+    done++;
+    if (s.words > best) { if (best > 0) bests++; best = s.words; }
+  }
+  return { total: done * SPRINT_POINTS.done + bests * SPRINT_POINTS.best, done, bests };
+}
+
+/** How a finished sprint went, against the ones before it. */
+export function sprintVerdict(s: Pick<Sprint, 'words' | 'minutes' | 'completed'>, before: Sprint[]): { pace: number; best: boolean; prevBest: number } {
+  const prev = bestSprint(before)?.words ?? 0;
+  return { pace: wpm(s.words, s.minutes), best: s.completed && s.words > prev && s.words > 0, prevBest: prev };
+}

@@ -256,7 +256,7 @@ function HowPoints() {
   const w = useWallet();
   const [open, setOpen] = useState(false);
   const parts = [
-    ['Minutes', w.earned.minutes], ['Day bonuses', w.earned.days], ['Week bonuses', w.earned.weeks], ['Streaks', w.earned.streaks],
+    ['Minutes', w.earned.minutes], ['Day bonuses', w.earned.days], ['Week bonuses', w.earned.weeks], ['Streaks', w.earned.streaks], ['Sprints', w.earned.sprints],
   ] as const;
   return (
     <section className="panel how">

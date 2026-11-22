@@ -11,7 +11,28 @@ export interface Version {
   label?: string;
 }
 
+/** A timed word sprint in the editor. */
+export interface Sprint {
+  id: string;
+  /** When it started (ISO) and the local day it counts on. */
+  at: string;
+  day: string;
+  ms: string;
+  ch: string;
+  /** Minutes planned, and minutes actually run. */
+  planned: number;
+  minutes: number;
+  /** Net new words (never negative). */
+  words: number;
+  /** Ran the full planned time. */
+  completed: boolean;
+}
+
+export const SPRINT_LENGTHS = [10, 15, 25, 45];
+
 export interface DraftsData {
+  /** Word sprints, newest last. */
+  sprints?: Sprint[];
   drafts: Record<string, Draft>;
   versions: Record<string, Version[]>;
   /** The name on the manuscript's title page and running header. */

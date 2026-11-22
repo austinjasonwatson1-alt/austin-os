@@ -88,3 +88,10 @@ describe('shelf goals sync', () => {
     expect(out['shelf.v1'].goals).toEqual({ '2026': 30, '2027': 40 });
   });
 });
+
+describe('sprint sync', () => {
+  it('keeps sprints from both devices', () => {
+    const out = syncMerge({ 'drafts.v1': { drafts: {}, versions: {}, sprints: [{ id: 'a', words: 1 }] } }, { 'drafts.v1': { drafts: {}, versions: {}, sprints: [{ id: 'b', words: 2 }] } }) as Record<string, { sprints: { id: string }[] }>;
+    expect(out['drafts.v1'].sprints.map((x) => x.id).sort()).toEqual(['a', 'b']);
+  });
+});

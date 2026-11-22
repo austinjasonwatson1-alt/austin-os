@@ -100,7 +100,7 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
       const seen = new Set<string>();
       versions[k] = all.filter((x) => (seen.has(String(x.at)) ? false : (seen.add(String(x.at)), true))).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 30);
     }
-    return { ...l, drafts, versions };
+    return { ...l, drafts, versions, ...(l.sprints || r.sprints ? { sprints: unionById(arr<WithId>(l.sprints), arr<WithId>(r.sprints)) } : {}) };
   },
   'review.v1': (l, r) => {
     const reviews: Obj = { ...(isObj(r.reviews) ? r.reviews : {}) };

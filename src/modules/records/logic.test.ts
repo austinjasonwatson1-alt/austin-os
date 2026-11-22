@@ -68,3 +68,15 @@ describe('hallOfRecords', () => {
     expect(nearest(trophies).every((t) => !t.earned)).toBe(true);
   });
 });
+
+describe('sprints in the Hall', () => {
+  it('records the best sprint and its trophies', () => {
+    const sp = (day: string, words: number, completed = true) => ({ id: day + words, at: `${day}T09:00:00Z`, day, ms: 'm', ch: 'c', planned: 25, minutes: 25, words, completed });
+    const h = hallOfRecords({ ...empty, sprints: [sp('2026-02-01', 600), sp('2026-02-03', 1100), sp('2026-02-04', 2000, false)] });
+    expect(h.records.find((r) => r.name === 'Best sprint')).toMatchObject({ value: '1,100 words', date: '2026-02-03' });
+    const t = Object.fromEntries(h.trophies.map((x) => [x.id, x]));
+    expect(t['sprint-first']).toMatchObject({ earned: true, date: '2026-02-01' });
+    expect(t['sprint-1000']).toMatchObject({ earned: true, date: '2026-02-03' });
+    expect(t['sprint-25'].count).toBe('2 / 25');
+  });
+});

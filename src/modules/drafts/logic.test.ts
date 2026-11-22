@@ -1,6 +1,7 @@
 import { strFromU8, unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { countWords, maybeVersion, paragraphs, roundedCount } from './logic';
+import { countWords, maybeVersion, paragraphs, roundedCount, bestSprint, sprintPoints, sprintVerdict, wpm } from './logic';
+import type { Sprint } from './types';
 import { manuscriptDocx, manuscriptText } from './manuscriptFormat';
 
 describe('drafts', () => {
@@ -42,5 +43,21 @@ describe('drafts', () => {
     expect(strFromU8(files['word/header1.xml'])).toContain('Watson / THE LIFE I DESERVE / ');
     expect(strFromU8(files['word/styles.xml'])).toContain('Times New Roman');
     expect(manuscriptText({ title: 'X', author: { name: 'A', surname: 'A', contact: '' }, words: 10, chapters: [{ title: 'Chapter 1', text: 'Hi.' }] })).toContain('CHAPTER 1\n\nHi.');
+  });
+});
+
+describe('sprints', () => {
+  const sp = (at: string, words: number, completed = true, minutes = 25): Sprint => ({ id: at, at, day: at.slice(0, 10), ms: 'm', ch: 'c', planned: 25, minutes, words, completed });
+  it('scores pace and the best', () => {
+    expect(wpm(500, 25)).toBe(20);
+    expect(wpm(10, 0)).toBe(0);
+    const before = [sp('2026-01-01T09:00', 400), sp('2026-01-02T09:00', 900, false)];
+    expect(bestSprint(before)?.words).toBe(400);
+    expect(sprintVerdict({ words: 450, minutes: 25, completed: true }, before)).toEqual({ pace: 18, best: true, prevBest: 400 });
+    expect(sprintVerdict({ words: 450, minutes: 12, completed: false }, before).best).toBe(false);
+  });
+  it('pays the Lounge for finished sprints and new bests', () => {
+    const p = sprintPoints([sp('2026-01-03T09:00', 300), sp('2026-01-01T09:00', 200), sp('2026-01-02T09:00', 100), sp('2026-01-04T09:00', 999, false), sp('2026-01-05T09:00', 0)]);
+    expect(p).toEqual({ done: 3, bests: 1, total: 3 * 5 + 10 });
   });
 });
