@@ -41,7 +41,7 @@ export function navGroups(): NavGroup[] {
     ] },
   ];
 }
-const TOP: NavItem[] = [{ path: '/home', glyph: '◈', name: 'Home' }, { path: '/keeper', glyph: '♨', name: 'The Keeper' }];
+const TOP: NavItem[] = [{ path: '/home', glyph: '◈', name: 'Home' }, { path: '/day', glyph: '☼', name: 'The Day' }, { path: '/keeper', glyph: '♨', name: 'The Keeper' }];
 
 /* Per-device conveniences (never user data): which groups are open, and which rooms get used. */
 const read = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : d; } catch { return d; } };

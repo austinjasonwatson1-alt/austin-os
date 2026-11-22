@@ -53,6 +53,6 @@ export function sceneFor(route: string, x: SoundWorld): Scene {
   if (r === '/forge') return { mix: { fire: 0.9, wind: 0.2 }, label: 'The forge fire' };
   if (r === '/hearth') return { mix: { fire: 0.7, chimes: 0.4, ...roof }, label: 'The hearth, and chimes on the porch' };
   if (r === '/keeper') return { mix: { fire: 0.5, calm: 0.45, ...roof }, label: 'By the fire with the Keeper' };
-  if (['/records', '/library', '/year', '/film', '/review', '/settings', '/memories', '/life', '/goals'].includes(r)) return { mix: { calm: 0.65, fire: 0.2, ...roof }, label: 'A calm room' };
+  if (['/records', '/library', '/year', '/film', '/review', '/settings', '/memories', '/life', '/goals', '/day'].includes(r)) return { mix: { calm: 0.65, fire: 0.2, ...roof }, label: 'A calm room' };
   return outdoors(x);
 }

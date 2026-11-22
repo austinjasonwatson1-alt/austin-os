@@ -24,6 +24,7 @@ describe('plain-file export', () => {
       'memories.v1': { items: [{ id: 'p1', day: '2026-11-20', caption: 'Cooper, muddy', thumb: 'data:image/jpeg;base64,AQ==' }], capsules: [{ title: 'To future me', body: 'Hi', written: '2026-11-22' }] },
       'memories.photo.p1': 'data:image/jpeg;base64,AQID',
       'kennel.v1': { walks: [{ date: '2026-11-22', who: 'both', minutes: 30 }], care: [], weights: [] },
+      'day.v1': { habits: [], days: { '2026-11-22': { intentions: [{ area: 'writing', text: 'Finish chapter 7', state: 'kept' }], done: [], well: 'Wrote early' } } },
     };
     const f = exportFiles(dump, '{"app":"austin-os"}', '2026-11-22');
     expect(f['backup/austin-os-backup.json']).toBe('{"app":"austin-os"}');
@@ -36,6 +37,7 @@ describe('plain-file export', () => {
     expect(f['memories/photos.csv']).toMatch(/photos\/2026-11-20-Cooper-muddy.jpg/);
     expect(f['memories/time-capsule.md']).toMatch(/still sealed/);
     expect(f['life/kennel-walks.csv']).toMatch(/2026-11-22,both,30/);
+    expect(f['life/the-day.md']).toMatch(/## 2026-11-22\n\n- writing: Finish chapter 7 \(kept\)\n\nWent well: Wrote early/);
     expect(Object.keys(f).some((k) => k.startsWith('publishing/'))).toBe(false);
   });
 });

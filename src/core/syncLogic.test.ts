@@ -142,3 +142,12 @@ describe('ideas sync', () => {
     expect(by).toEqual({ a: 'edited on the phone', b: 'mine', c: 'new' });
   });
 });
+
+describe('the day sync', () => {
+  it('unions habits checked on either device and keeps a sealed day sealed', () => {
+    const out = syncMerge({ 'day.v1': { habits: [{ id: 'h1', name: 'Walk', days: [], createdAt: '2026-11-01' }], days: { '2026-11-22': { intentions: [], done: ['h1'] } } } },
+      { 'day.v1': { habits: [], days: { '2026-11-22': { intentions: [], done: ['h2'], closedAt: '2026-11-22T22:00:00Z' } } } }) as Record<string, { days: Record<string, { done: string[]; closedAt?: string }> }>;
+    expect(out['day.v1'].days['2026-11-22'].done.sort()).toEqual(['h1', 'h2']);
+    expect(out['day.v1'].days['2026-11-22'].closedAt).toBe('2026-11-22T22:00:00Z');
+  });
+});
