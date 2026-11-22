@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { kvGet, markDeleted, saveWithSnapshot } from '../../core/storage';
+import { cleanCare, cleanNote, cleanWalk, cleanWeight, replaceById } from './logic';
 import { DEFAULT_KENNEL, type Care, type KennelData, type Note, type Walk, type Weight } from './types';
 
 export const KEY = 'kennel.v1';
@@ -15,6 +16,8 @@ interface KennelState extends KennelData {
   addCare: (c: Omit<Care, 'id'>) => Care;
   addWeight: (w: Omit<Weight, 'id'>) => Weight;
   addNote: (n: Omit<Note, 'id'>) => Note;
+  /** Save an edited record in place (same id). A record deleted meanwhile is not brought back. */
+  update: <L extends List>(list: L, item: Item<L>) => void;
   /** Remove one item from a list (recorded as deleted so sync drops it everywhere). */
   remove: (list: List, id: string) => void;
 }
@@ -42,10 +45,19 @@ export const useKennel = create<KennelState>((set, get) => {
       set({ ...DEFAULT_KENNEL, ...(saved ?? {}), loaded: true });
     },
 
-    addWalk: (w) => add('walks', { ...w, minutes: Math.max(1, Math.round(w.minutes)), note: w.note?.trim() || undefined }),
-    addCare: (c) => add('care', { ...c, title: c.title?.trim() || undefined, note: c.note?.trim() || undefined, nextDue: c.nextDue || undefined }),
-    addWeight: (w) => add('weights', { ...w, lb: Math.round(w.lb * 10) / 10 }),
-    addNote: (n) => add('notes', { ...n, text: n.text.trim() }),
+    addWalk: (w) => add('walks', cleanWalk(w)),
+    addCare: (c) => add('care', cleanCare(c)),
+    addWeight: (w) => add('weights', cleanWeight(w)),
+    addNote: (n) => add('notes', cleanNote(n)),
+
+    update(list, item) {
+      const tidy = list === 'walks' ? cleanWalk(item as Walk) : list === 'care' ? cleanCare(item as Care) : list === 'weights' ? cleanWeight(item as Weight) : cleanNote(item as Note);
+      const cur = get()[list] as Item<typeof list>[];
+      const next = replaceById(cur as { id: string }[], tidy as { id: string });
+      if (next === cur) return;
+      set({ [list]: next } as Partial<KennelState>);
+      persist();
+    },
 
     remove(list, id) {
       void markDeleted(KEY, id);

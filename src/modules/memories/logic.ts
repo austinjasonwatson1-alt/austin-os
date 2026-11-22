@@ -74,6 +74,18 @@ export function agoLabel(day: string, today: string, kind: OnThisDay['kind'] = '
 /** The local calendar day of a timestamp (e.g. a file's lastModified). */
 export const dayOf = (ms: number): string => iso(new Date(ms));
 
+export interface PhotoDay { day: string; from: 'photo' | 'file' }
+
+/**
+ * The day a new photo belongs to: the EXIF "taken" day when there is one (and it isn't in the
+ * future — a camera clock can be wrong), else the file's last-modified local day, else today.
+ */
+export function photoDay(exif: string | null, lastModified: number | undefined, today: string): PhotoDay {
+  if (exif && exif <= today) return { day: exif, from: 'photo' };
+  const file = lastModified ? dayOf(lastModified) : today;
+  return { day: file > today ? today : file, from: 'file' };
+}
+
 /* ---------------- the time capsule ---------------- */
 
 export type CapsuleState = 'sealed' | 'ready' | 'open';

@@ -43,6 +43,11 @@ export interface Txn {
   fp: string;
   /** True once Austin picked the category himself (rules then leave it alone). */
   manual?: boolean;
+  /**
+   * Entered by hand (not from a statement). Its id is random, its fp is `hand|<id>`, so a
+   * statement import can never match, skip or replace it; and its date/description/amount stay editable.
+   */
+  hand?: boolean;
   /** File it came from, for the record. */
   source?: string;
   addedAt: string;

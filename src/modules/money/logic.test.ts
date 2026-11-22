@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyRules, byCategory, categorize, defaultMonth, describeMoney, filterTxns, fingerprints, fmtMoney, merchantOf,
   monthTotals, parseAmount, parseBankDate, parseStatement, previewImport, shiftMonth, toTxns, upsertRule, writingSpend, yearTrend,
+  editTxn, handCents, handProblem, handTxn, isHand, suggestCategory,
 } from './logic';
 import type { Rule, Txn } from './types';
 
@@ -246,5 +247,71 @@ describe('totals', () => {
   it('describes itself for restore', () => {
     expect(describeMoney.detail({ txns: [T({}), T({})], rules: [{ id: 'r', match: 'x', category: 'other', createdAt: NOW }] })).toBe('2 transactions · 1 rule');
     expect(describeMoney.size({})).toBe(0);
+  });
+});
+
+describe('entered by hand', () => {
+  const draft = { date: '2026-11-03', desc: '  COFFEE   HOUSE ', amount: '4.50', dir: 'out' as const, category: 'dining' as const };
+
+  it('makes a hand line with its own id and a fingerprint no statement can have', () => {
+    const t = handTxn(draft, 'h-abc', NOW);
+    expect(t).toMatchObject({ id: 'h-abc', date: '2026-11-03', desc: 'COFFEE HOUSE', cents: -450, category: 'dining', fp: 'hand|h-abc', manual: true, hand: true });
+    expect(isHand(t)).toBe(true);
+    expect(isHand(toTxns([{ date: '2026-11-03', desc: 'x', cents: -1 }], [], NOW)[0])).toBe(false);
+  });
+
+  it('is never skipped, matched or dropped by a later statement import of the same purchase', () => {
+    const stmtA = 'Date,Description,Amount\n11/03/2026,COFFEE HOUSE,-4.50\n11/03/2026,COFFEE HOUSE,-4.50\n';
+    const hand = [handTxn(draft, 'h-1', NOW), handTxn(draft, 'h-2', NOW)];
+    const incoming = toTxns(ok(stmtA).lines, [], NOW);
+    const plan = previewImport(hand, incoming);
+    // Both statement lines still come in (the hand lines don't count as "already here")…
+    expect([plan.add.length, plan.already]).toEqual([2, 0]);
+    // …nothing incoming shares an id or fingerprint with a hand line…
+    for (const t of plan.add) for (const h of hand) { expect(t.id).not.toBe(h.id); expect(t.fp).not.toBe(h.fp); }
+    // …and they are flagged so Austin can see the likely doubles.
+    expect(plan.likeHand).toBe(2);
+    // Merged books keep every hand line.
+    const books = [...hand, ...plan.add];
+    expect(books.filter(isHand).map((t) => t.id)).toEqual(['h-1', 'h-2']);
+    // Re-importing the statement adds nothing and still leaves the hand lines alone.
+    const again = previewImport(books, toTxns(ok(stmtA).lines, [], NOW));
+    expect([again.add.length, again.already, again.likeHand]).toEqual([0, 2, 0]);
+  });
+
+  it('a hand line far from any statement line is not flagged', () => {
+    const plan = previewImport([handTxn({ ...draft, date: '2026-10-01' }, 'h-1', NOW)], toTxns([{ date: '2026-11-03', desc: 'COFFEE HOUSE', cents: -450 }], [], NOW));
+    expect(plan.likeHand).toBe(0);
+  });
+
+  it('reads the amount with the chosen direction', () => {
+    expect(handCents('$1,200', 'in')).toBe(120000);
+    expect(handCents('-12.5', 'out')).toBe(-1250);
+    expect(handCents('12.5', 'in')).toBe(1250);
+    expect(handCents('0', 'out')).toBeNull();
+    expect(handCents('abc', 'out')).toBeNull();
+  });
+
+  it('says what is missing', () => {
+    expect(handProblem(draft)).toBeNull();
+    expect(handProblem({ ...draft, desc: ' ' })).toMatch(/what/);
+    expect(handProblem({ ...draft, amount: '' })).toMatch(/amount/);
+    expect(handProblem({ ...draft, date: '' })).toMatch(/day/);
+  });
+
+  it('suggests a category as you type', () => {
+    expect(suggestCategory('Starbucks', 'out')).toBe('dining');
+    expect(suggestCategory('', 'in')).toBe('income');
+    expect(suggestCategory('', 'out')).toBe('other');
+    expect(suggestCategory('Kroger', 'out', [{ id: 'r', match: 'kroger', category: 'pets', createdAt: NOW }])).toBe('pets');
+  });
+
+  it('edits date, description and amount only on hand lines; id and fp never change', () => {
+    const h = handTxn(draft, 'h-1', NOW);
+    const e = editTxn(h, { date: '2026-11-05', desc: 'Dutch Bros', cents: -575, category: 'dining' });
+    expect(e).toMatchObject({ id: 'h-1', fp: 'hand|h-1', date: '2026-11-05', desc: 'Dutch Bros', cents: -575 });
+    const s = toTxns([{ date: '2026-11-03', desc: 'HEB', cents: -6000 }], [], NOW)[0];
+    const es = editTxn(s, { date: '2026-11-09', desc: 'changed', cents: -1, category: 'pets' });
+    expect(es).toMatchObject({ id: s.id, fp: s.fp, date: '2026-11-03', desc: 'HEB', cents: -6000, category: 'pets', manual: true });
   });
 });

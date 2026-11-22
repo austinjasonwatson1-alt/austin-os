@@ -3,8 +3,9 @@ import { daysUntil, MONTHS_SHORT, parseISO, prettyDate, todayISO } from '../../c
 import { CountUp, embers, reducedMotion, tilt } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { dataUrlKB, processImage } from './image';
+import { EXIF_SCAN_BYTES, exifDay } from './exif';
 import {
-  agoLabel, capsuleState, countdownLabel, daysToOpen, dayOf, filterByTag, groupByMonth, leanFor, onThisDay,
+  agoLabel, capsuleState, countdownLabel, daysToOpen, dayOf, filterByTag, groupByMonth, leanFor, onThisDay, photoDay,
   sealedFor, sealProblem, sortCapsules, tagCounts, type CapsuleDraft,
 } from './logic';
 import { useMemories, type NewPhoto } from './store';
@@ -145,11 +146,11 @@ function TagPicker({ value, onChange, label = 'Tag' }: { value: MemoryTag | unde
 
 /* ---------------- upload: shrink, date, caption, then pin ---------------- */
 
-interface Pending { key: string; name: string; day: string; caption: string; tag?: MemoryTag; full?: string; thumb?: string; err?: string }
+interface Pending { key: string; name: string; day: string; from: 'photo' | 'file' | 'you'; caption: string; tag?: MemoryTag; full?: string; thumb?: string; err?: string }
 
 function UploadSheet({ files, onClose }: { files: File[]; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
-  const [rows, setRows] = useState<Pending[]>(() => files.map((f, i) => ({ key: `${i}-${f.name}`, name: f.name, day: dayOf(f.lastModified || Date.now()), caption: '' })));
+  const [rows, setRows] = useState<Pending[]>(() => files.map((f, i) => ({ key: `${i}-${f.name}`, name: f.name, ...photoDay(null, f.lastModified, todayISO()), caption: '' })));
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => { ref.current?.showModal(); }, []);
@@ -158,6 +159,14 @@ function UploadSheet({ files, onClose }: { files: File[]; onClose: () => void })
   useEffect(() => {
     let live = true;
     (async () => {
+      // The real day first, from each photo's EXIF (the shrunk copy loses it). Quick: only the first bytes are read.
+      for (let i = 0; i < files.length && live; i++) {
+        try {
+          const taken = exifDay(await files[i].slice(0, EXIF_SCAN_BYTES).arrayBuffer());
+          const pd = photoDay(taken, files[i].lastModified, todayISO());
+          if (live && pd.from === 'photo') setRows((r) => r.map((x, j) => (j === i && x.from !== 'you' ? { ...x, ...pd } : x)));
+        } catch { /* keep the file's day */ }
+      }
       for (let i = 0; i < files.length && live; i++) {
         try {
           const p = await processImage(files[i]);
@@ -210,7 +219,7 @@ function UploadSheet({ files, onClose }: { files: File[]; onClose: () => void })
               ) : (
                 <>
                   <div className="field-row up-two">
-                    <label className="field"><span>Day</span><input type="date" value={r.day} max={todayISO()} onChange={(e) => e.target.value && edit(r.key, { day: e.target.value })} /></label>
+                    <label className="field"><span>Day <em className={`up-from ${r.from}`}>{r.from === 'photo' ? '· taken' : r.from === 'file' ? '· file date' : ''}</em></span><input type="date" value={r.day} max={todayISO()} onChange={(e) => e.target.value && edit(r.key, { day: e.target.value, from: 'you' })} /></label>
                     <label className="field"><span>Caption</span><input value={r.caption} placeholder="What was happening…" onChange={(e) => edit(r.key, { caption: e.target.value })} /></label>
                   </div>
                   <TagPicker value={r.tag} onChange={(t) => edit(r.key, { tag: t })} />

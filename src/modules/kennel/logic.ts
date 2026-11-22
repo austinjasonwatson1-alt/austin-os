@@ -155,3 +155,33 @@ export const describeKennel: Describer = {
     return parts.join(' · ');
   },
 };
+
+/* ---------------- tidying & editing records ---------------- */
+
+/** A walk as it should be stored: whole minutes (at least 1), no empty note. */
+export const cleanWalk = <T extends Omit<Walk, 'id'>>(w: T): T => ({ ...w, minutes: Math.max(1, Math.round(Number(w.minutes) || 0)), note: w.note?.trim() || undefined });
+
+/** A care record as it should be stored: no empty title/note/next-due. */
+export const cleanCare = <T extends Omit<Care, 'id'>>(c: T): T => ({ ...c, title: c.title?.trim() || undefined, note: c.note?.trim() || undefined, nextDue: c.nextDue || undefined });
+
+/** A weigh-in to one decimal place. */
+export const cleanWeight = <T extends Omit<Weight, 'id'>>(w: T): T => ({ ...w, lb: Math.round((Number(w.lb) || 0) * 10) / 10 });
+
+/** A moment with its words trimmed. */
+export const cleanNote = <T extends { text: string }>(n: T): T => ({ ...n, text: n.text.trim() });
+
+/**
+ * Swap in an edited record, keeping its place and its id. Returns the same array when the id
+ * isn't there (it was deleted meanwhile), so an edit never resurrects or duplicates anything.
+ */
+export function replaceById<T extends { id: string }>(list: T[], item: T): T[] {
+  const i = list.findIndex((x) => x.id === item.id);
+  if (i < 0) return list;
+  const next = list.slice();
+  next[i] = { ...item };
+  return next;
+}
+
+/** Why a care record can't be saved yet, or null. */
+export const careProblem = (c: Pick<Care, 'date' | 'nextDue'>): string | null =>
+  !c.date ? 'Choose the day it was done.' : c.nextDue && c.nextDue < c.date ? 'Next due can’t be before it was done.' : null;

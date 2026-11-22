@@ -102,6 +102,12 @@ function TheRoad({ goals, milestones, today, onEdit }: { goals: Goal[]; mileston
   const outline = useMemo(() => roadOutline(), []);
   const centre = useMemo(() => roadLine(0, 1, 90), []);
   const nowT = dayT(today, spans);
+  // On a phone the road is wider than the screen: it scrolls sideways, opening on the middle of the road.
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scroller.current;
+    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+  }, []);
   const walked = useMemo(() => roadLine(0, nowT, 60), [nowT]);
   const nowP = roadPoint(nowT);
   const { W, H, horizon: HY } = ROAD;
@@ -142,6 +148,7 @@ function TheRoad({ goals, milestones, today, onEdit }: { goals: Goal[]; mileston
           {lanterns.filter((l) => l.m.done).length} of {lanterns.length} lanterns lit this year
         </span>
       </div>
+      <div className="gr-scroll" ref={scroller}>
       <svg viewBox={`0 0 ${W} ${H}`} className="gr-svg" role="group" aria-label={`The road through ${year}, from today toward the horizon`}>
         <defs>
           <linearGradient id="gr-sky" x1="0" y1="0" x2="0" y2="1">
@@ -296,6 +303,7 @@ function TheRoad({ goals, milestones, today, onEdit }: { goals: Goal[]; mileston
           <text x={ROAD.cx} y={H - 26} textAnchor="middle" className="gr-empty">No lanterns on the road yet — give this season a milestone and one will be hung.</text>
         )}
       </svg>
+      </div>
       <div className="gr-legend mono">
         <span><i className="lg-lit" />done</span>
         <span><i className="lg-now" />this season</span>

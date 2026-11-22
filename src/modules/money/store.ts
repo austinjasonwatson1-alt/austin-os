@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { kvGet, saveWithSnapshot, snapshotNow, markDeleted } from '../../core/storage';
-import { applyRules, previewImport, upsertRule } from './logic';
+import { applyRules, editTxn, handTxn, previewImport, upsertRule, type HandDraft } from './logic';
 import { DEFAULT_MONEY, type CatKey, type MoneyData, type Txn } from './types';
 
 export const KEY = 'money.v1';
@@ -13,6 +13,10 @@ interface MoneyState extends MoneyData {
   deletedIds: () => Promise<string[]>;
   /** Add previewed transactions (only ones not already here), after a named restore point. */
   importTxns: (previewed: Txn[], why: string) => Promise<number>;
+  /** Write one transaction in by hand (its own random id; never matched by a statement import). */
+  addHand: (d: HandDraft) => Txn;
+  /** Edit a line: category on any line; date/description/amount only on hand-entered ones. */
+  editTxn: (id: string, patch: Partial<Pick<Txn, 'date' | 'desc' | 'cents' | 'category'>>) => void;
   remove: (id: string) => void;
   /** Recategorize one transaction; with `always`, also save a rule for that merchant phrase and apply it everywhere. */
   setCategory: (id: string, category: CatKey, always?: string) => void;
@@ -48,6 +52,26 @@ export const useMoney = create<MoneyState>((set, get) => {
       set({ txns: [...get().txns, ...add] });
       persist();
       return add.length;
+    },
+
+    addHand(d) {
+      const t = handTxn(d, `h-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`, new Date().toISOString());
+      set({ txns: [...get().txns, t] });
+      persist();
+      return t;
+    },
+
+    editTxn(id, patch) {
+      let changed = false;
+      const txns = get().txns.map((t) => {
+        if (t.id !== id) return t;
+        const n = editTxn(t, patch);
+        changed = JSON.stringify(n) !== JSON.stringify(t);
+        return changed ? n : t;
+      });
+      if (!changed) return;
+      set({ txns });
+      persist();
     },
 
     remove(id) {

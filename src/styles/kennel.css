@@ -82,9 +82,19 @@
 .kn-day.none .kn-bar { background: repeating-linear-gradient(135deg, rgba(233, 228, 216, .03) 0 4px, transparent 4px 8px); }
 
 .kn-list { list-style: none; margin: 0; padding: 0; display: grid; }
-.kn-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 9px 0; }
+.kn-list li { display: block; min-width: 0; }
 .kn-list li + li { border-top: 1px solid var(--line); }
-.kn-list li.kn-due { grid-template-columns: 22px minmax(0, 1fr); }
+/* every row opens its record: the whole line is the button */
+.kn-row {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: start; width: 100%; min-height: 44px;
+  margin: 0; padding: 10px 8px 10px 2px; border: 0; border-radius: 10px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+}
+.kn-row:hover { background: linear-gradient(90deg, rgba(232, 168, 75, .07), transparent 80%); }
+.kn-row:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(232, 168, 75, .45); }
+.kn-pen { align-self: center; color: var(--lamp); opacity: .28; font-size: 13px; transition: opacity .15s, transform .15s; }
+.kn-row:hover .kn-pen, .kn-row:focus-visible .kn-pen { opacity: .95; transform: rotate(-12deg); }
+@media (hover: none) { .kn-pen { opacity: .5; } }
 .kn-glyph { color: var(--lamp); font-size: 14px; text-align: center; line-height: 22px; }
 .kn-b { display: grid; gap: 2px; min-width: 0; }
 .kn-t { font-size: 14.5px; }
@@ -92,7 +102,7 @@
 .kn-note { font-family: var(--display); font-style: italic; font-size: 14px; color: var(--bone-dim); overflow-wrap: anywhere; }
 .kn-m { font-size: 10px; color: var(--bone-faint); }
 .kn-due.soon .kn-m { color: var(--warn); }
-.kn-due.overdue { background: linear-gradient(90deg, rgba(209, 80, 63, .1), transparent 70%); border-radius: 8px; padding-left: 6px; }
+.kn-due.overdue .kn-row { background: linear-gradient(90deg, rgba(209, 80, 63, .1), transparent 70%); padding-left: 6px; }
 .kn-due.overdue .kn-glyph, .kn-due.overdue .kn-m { color: var(--bad); }
 .kn-hist { max-height: 320px; overflow: auto; scrollbar-width: thin; }
 
@@ -110,7 +120,13 @@
 .kn-moments .kn-glyph { font-family: var(--display); font-size: 20px; color: rgba(232, 168, 75, .6); }
 
 /* sheets */
+.kn-eyebrow { font-size: 10.5px; }
 .kn-fields { display: grid; gap: 12px; margin-top: 14px; }
+.kn-seg button { min-height: 36px; }
+.kn-warn { margin: -4px 0 0; font-size: 11px; color: var(--warn); }
+.kn-quote-in { font-family: var(--display); font-style: italic; font-size: 16px; }
+.kn-half { max-width: 220px; }
+.kn-actions .kn-rm { margin-right: auto; }
 .kn-fields input[type='date'] { color-scheme: dark; }
 .kn-kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .kn-kind {
@@ -142,4 +158,37 @@
 @media (prefers-reduced-motion: reduce) {
   .kn-zzz i, .kn-zzz b, .kn-bar span { animation: none; }
   .kn-q { transition: none; }
+}
+
+/* ---------- phone polish ---------- */
+@media (max-width: 640px) {
+  .kennel .seg button { min-height: 34px; padding: 4px 12px; }
+  .kennel .btn.sm { min-height: 36px; }
+  .kn-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+  .kn-q { justify-content: center; padding: 11px 4px; min-height: 46px; font-size: 19px; }
+  .kn-more { grid-column: 1 / -1; justify-self: start; }
+  .kn-log { width: 100%; }
+  .kn-today { grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 12px; }
+  .kn-today .kn-big { grid-row: span 3; }
+  .kn-dog { grid-template-columns: 92px minmax(0, 1fr); align-items: start; padding-top: 16px; }
+  .kn-portrait { margin-top: 26px; }
+  .kn-name { font-size: 26px; }
+  .kn-line { font-size: 13px; }
+  .kn-facts > div { grid-template-columns: 74px minmax(0, 1fr); }
+  .kn-wv { flex: none; white-space: nowrap; font-size: 40px; }
+  .kn-add { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .kn-add input { min-height: 44px; }
+  .kn-add input[type='date'] { grid-column: auto; }
+  .kn-add > .btn { grid-column: 1 / -1; min-height: 42px; }
+  .kn-note-add { grid-template-columns: minmax(0, 1fr) auto; }
+  .kn-note-add > .btn { grid-column: auto; }
+  .kn-panel-h-wrap, .kn-notes .panel-h, .kn-weight .panel-h { flex-wrap: wrap; gap: 8px; }
+  .kn-sheet .kn-actions { flex-wrap: nowrap; }
+  .kn-sheet .kn-actions .btn { min-height: 42px; }
+  .kn-sheet .kn-actions .kn-rm { padding-left: 12px; padding-right: 12px; }
+  .kn-sheet .sheet-title { font-size: 26px; }
+  .kn-kind { min-height: 44px; }
+}
+@media (max-width: 380px) {
+  .kn-sheet .kn-actions { flex-wrap: wrap; }
 }

@@ -217,3 +217,33 @@
   .gr-stars circle, .gr-beacon, .gr-today-glow, .gr-lantern.now .gr-lantern-glow { animation: none; }
   .gd-arc, .gs-bar i, .gh-bar i { transition: none; }
 }
+
+/* the road scrolls sideways on narrow screens rather than shrinking to unreadable */
+.gr-scroll { border-radius: 12px; }
+@media (max-width: 760px) {
+  .gr-scroll { overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent); }
+  .gr-scroll::-webkit-scrollbar { display: none; }
+  .gr-scroll .gr-svg { width: 740px; max-width: none; }
+}
+
+/* ---------- phone polish ---------- */
+@media (max-width: 640px) {
+  .gl-hero-act { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .gl-hero-act .btn { min-height: 42px; justify-content: center; text-align: center; }
+  .gl-hero-act .btn.ghost { grid-column: 1 / -1; border: 1px dashed var(--line-strong); }
+  .gl-dial { width: 132px; height: 132px; }
+  .gd-q { font-size: 34px; }
+  .goals .panel-h { flex-wrap: wrap; gap: 4px 12px; }
+  .goals .btn.sm { min-height: 36px; }
+  .goals .seg button { min-height: 36px; }
+  .gs-list li { grid-template-columns: 40px minmax(0, 1fr); }
+  .gs-check { width: 36px; height: 36px; }
+  .gs-check span { width: 10px; height: 10px; }
+  .gh-list li { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; }
+  .gh-sub { min-width: 36px; }
+  .gh-check { width: 36px; height: 36px; }
+  .gl-area { min-height: 40px; }
+  .gp-act .btn { min-height: 36px; }
+  .gl-fields .sheet-actions .btn { min-height: 42px; }
+}

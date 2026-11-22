@@ -416,3 +416,31 @@
   .mem-light[open], .light-photo img.full, .letter, .up-spin { animation: none; }
   .seal-btn .half, .unseal-env .env-flap, .unseal-page, .light-photo img.thumb { transition: none; }
 }
+
+/* where an upload's day came from: the photo's own EXIF, or only the file's date */
+.up-from { font-style: normal; letter-spacing: .08em; text-transform: none; }
+.up-from.photo { color: var(--lamp); }
+.up-from.file { color: var(--bone-faint); }
+
+/* ---------- phone polish ---------- */
+@media (max-width: 640px) {
+  .mem-tabs button { min-height: 36px; }
+  .mtag { min-height: 34px; padding: 6px 12px; }
+  /* tag pickers in the upload sheet: one swipeable row, not a wall of pills */
+  .sheet.mem-upload { padding: 22px 16px 0; }
+  .mem-upload .mem-tags.tight { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent); }
+  .mem-upload .mem-tags.tight::-webkit-scrollbar { display: none; }
+  .mem-upload .mtag { flex: none; }
+  .up-all { display: grid; gap: 8px; }
+  .up-all > * { min-width: 0; }
+  .up-list { max-height: none; overflow: visible; }
+  /* thumbnail beside the day; caption and tags take the full width underneath */
+  .up-row { grid-template-columns: 64px minmax(0, 1fr); gap: 10px 12px; align-items: end; }
+  .up-row .up-fields, .up-row .field-row.up-two { display: contents; }
+  .up-row .field-row.up-two > .field + .field, .up-row .mem-tags { grid-column: 1 / -1; }
+  .mem-upload .sheet-actions { position: sticky; bottom: 0; margin: 16px -16px 0; padding: 22px 16px 16px;
+    background: linear-gradient(180deg, transparent, var(--panel-solid) 18px); }
+  .mem-upload .sheet-actions .btn { min-height: 42px; }
+  .up-size { flex-basis: 100%; }
+}

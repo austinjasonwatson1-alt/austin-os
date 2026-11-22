@@ -1,6 +1,7 @@
 /* ================= Money: the strongbox in the Ledger House ================= */
 
-.mny { display: grid; gap: 16px; }
+.mny { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.mny > * { min-width: 0; }
 
 /* ---------- full-page hero ---------- */
 .mny-hero::after { background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.5), transparent); }
@@ -220,4 +221,95 @@ button.mny-tag:hover { border-color: var(--cc); background: color-mix(in srgb, v
 @media (prefers-reduced-motion: reduce) {
   .mny-sb-glow, .mny-bar span, .mny-b { animation: none; }
   .mny-cat, .mny-chip, .mny-arrow, .mny-del, .mny-pick-b { transition: none; }
+}
+
+/* ---------- written in by hand ---------- */
+.mny-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mny-hand-btn span { color: var(--lamp); }
+button.mny-row-desc {
+  display: block; width: 100%; min-width: 0; border: 0; background: none; padding: 0; margin: 0; color: inherit; font: inherit; font-size: 14px;
+  text-align: left; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+button.mny-row-desc:hover { color: #f8dca6; }
+button.mny-row-desc:focus-visible { outline: none; text-decoration: underline; text-decoration-color: var(--lamp); text-underline-offset: 3px; }
+.mny-quill-mark { font-style: normal; color: var(--lamp); margin-right: 6px; font-size: 12px; text-shadow: 0 0 8px rgba(232, 168, 75, .5); }
+.mny-row.hand::before { background: repeating-linear-gradient(180deg, var(--cc) 0 3px, transparent 3px 6px); opacity: .8; }
+.mny-likehand {
+  margin: 0 0 4px; padding: 10px 13px; border-radius: 10px; font-size: 13px; color: var(--bone-dim);
+  border: 1px dashed rgba(232, 168, 75, .35); background: rgba(232, 168, 75, .05);
+}
+.mny-likehand span { color: var(--lamp); margin-right: 4px; }
+
+.mny-hand { width: min(560px, calc(100vw - 24px)); }
+.mny-eyebrow { font-size: 10.5px; }
+.mny-dir { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; border-radius: 14px; border: 1px solid var(--line); background: rgba(5, 7, 12, .5); }
+.mny-dir button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; border: 1px solid transparent; border-radius: 10px;
+  background: none; color: var(--bone-faint); font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; transition: background .15s, color .15s, border-color .15s;
+}
+.mny-dir button span { font-size: 14px; }
+.mny-dir .out[aria-checked='true'] { color: #f8dca6; border-color: rgba(232, 168, 75, .5); background: linear-gradient(180deg, rgba(232, 168, 75, .2), rgba(232, 168, 75, .06)); box-shadow: 0 0 18px rgba(232, 168, 75, .15); }
+.mny-dir .in[aria-checked='true'] { color: #b9f0d2; border-color: rgba(79, 191, 135, .5); background: linear-gradient(180deg, rgba(79, 191, 135, .2), rgba(79, 191, 135, .05)); box-shadow: 0 0 18px rgba(79, 191, 135, .15); }
+.mny-amt {
+  display: flex; align-items: baseline; gap: 6px; margin: 14px 0 12px; padding: 6px 4px 8px; border-bottom: 1px solid var(--line-strong);
+  transition: border-color .15s;
+}
+.mny-amt:focus-within { border-color: var(--lamp); }
+.mny-amt.in:focus-within { border-color: var(--good); }
+.mny-amt-sign { font-family: var(--display); font-weight: 700; font-size: 30px; color: var(--lamp); text-shadow: 0 0 20px rgba(232, 168, 75, .4); }
+.mny-amt.in .mny-amt-sign { color: var(--good); text-shadow: 0 0 20px rgba(79, 191, 135, .4); }
+.mny-amt input {
+  flex: 1; min-width: 0; border: 0; outline: none; background: none; padding: 0; color: var(--bone);
+  font-family: var(--display); font-weight: 700; font-size: 46px; line-height: 1.05; letter-spacing: -0.02em;
+}
+.mny-amt input::placeholder { color: rgba(233, 228, 216, .18); }
+.mny-hand-fields { display: grid; grid-template-columns: minmax(0, 1fr) 160px; gap: 10px; }
+.mny-hand-fields input[type='date'] { color-scheme: dark; }
+.mny-pick-l { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 16px 0 8px; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--bone-faint); }
+.mny-auto { color: var(--lamp); letter-spacing: .06em; text-transform: none; font-size: 11px; }
+.mny-auto-back { border: 0; background: none; padding: 4px 0; color: var(--lamp); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: none; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+.mny-pick-b.auto[aria-checked='true'] { border-style: dashed; }
+.mny-hand-acts .mny-rm { margin-right: auto; }
+.mny-amt-sign i { font-family: var(--ui); font-style: normal; font-weight: 300; font-size: 26px; margin-right: 2px; vertical-align: 4px; }
+
+/* ---------- phone polish ---------- */
+@media (max-width: 640px) {
+  /* top strip: month on its own line with the arrows at the edges, numbers, then the two actions side by side */
+  .mny-top { grid-template-columns: minmax(0, 1fr); }
+  .mny-month { justify-content: space-between; }
+  .mny-month-l { flex: 1; }
+  .mny-arrow { flex: none; width: 40px; height: 40px; }
+  .mny-stats { grid-row: auto; }
+  .mny-stat-v { font-size: 24px; }
+  .mny-top .mny-acts { display: grid; grid-template-columns: 1fr 1fr; }
+  .mny-acts .btn { min-height: 42px; justify-content: center; text-align: center; }
+  .mny-empty .mny-acts { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .mny-hero-coin { padding: 16px 18px; }
+  .mny-coin-v { font-size: 38px; }
+
+  /* the transaction list: chips become one swipeable strip; everything tappable is a thumb wide */
+  .mny-list .panel-h { flex-wrap: wrap; gap: 8px; }
+  .mny-list .seg button { min-height: 34px; }
+  .mny-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 12px 0 10px; padding: 0 2px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 28px), transparent); }
+  .mny-chips::-webkit-scrollbar { display: none; }
+  .mny-chip { flex: none; min-height: 36px; padding: 6px 13px; }
+  .mny-row { grid-template-columns: 46px minmax(0, 1fr) auto; gap: 4px 10px; padding: 10px 2px 10px 12px; }
+  button.mny-row-desc { min-height: 30px; }
+  .mny-tag { padding: 6px 11px; }
+  .mny-del { width: 36px; height: 36px; padding: 0; font-size: 18px; }
+  .mny-del.sure { width: auto; padding: 0 10px; }
+  .mny-rules li { flex-wrap: wrap; }
+  .mny-tl { font-size: 17px; }
+
+  /* sheets: full-width-ish, with the buttons kept in reach at the bottom */
+  .sheet.mny-sheet { padding: 22px 18px 0; }
+  .mny-sheet .sheet-actions { position: sticky; bottom: 0; margin: 18px -18px 0; padding: 22px 18px 16px;
+    background: linear-gradient(180deg, transparent, var(--panel-solid) 18px); }
+  .mny-sheet .sheet-actions .btn { min-height: 42px; }
+  .mny-hand-fields { grid-template-columns: minmax(0, 1fr); }
+  .mny-amt input { font-size: 40px; }
+  .mny-pick-b { min-height: 42px; padding: 8px 10px; font-size: 12.5px; }
+  .mny-auto-back { min-height: 32px; }
+  .mny-phrase { min-height: 32px; }
 }

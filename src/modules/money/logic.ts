@@ -216,6 +216,8 @@ export function toTxns(lines: ParsedLine[], rules: Rule[], now: string, source?:
 
 export interface ImportPlan {
   add: Txn[];
+  /** New lines that look like one Austin entered by hand (same amount, within 3 days). Both are kept; he can delete one. */
+  likeHand: number;
   /** Lines already in the books (left exactly as they are). */
   already: number;
   /** Lines Austin deleted before; kept out so they don't come back. */
@@ -224,17 +226,87 @@ export interface ImportPlan {
 
 /** What an import would add. Nothing existing is touched; deleted lines stay deleted. */
 export function previewImport(existing: Txn[], incoming: Txn[], deletedIds: Iterable<string> = []): ImportPlan {
-  const have = new Set(existing.map((t) => t.fp));
+  // Hand-entered lines never take part in matching: a statement line is never "already here" because of one.
+  const stmt = existing.filter((t) => !isHand(t));
+  const have = new Set(stmt.map((t) => t.fp));
   const haveId = new Set(existing.map((t) => t.id));
   const dead = new Set(deletedIds);
+  const hands = existing.filter(isHand);
   const add: Txn[] = [];
-  let already = 0, deletedBefore = 0;
+  let already = 0, deletedBefore = 0, likeHand = 0;
   for (const t of incoming) {
+    if (isHand(t)) continue; // only statement lines come in through an import
     if (have.has(t.fp) || haveId.has(t.id)) already++;
     else if (dead.has(t.id)) deletedBefore++;
-    else { add.push(t); have.add(t.fp); haveId.add(t.id); }
+    else {
+      add.push(t); have.add(t.fp); haveId.add(t.id);
+      if (hands.some((h) => h.cents === t.cents && Math.abs(dayDiff(h.date, t.date)) <= 3)) likeHand++;
+    }
   }
-  return { add, already, deletedBefore };
+  return { add, likeHand, already, deletedBefore };
+}
+
+const dayDiff = (a: string, b: string) => Math.round((Date.UTC(+a.slice(0, 4), +a.slice(5, 7) - 1, +a.slice(8, 10)) - Date.UTC(+b.slice(0, 4), +b.slice(5, 7) - 1, +b.slice(8, 10))) / 86400000);
+
+/* ---------------- entered by hand ---------------- */
+
+export const HAND_FP = 'hand|';
+
+/** Was this line written in by hand (rather than read from a statement)? */
+export const isHand = (t: Pick<Txn, 'fp'> & { hand?: boolean }) => t.hand === true || t.fp.startsWith(HAND_FP);
+
+export interface HandDraft {
+  date: string;
+  desc: string;
+  /** The amount as typed ("12.50", "$1,200"); the sign comes from `dir`. */
+  amount: string;
+  dir: 'in' | 'out';
+  category: CatKey;
+}
+
+/** Signed cents for a typed amount, or null when it isn't a positive amount. */
+export function handCents(amount: string, dir: HandDraft['dir']): number | null {
+  const c = parseAmount(amount);
+  if (c === null || c === 0) return null;
+  return dir === 'in' ? Math.abs(c) : -Math.abs(c);
+}
+
+/** Why a hand entry can't be saved yet, or null. */
+export function handProblem(d: HandDraft): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.date)) return 'Choose the day.';
+  if (!d.desc.trim()) return 'Say what it was.';
+  if (handCents(d.amount, d.dir) === null) return 'Enter an amount, like 12.50.';
+  return null;
+}
+
+/**
+ * A transaction written in by hand. Its id is supplied (random, never derived from the
+ * content), and its fingerprint is `hand|<id>`, which no statement line can ever have.
+ * Its category counts as chosen by hand, so rules leave it alone.
+ */
+export function handTxn(d: HandDraft, id: string, now: string): Txn {
+  const cents = handCents(d.amount, d.dir);
+  if (cents === null) throw new Error('No amount');
+  return { id, date: d.date, desc: d.desc.trim().replace(/\s+/g, ' '), cents, category: d.category, fp: HAND_FP + id, manual: true, hand: true, addedAt: now };
+}
+
+/** The category a hand entry would get as it's typed (rules, then keywords, then the sign). */
+export const suggestCategory = (desc: string, dir: HandDraft['dir'], rules: Rule[] = []): CatKey =>
+  categorize(desc || '', dir === 'in' ? 1 : -1, rules);
+
+/**
+ * Apply an edit. Category can change on any line; date, description and amount only on a
+ * hand-entered one (statement lines stay exactly as the bank had them). Id and fp never change.
+ */
+export function editTxn(t: Txn, patch: Partial<Pick<Txn, 'date' | 'desc' | 'cents' | 'category'>>): Txn {
+  const next: Txn = { ...t };
+  if (patch.category && patch.category !== t.category) { next.category = patch.category; next.manual = true; }
+  if (isHand(t)) {
+    if (patch.date && /^\d{4}-\d{2}-\d{2}$/.test(patch.date)) next.date = patch.date;
+    if (patch.desc?.trim()) next.desc = patch.desc.trim().replace(/\s+/g, ' ');
+    if (typeof patch.cents === 'number' && Number.isFinite(patch.cents) && patch.cents !== 0) next.cents = Math.round(patch.cents);
+  }
+  return next;
 }
 
 /* ---------------- categories ---------------- */

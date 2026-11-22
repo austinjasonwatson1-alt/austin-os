@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { agoLabel, leanFor, orphanPhotoIds, capsuleState, countdownLabel, daysToOpen, describeMemories, filterByTag, groupByMonth, onThisDay, readyCapsules, sealProblem, sealedFor, sortCapsules, tagCounts } from './logic';
+import { agoLabel, dayOf, photoDay, leanFor, orphanPhotoIds, capsuleState, countdownLabel, daysToOpen, describeMemories, filterByTag, groupByMonth, onThisDay, readyCapsules, sealProblem, sealedFor, sortCapsules, tagCounts } from './logic';
 import type { Capsule, Memory } from './types';
 
 const M = (id: string, day: string, p: Partial<Memory> = {}): Memory => ({ id, day, caption: '', thumb: 'data:', addedAt: `${day}T12:00:00Z`, ...p });
@@ -126,5 +126,21 @@ describe('the wall', () => {
       expect(leanFor(id)).toBe(leanFor(id));
       expect(Math.abs(leanFor(id))).toBeLessThanOrEqual(2.5);
     }
+  });
+});
+
+describe('the day a new photo belongs to', () => {
+  const today = '2026-11-22';
+  const noon = new Date(2025, 6, 4, 12).getTime();
+  it('prefers the EXIF day', () => {
+    expect(photoDay('2025-07-01', noon, today)).toEqual({ day: '2025-07-01', from: 'photo' });
+  });
+  it('falls back to the file’s local day, then today', () => {
+    expect(photoDay(null, noon, today)).toEqual({ day: '2025-07-04', from: 'file' });
+    expect(photoDay(null, noon, today).day).toBe(dayOf(noon));
+    expect(photoDay(null, 0, today)).toEqual({ day: today, from: 'file' });
+  });
+  it('ignores an EXIF day in the future (a wrong camera clock)', () => {
+    expect(photoDay('2031-01-01', noon, today)).toEqual({ day: '2025-07-04', from: 'file' });
   });
 });

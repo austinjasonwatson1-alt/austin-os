@@ -3,8 +3,8 @@ import { todayISO } from '../../core/dates';
 import { CountUp, embers } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import {
-  byCategory, defaultMonth, filterTxns, fmtMoney, merchantOf, monthLabel, monthOf, monthTotals, parseStatement,
-  previewImport, shiftMonth, toTxns, writingSpend, yearTrend, type ImportPlan, type Layout, type TrendMonth,
+  byCategory, defaultMonth, filterTxns, fmtMoney, handCents, handProblem, isHand, merchantOf, monthLabel, monthOf, monthTotals, parseStatement,
+  previewImport, shiftMonth, suggestCategory, toTxns, writingSpend, yearTrend, type HandDraft, type ImportPlan, type Layout, type TrendMonth,
 } from './logic';
 import { useMoney } from './store';
 import { CATEGORIES, CAT_OF, type CatKey, type Txn } from './types';
@@ -51,6 +51,7 @@ export function MoneyPanel({ startIndex = 0 }: { startIndex?: number }) {
   const [cat, setCat] = useState<CatKey | null>(null);
   const [scope, setScope] = useState<'month' | 'all'>('month');
   const [open, setOpen] = useState<Txn | null>(null);
+  const [hand, setHand] = useState<Txn | 'new' | null>(null);
   const [limit, setLimit] = useState(60);
 
   const tot = useMemo(() => monthTotals(txns, month), [txns, month]);
@@ -77,9 +78,13 @@ export function MoneyPanel({ startIndex = 0 }: { startIndex?: number }) {
             <li>Choose <b>CSV</b> (sometimes called “spreadsheet” or “comma-separated”) and the dates you want.</li>
             <li>Choose that file here. You’ll see every line before anything is added.</li>
           </ol>
-          <ImportMoney primary />
+          <div className="mny-acts">
+            <ImportMoney primary />
+            <button className="btn" onClick={() => setHand('new')}>✎ Write one in by hand</button>
+          </div>
           <p className="mono faint mny-fine">Re-importing an overlapping statement is safe — lines already here are skipped.</p>
         </div>
+        {hand && <HandSheet t={hand === 'new' ? undefined : hand} onClose={() => setHand(null)} />}
       </section>
     );
   }
@@ -100,7 +105,10 @@ export function MoneyPanel({ startIndex = 0 }: { startIndex?: number }) {
           <Stat label="Went out" cents={tot.outC} tone="out" />
           <Stat label="Net" cents={tot.net} tone={tot.net >= 0 ? 'in' : 'bad'} signed />
         </div>
-        <ImportMoney />
+        <div className="mny-acts">
+          <button className="btn mny-hand-btn" onClick={() => setHand('new')}><span aria-hidden>✎</span> Write one in</button>
+          <ImportMoney />
+        </div>
       </section>
 
       <div className="mny-grid">
@@ -158,7 +166,7 @@ export function MoneyPanel({ startIndex = 0 }: { startIndex?: number }) {
         </div>
         {list.length === 0 ? <p className="dim mny-none">Nothing matches.</p> : (
           <ul className="mny-rows">
-            {list.slice(0, limit).map((t) => <TxnRow key={t.id} t={t} onOpen={() => setOpen(t)} />)}
+            {list.slice(0, limit).map((t) => <TxnRow key={t.id} t={t} onOpen={() => (isHand(t) ? setHand(t) : setOpen(t))} />)}
           </ul>
         )}
         {list.length > limit && <button className="btn ghost mny-more" onClick={() => setLimit(limit + 100)}>Show more ({list.length - limit} left)</button>}
@@ -166,6 +174,7 @@ export function MoneyPanel({ startIndex = 0 }: { startIndex?: number }) {
       </section>
 
       {open && <Recategorize t={open} onClose={() => setOpen(null)} />}
+      {hand && <HandSheet t={hand === 'new' ? undefined : hand} onClose={() => setHand(null)} />}
     </div>
   );
 }
@@ -239,13 +248,16 @@ function WritingCallout({ year, w, onShow, style }: { year: number; w: ReturnTyp
 
 function TxnRow({ t, onOpen }: { t: Txn; onOpen: () => void }) {
   const k = CAT_OF[t.category];
+  const byHand = isHand(t);
   const [sure, setSure] = useState(false);
   useEffect(() => { if (!sure) return; const id = setTimeout(() => setSure(false), 3500); return () => clearTimeout(id); }, [sure]);
   return (
-    <li className="mny-row" style={{ '--cc': k.color } as CSSProperties}>
+    <li className={`mny-row${byHand ? ' hand' : ''}`} style={{ '--cc': k.color } as CSSProperties}>
       <span className="mny-row-d mono">{shortDate(t.date)}</span>
-      <span className="mny-row-desc" title={t.desc}>{t.desc}</span>
-      <button className="mny-tag" onClick={onOpen} title="Change category"><i aria-hidden />{k.label}</button>
+      <button className="mny-row-desc" title={byHand ? `${t.desc} — written in by hand; tap to edit` : `${t.desc} — tap to change category`} onClick={onOpen}>
+        {byHand && <i className="mny-quill-mark" aria-label="Written in by hand">✎</i>}{t.desc}
+      </button>
+      <button className="mny-tag" onClick={onOpen} title={byHand ? 'Edit' : 'Change category'}><i aria-hidden />{k.label}</button>
       <span className={`mny-row-a mono ${t.cents > 0 ? 'in' : ''}`}>{fmtMoney(t.cents, { cents: true, sign: true })}</span>
       <button className={`mny-del${sure ? ' sure' : ''}`} aria-label={sure ? `Really delete ${t.desc}` : `Delete ${t.desc}`}
         onClick={() => (sure ? useMoney.getState().remove(t.id) : setSure(true))}>{sure ? 'Delete?' : '×'}</button>
@@ -285,6 +297,84 @@ function Recategorize({ t, onClose }: { t: Txn; onClose: () => void }) {
         <button className="btn ghost" onClick={close}>Cancel</button>
         <button className="btn primary" disabled={always && !phrase.trim()} onClick={save}>Save</button>
       </div>
+    </dialog>
+  );
+}
+
+/* ---------------- written in by hand ---------------- */
+
+function HandSheet({ t, onClose }: { t?: Txn; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => { ref.current?.showModal(); }, []);
+  const rules = useMoney((s) => s.rules);
+  const [date, setDate] = useState(t?.date ?? todayISO());
+  const [desc, setDesc] = useState(t?.desc ?? '');
+  const [amount, setAmount] = useState(t ? (Math.abs(t.cents) / 100).toFixed(2) : '');
+  const [dir, setDir] = useState<HandDraft['dir']>(t && t.cents > 0 ? 'in' : 'out');
+  const [picked, setPicked] = useState<CatKey | null>(t?.category ?? null);
+  const [sure, setSure] = useState(false);
+  useEffect(() => { if (!sure) return; const id = setTimeout(() => setSure(false), 4000); return () => clearTimeout(id); }, [sure]);
+  const auto = suggestCategory(desc, dir, rules);
+  const category = picked ?? auto;
+  const draft: HandDraft = { date, desc, amount, dir, category };
+  const problem = handProblem(draft);
+  const cents = handCents(amount, dir);
+  // Tell the page straight away (not on the dialog's async close event): adding the first line swaps the empty state out.
+  const close = () => { ref.current?.close(); onClose(); };
+  const save = () => {
+    if (problem) return;
+    const s = useMoney.getState();
+    if (t) s.editTxn(t.id, { date, desc, cents: cents!, category });
+    else s.addHand(draft);
+    close();
+  };
+  return (
+    <dialog ref={ref} className="sheet mny-sheet mny-hand" onClose={onClose} aria-labelledby="mny-hand-t">
+      <form onSubmit={(e) => { e.preventDefault(); save(); }}>
+        <div className="page-eyebrow mny-eyebrow">{t ? 'Written in by hand' : 'The ledger book'}</div>
+        <h2 id="mny-hand-t" className="sheet-title">{t ? 'Edit the line' : 'Write one in'}</h2>
+        <p className="sheet-src mono">{t ? `Added ${shortDate(t.addedAt.slice(0, 10))} · not from a statement` : 'Cash, a check, a gift — anything a statement won’t show.'}</p>
+
+        <div className="mny-dir" role="radiogroup" aria-label="Money in or out">
+          <button type="button" role="radio" aria-checked={dir === 'out'} className="out" onClick={() => setDir('out')}><span aria-hidden>↑</span>Money out</button>
+          <button type="button" role="radio" aria-checked={dir === 'in'} className="in" onClick={() => setDir('in')}><span aria-hidden>↓</span>Money in</button>
+        </div>
+
+        <label className={`mny-amt ${dir}`}>
+          <span className="mny-amt-sign" aria-hidden><i>{dir === 'in' ? '+' : '−'}</i>$</span>
+          <input inputMode="decimal" value={amount} placeholder="0.00" aria-label="Amount in dollars" autoFocus={!t}
+            onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))} />
+        </label>
+
+        <div className="mny-hand-fields">
+          <label className="field mny-hand-desc"><span>What was it</span><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Farmers market, cash" /></label>
+          <label className="field mny-hand-date"><span>Day</span><input type="date" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} /></label>
+        </div>
+
+        <p className="mny-pick-l mono">
+          Category {picked === null
+            ? <span className="mny-auto">✦ sorted as you type</span>
+            : <button type="button" className="mny-auto-back" onClick={() => setPicked(null)}>let the house choose ({CAT_OF[auto].label})</button>}
+        </p>
+        <div className="mny-pick" role="radiogroup" aria-label="Category">
+          {CATEGORIES.map((c) => (
+            <button type="button" key={c.k} role="radio" aria-checked={category === c.k} className={`mny-pick-b${picked === null && c.k === auto ? ' auto' : ''}`} style={{ '--cc': c.color } as CSSProperties} onClick={() => setPicked(c.k)}>
+              <span aria-hidden>{c.glyph}</span>{c.label}
+            </button>
+          ))}
+        </div>
+
+        {problem && (desc || amount) ? <p className="mono faint mny-fine">{problem}</p> : null}
+        <div className="sheet-actions mny-hand-acts">
+          {t && (sure
+            ? <button type="button" className="btn danger-solid mny-rm" onClick={() => { useMoney.getState().remove(t.id); close(); }}>Delete this line</button>
+            : <button type="button" className="btn danger mny-rm" onClick={() => setSure(true)}>Delete…</button>)}
+          <button type="button" className="btn ghost" onClick={close}>Cancel</button>
+          <button type="submit" className="btn primary" disabled={Boolean(problem)}>
+            {t ? 'Save' : cents ? `Add ${fmtMoney(cents, { cents: true, sign: true })}` : 'Add it'}
+          </button>
+        </div>
+      </form>
     </dialog>
   );
 }
@@ -373,6 +463,9 @@ function ImportMoney({ primary }: { primary?: boolean }) {
                 <b className="g-good">{plan.add.length} new</b>, {plan.already} already here{plan.deletedBefore ? <>, {plan.deletedBefore} you deleted before (kept out)</> : null}
                 {parsed.skipped ? <>; {parsed.skipped} row{parsed.skipped === 1 ? '' : 's'} without a date or amount skipped</> : null}. Nothing already here is changed.
               </p>
+              {plan.likeHand > 0 && (
+                <p className="mny-likehand"><span aria-hidden>✎</span> {plan.likeHand} new line{plan.likeHand === 1 ? ' looks' : 's look'} like one you wrote in by hand (same amount, within a few days). Both are kept — delete the hand-written one afterwards if it’s the same purchase.</p>
+              )}
               {range && <p className="mono faint mny-fine">{shortDate(range[0])} – {shortDate(range[1])} · net {fmtMoney(sum, { cents: true, sign: true })}</p>}
               {plan.add.length > 0 && (
                 <ul className="mny-imp">

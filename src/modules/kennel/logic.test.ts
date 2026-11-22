@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeKennel, kennelPose, kennelWalkMinutes, latestWeight, nextCareFor, sparkPoints, upcomingCare, walkStreak, walkStrip, weekMinutes, weightChange, notesFor } from './logic';
+import { careProblem, cleanCare, cleanNote, cleanWalk, cleanWeight, describeKennel, kennelPose, replaceById, kennelWalkMinutes, latestWeight, nextCareFor, sparkPoints, upcomingCare, walkStreak, walkStrip, weekMinutes, weightChange, notesFor } from './logic';
 import type { Care, Walk, Weight } from './types';
 
 const W = (date: string, minutes = 30, who: Walk['who'] = 'both'): Walk => ({ id: `${date}-${minutes}-${who}`, date, minutes, who });
@@ -104,5 +104,40 @@ describe('the rest', () => {
     expect(describeKennel.detail({ walks: [W('2026-01-01'), W('2026-01-02')], care: [C({})] })).toBe('2 walks · 1 care record');
     expect(describeKennel.size({ walks: [W('2026-01-01')], weights: [L('2026-01-01', 'cooper', 1)] })).toBe(2);
     expect(describeKennel.detail(undefined)).toBe('0 walks · 0 care records');
+  });
+});
+
+describe('editing records', () => {
+  it('replaces a record in place, keeping its id and order', () => {
+    const list = [W('2026-11-20'), W('2026-11-21', 20), W('2026-11-22', 25)];
+    const edited = { ...list[1], minutes: 45, note: 'creek loop' };
+    const out = replaceById(list, edited);
+    expect(out.map((w) => w.id)).toEqual(list.map((w) => w.id));
+    expect(out[1]).toEqual(edited);
+    expect(out[1]).not.toBe(edited);
+    expect(list[1].minutes).toBe(20); // the original is untouched
+  });
+
+  it('leaves the list alone when the record is gone (never brings it back)', () => {
+    const list = [W('2026-11-20')];
+    expect(replaceById(list, { ...W('2026-11-01'), id: 'nope' })).toBe(list);
+  });
+
+  it('tidies walks, care, weights and notes the same way for add and edit', () => {
+    expect(cleanWalk({ date: '2026-11-22', who: 'both', minutes: 29.6, note: '  ' })).toEqual({ date: '2026-11-22', who: 'both', minutes: 30, note: undefined });
+    expect(cleanWalk({ date: '2026-11-22', who: 'both', minutes: 0 }).minutes).toBe(1);
+    expect(cleanCare({ date: '2026-11-22', who: 'cooper', kind: 'vaccine', title: ' Rabies ', note: '', nextDue: '' })).toEqual({ date: '2026-11-22', who: 'cooper', kind: 'vaccine', title: 'Rabies', note: undefined, nextDue: undefined });
+    expect(cleanWeight({ date: '2026-11-22', dog: 'shadow', lb: 41.26 }).lb).toBe(41.3);
+    expect(cleanNote({ id: 'n1', date: '2026-11-22', who: 'cooper', text: '  pancake thief ' }).text).toBe('pancake thief');
+  });
+
+  it('keeps ids through cleaning', () => {
+    expect(cleanWalk({ id: 'w1', date: '2026-11-22', who: 'cooper', minutes: 10 }).id).toBe('w1');
+  });
+
+  it('checks care dates', () => {
+    expect(careProblem({ date: '2026-11-22' })).toBeNull();
+    expect(careProblem({ date: '2026-11-22', nextDue: '2026-11-21' })).toMatch(/before/);
+    expect(careProblem({ date: '' })).toMatch(/day/);
   });
 });
