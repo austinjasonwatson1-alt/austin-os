@@ -88,5 +88,5 @@
 .aa-coin { font-family: var(--display); font-size: 30px; fill: #c9a227; }
 .aa-door { fill: #0a0d16; stroke: rgba(233, 228, 216, .2); }
 .aa-heart { fill: #d97ba4; opacity: calc(.3 + var(--heat) * .7); filter: drop-shadow(0 0 8px rgba(217, 123, 164, .7)); }
-@media (max-width: 860px) { .al-add { grid-template-columns: minmax(0, 1fr) auto; } .al-add .al-amt, .al-add .al-when { width: auto; } }
+@media (max-width: 860px) { .al-add { grid-template-columns: minmax(0, 1fr) auto; } .al-add .al-amt { width: 92px; } .al-add .al-when { width: 148px; } .al-add > .btn { grid-column: 1 / -1; justify-self: start; } }
 @media (prefers-reduced-motion: reduce) { .aa-spark { animation: none; } }

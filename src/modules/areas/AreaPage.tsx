@@ -152,7 +152,7 @@ function Item({ i, list, config }: { i: AreaItem; list: AreaList; config: AreaCo
       </div>
       {sure
         ? <button className="btn danger sm" onClick={() => a.removeItem(i.id)}>Remove</button>
-        : <button className="btn ghost sm" aria-label="Remove" onClick={() => setSure(true)}>\u2715</button>}
+        : <button className="btn ghost sm" aria-label="Remove" onClick={() => setSure(true)}>✕</button>}
     </li>
   );
 }
@@ -165,7 +165,7 @@ function MoneySummary({ config, items }: { config: AreaConfig; items: AreaItem[]
     <div className="area-today money-sum">
       <span className={`big ${m.net >= 0 ? 'g-good' : ''}`}>{money(m.net)}</span>
       <span className="mono">net in {y}</span>
-      <span className="mono faint">{money(m.in)} in \u00b7 {money(m.out)} out</span>
+      <span className="mono faint">{money(m.in)} in · {money(m.out)} out</span>
     </div>
   );
 }
@@ -195,7 +195,7 @@ function AreaArt({ id, heat }: { id: AreaConfig['id']; heat: number }) {
           <rect x="50" y="92" width="200" height="12" className="aa-wall" />
           {[70, 115, 160, 205].map((x) => <rect key={x} x={x} y="108" width="22" height="92" className="aa-col" />)}
           <rect x="40" y="200" width="220" height="16" className="aa-wall" />
-          <text x="150" y="80" textAnchor="middle" className="aa-coin">\u00a4</text>
+          <text x="150" y="80" textAnchor="middle" className="aa-coin">¤</text>
         </g>
       ) : id === 'hearth' ? (
         <g>

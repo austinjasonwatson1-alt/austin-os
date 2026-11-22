@@ -333,7 +333,10 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .tip b { color: var(--bone); font-weight: 500; }
 .seg { display: inline-flex; padding: 2px; border-radius: 9px; border: 1px solid var(--line); background: rgba(5, 7, 12, .4); }
-.seg button { border: 0; background: none; color: var(--bone-faint); font-family: var(--mono); font-size: 11px; letter-spacing: .06em; padding: 4px 10px; border-radius: 7px; }
+.seg button { border: 0; background: none; color: var(--bone-faint); font-family: var(--mono); font-size: 11px; letter-spacing: .06em; padding: 4px 10px; border-radius: 7px; white-space: nowrap; flex: none; }
+.seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+@media (max-width: 420px) { .seg button { padding: 4px 8px; } }
 .seg button[aria-checked='true'] { background: var(--lamp-soft); color: var(--bone); }
 .galaxy { position: relative; max-width: 620px; margin: 0 auto; }
 .galaxy svg { display: block; width: 100%; height: auto; }
@@ -408,7 +411,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .field-row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .field-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .seg.wide { display: flex; width: 100%; }
-.seg.wide button { flex: 1; padding: 7px 6px; }
+.seg.wide button { flex: 1 1 0; padding: 7px 6px; }
 .field textarea.ruled, textarea.ruled {
   width: 100%; resize: vertical; border: 1px solid var(--line-strong); border-radius: 9px; outline: none; padding: 4px 10px; line-height: 28px;
   font-family: var(--display); font-style: italic; font-size: 15.5px; caret-color: var(--lamp);
