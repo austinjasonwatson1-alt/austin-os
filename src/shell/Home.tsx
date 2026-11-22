@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { anniversary, bedtime, freshFinish, greyness, growth } from './worldLogic';
+import { anniversary, bedtime, freshFinish, greyness, growth, holiday, type Holiday } from './worldLogic';
 import { useShelf } from '../modules/shelf/store';
-import { skyPhase, type Phase } from '../core/skyLogic';
+import { season, skyPhase, type Phase, type Season } from '../core/skyLogic';
 import { usePub } from '../modules/pub/store';
 import { areaHeat, areaMinutes, money, moneyYear } from '../modules/areas/logic';
 import { AREA_STORES } from '../modules/areas/store';
@@ -46,7 +46,10 @@ export default function Home() {
   const shelfBooks = useShelf((st) => st.books);
   useEffect(() => { void useShelf.getState().load(); }, []);
   const hasOffer = usePub((st) => st.queries.some((q) => q.status === 'offer'));
-  const world: World = { growth: growth(totalMins, streak, hasOffer), phase: (new URLSearchParams(window.location.search).get('sky') as Phase | null) ?? skyPhase(now), sleeping: bedtime(now), grey: greyness(firstDay, today), newBook: freshFinish(shelfBooks, today, addDays(today, -1)) };
+  const world: World = { growth: growth(totalMins, streak, hasOffer), phase: (new URLSearchParams(window.location.search).get('sky') as Phase | null) ?? skyPhase(now), sleeping: bedtime(now), grey: greyness(firstDay, today), newBook: freshFinish(shelfBooks, today, addDays(today, -1)),
+    // ?season=winter / ?holiday=christmas preview any look.
+    season: (new URLSearchParams(window.location.search).get('season') as Season | null) ?? season(now),
+    holiday: new URLSearchParams(window.location.search).has('holiday') ? (new URLSearchParams(window.location.search).get('holiday') as Holiday) : holiday(now) };
   const years = anniversary(firstDay, today);
   // On the anniversary, the sky replays its best: a shooting star once per day.
   useEffect(() => {

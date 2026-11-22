@@ -66,3 +66,13 @@ export function freshFinish(books: { title: string; status: string; finished?: s
     .sort((a, b) => (b.finished ?? '').localeCompare(a.finished ?? ''))[0];
   return hit?.title ?? null;
 }
+
+export type Holiday = 'christmas' | 'halloween' | null;
+
+/** Dressing for the homestead on the days that call for it. */
+export function holiday(d: Date): Holiday {
+  const m = d.getMonth(), day = d.getDate();
+  if ((m === 11 && day >= 1) || (m === 0 && day <= 6)) return 'christmas';
+  if (m === 9 && day >= 24) return 'halloween';
+  return null;
+}

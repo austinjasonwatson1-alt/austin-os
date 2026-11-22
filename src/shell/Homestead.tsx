@@ -1,8 +1,8 @@
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import { AREAS, type AreaId } from '../modules/registry';
 import { go } from './router';
-import { daylight, type Growth } from './worldLogic';
-import type { Phase } from '../core/skyLogic';
+import { daylight, type Growth, type Holiday } from './worldLogic';
+import type { Phase, Season } from '../core/skyLogic';
 import { Dog, Patrol } from './Dogs';
 import type { DogPose } from '../modules/lounge/logic';
 
@@ -12,7 +12,7 @@ import type { DogPose } from '../modules/lounge/logic';
  * `heat` (0–1) is how much of today's writing is done; the cabin windows burn with it.
  */
 /** What the scene needs to know about the life around it. */
-export interface World { growth: Growth; phase: Phase; sleeping: boolean; grey: number; /** A book just finished: the dogs make a fuss about it. */ newBook?: string | null }
+export interface World { growth: Growth; phase: Phase; sleeping: boolean; grey: number; season?: Season; holiday?: Holiday; /** A book just finished: the dogs make a fuss about it. */ newBook?: string | null }
 
 export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, forgeHeat = 0, hearthHeat = 0, world, pose, children }: { heat: number; chapelHeat?: number; officeHeat?: number; obsHeat?: number; forgeHeat?: number; hearthHeat?: number; world?: World; pose: DogPose; children?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -38,7 +38,7 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
   const area = (id: AreaId) => AREAS.find((a) => a.id === id)!;
 
   return (
-    <div ref={ref} className={`hs-scene${world?.sleeping ? ' sleeping' : ''}`} data-phase={world?.phase ?? 'night'}
+    <div ref={ref} className={`hs-scene${world?.sleeping ? ' sleeping' : ''}`} data-phase={world?.phase ?? 'night'} data-season={world?.season}
       style={{ '--heat': heat, '--wall': world ? daylight(world.phase).wall : 0, '--glow': world ? daylight(world.phase).glow : 1 } as CSSProperties}>
       <svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" className="hs-svg" role="group" aria-label="The homestead">
         <defs>
@@ -80,11 +80,17 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
         {/* near ridge */}
         <g className="hs-layer" data-depth="2">
           <path d="M-60 300 C 120 262, 250 250, 380 272 S 640 300, 760 276 S 1000 250, 1260 290 L1260 360 L-60 360 Z" fill="url(#hs-near)" />
+          {world?.season === 'winter' && (
+            <g className="hs-snow" aria-hidden>
+              <path d="M-60 300 C 120 262, 250 250, 380 272 S 640 300, 760 276 S 1000 250, 1260 290 L1260 302 C 1000 262, 760 288, 640 310 S 300 262, -60 312 Z" className="hs-drift" />
+            </g>
+          )}
           <path d="M210 302 C 330 296, 420 312, 560 306 S 800 300, 940 304 S 1080 312, 1150 306" className="hs-trail" />
           {/* the dirt path from the cabin door down toward you */}
           <path d="M462 300 C 458 318, 430 330, 420 346 L 404 362 L 452 362 C 462 344, 478 328, 478 300 Z" className="hs-path" />
           {/* a small pond holding the moon */}
           <ellipse cx="300" cy="326" rx="70" ry="11" fill="url(#hs-pond)" stroke="rgba(233,228,216,.08)" />
+          {world?.season === 'winter' && <ellipse cx="300" cy="326" rx="70" ry="11" className="hs-ice" aria-hidden />}
           <g className="hs-shimmer"><path d="M262 324h22M298 328h30M318 322h14M276 330h16" /></g>
           <ellipse cx="312" cy="325" rx="6" ry="2" fill="rgba(244,236,216,.35)" />
           {/* rocks and grass */}
@@ -218,6 +224,7 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
 
           <Pines />
           {world && <Garden g={world.growth} />}
+          {world?.season && <SeasonDress season={world.season} holiday={world.holiday ?? null} />}
           <rect x="-60" y="270" width="1320" height="60" fill="url(#hs-mist)" className="hs-mist" />
           {/* Cooper and Shadow out front of the cabin; click them to go in to the Lounge */}
           {world?.newBook && !world.sleeping ? (
@@ -322,6 +329,89 @@ function Pines() {
         <path key={x} transform={`translate(${x} ${y}) scale(${s})`}
           d="M0 -78 L13 -46 L6 -48 L19 -18 L8 -20 L23 6 L3 4 L3 12 L-3 12 L-3 4 L-23 6 L-8 -20 L-19 -18 L-6 -48 L-13 -46 Z" />
       ))}
+    </g>
+  );
+}
+
+/* ---------------- the seasons, and the days that call for dressing up ---------------- */
+
+/** Points along a line, for strings of lights and rows of icicles. */
+const along = (x1: number, y1: number, x2: number, y2: number, n: number) =>
+  Array.from({ length: n }, (_, i) => [x1 + ((x2 - x1) * i) / (n - 1), y1 + ((y2 - y1) * i) / (n - 1)] as const);
+const BULBS = ['#ff6b5e', '#ffd27a', '#7fd3ff', '#9ff0a8', '#ff9ad5'];
+
+function Tree({ x, y, s = 1, kind }: { x: number; y: number; s?: number; kind: 'blossom' | 'summer' | 'autumn' }) {
+  const fill = kind === 'blossom' ? ['#f6b8c8', '#f9d3dd', '#e996ad'] : kind === 'summer' ? ['#2f6b45', '#3d8455', '#285c3b'] : ['#d9662b', '#e8a03a', '#b8442a'];
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`} className={`hs-tree t-${kind}`}>
+      <path d="M-2 0 L-3 -26 L-12 -36 M-3 -26 L3 -38 M0 -14 L9 -24" className="hs-trunk" />
+      <circle cx="-12" cy="-40" r="11" fill={fill[0]} /><circle cx="4" cy="-46" r="13" fill={fill[1]} /><circle cx="14" cy="-34" r="10" fill={fill[2]} />
+      <circle cx="-2" cy="-32" r="10" fill={fill[0]} />
+      {kind === 'blossom' && [[-16, -46], [8, -54], [16, -40], [-6, -38], [2, -30]].map(([a, b], i) => <circle key={i} cx={a} cy={b} r="1.6" fill="#fff4f7" />)}
+    </g>
+  );
+}
+
+function Pumpkin({ x, y, lit }: { x: number; y: number; lit: boolean }) {
+  return (
+    <g transform={`translate(${x} ${y})`} className={lit ? 'hs-pumpkin lit' : 'hs-pumpkin'}>
+      {lit && <circle r="16" fill="url(#hs-glow)" className="hs-lantern-glow" />}
+      <ellipse rx="8" ry="6" cy="-6" fill="#d9701f" /><ellipse rx="4" ry="6" cy="-6" fill="#e8862c" />
+      <path d="M0 -12 q1 -4 3 -5" stroke="#4a5a2a" strokeWidth="1.6" fill="none" />
+      {lit && <path d="M-4 -8 l1.5 -2 l1.5 2 z M1 -8 l1.5 -2 l1.5 2 z M-4 -4 q4 3 8 0 q-4 1 -8 0 z" fill="#ffe08a" />}
+    </g>
+  );
+}
+
+function SeasonDress({ season, holiday }: { season: Season; holiday: Holiday }) {
+  const winter = season === 'winter';
+  return (
+    <g className={`hs-season s-${season}`} aria-hidden>
+      {winter && (
+        <g className="hs-snow">
+          {/* caps on every roof */}
+          <path d="M372 226 L470 156 L568 226 L562 229 L470 165 L378 229 Z" />
+          <path d="M436 236 L470 220 L504 236 L500 238 L470 225 L440 238 Z" />
+          <path d="M740 226 L790 186 L840 226 L835 228 L790 193 L745 228 Z" />
+          <path d="M772 146 L790 118 L808 146 L804 147 L790 124 L776 147 Z" />
+          <rect x="986" y="153" width="128" height="5" rx="2.5" />
+          <path d="M106 226 A44 44 0 0 1 194 226 L188 226 A38 32 0 0 0 112 226 Z" />
+          {/* icicles on the cabin eaves */}
+          {along(382, 226, 558, 226, 14).map(([x, y], i) => <path key={i} d={`M${x - 2} ${y} L${x} ${y + 5 + (i % 3) * 3} L${x + 2} ${y} Z`} className="hs-icicle" />)}
+        </g>
+      )}
+      {season === 'spring' && <><Tree x={612} y={306} s={1.05} kind="blossom" /><Tree x={232} y={304} s={0.85} kind="blossom" /><Tree x={930} y={300} s={0.8} kind="blossom" /></>}
+      {season === 'summer' && (
+        <>
+          <Tree x={612} y={306} s={1.05} kind="summer" /><Tree x={930} y={300} s={0.8} kind="summer" />
+          {[[838, 300], [848, 302], [858, 299]].map(([x, y], i) => (
+            <g key={i} transform={`translate(${x} ${y})`} className="hs-sunflower"><path d={`M0 0 V${-14 - i * 3}`} /><circle cy={-15 - i * 3} r="4" /><circle cy={-15 - i * 3} r="1.8" className="c" /></g>
+          ))}
+        </>
+      )}
+      {season === 'autumn' && (
+        <>
+          <Tree x={612} y={306} s={1.05} kind="autumn" /><Tree x={232} y={304} s={0.85} kind="autumn" /><Tree x={930} y={300} s={0.8} kind="autumn" />
+          <path d="M596 308 q14 -7 30 0 z M914 302 q12 -6 26 0 z" className="hs-leafpile" />
+          <Pumpkin x={432} y={302} lit={holiday === 'halloween'} /><Pumpkin x={447} y={303} lit={holiday === 'halloween'} /><Pumpkin x={508} y={302} lit={holiday === 'halloween'} />
+        </>
+      )}
+      {holiday === 'christmas' && (
+        <g className="hs-xmas">
+          {/* lights along the cabin and chapel roofs */}
+          {[...along(378, 228, 470, 162, 12), ...along(470, 162, 562, 228, 12)].map(([x, y], i) => <circle key={`c${i}`} cx={x} cy={y + 3} r="2.2" fill={BULBS[i % BULBS.length]} className="bulb" style={{ animationDelay: `${(i % 5) * 0.3}s` }} />)}
+          {[...along(744, 228, 790, 192, 6), ...along(790, 192, 836, 228, 6)].map(([x, y], i) => <circle key={`h${i}`} cx={x} cy={y + 3} r="2" fill={BULBS[(i + 2) % BULBS.length]} className="bulb" style={{ animationDelay: `${(i % 4) * 0.35}s` }} />)}
+          {/* a wreath on the cabin door */}
+          <g transform="translate(470 270)"><circle r="7" className="wreath" /><path d="M-3 5 L0 2 L3 5 L0 8 Z" fill="#d23b3b" /></g>
+          {/* a lit tree by the path */}
+          <g transform="translate(640 306)" className="xmas-tree">
+            <circle cy="-24" r="34" fill="url(#hs-glow)" className="hs-lantern-glow" />
+            <path d="M0 -52 L16 -22 L8 -22 L20 0 L-20 0 L-8 -22 L-16 -22 Z" fill="#1f4a32" />
+            {[[-8, -10], [6, -14], [-3, -24], [9, -4], [-12, -3], [2, -34]].map(([a, b], i) => <circle key={i} cx={a} cy={b} r="1.8" fill={BULBS[i % BULBS.length]} className="bulb" style={{ animationDelay: `${i * 0.25}s` }} />)}
+            <path d="M0 -60 l2 4 l4 0.5 l-3 3 l1 4 l-4 -2 l-4 2 l1 -4 l-3 -3 l4 -0.5 z" fill="#ffd27a" className="star" />
+          </g>
+        </g>
+      )}
     </g>
   );
 }

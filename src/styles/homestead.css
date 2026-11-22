@@ -258,3 +258,25 @@
 .dogs-proud:hover .dp-bubble rect, .dogs-proud:focus-visible .dp-bubble rect { stroke: #ffd27a; }
 @keyframes dp-float { 50% { transform: translateY(-4px); } }
 @media (prefers-reduced-motion: reduce) { .dp-wag, .dp-bubble { animation: none; } }
+
+/* ---------------- seasons ---------------- */
+.hs-snow path, .hs-snow rect { fill: #e9eef6; }
+.hs-drift { fill: rgba(225, 233, 245, .28); }
+.hs-ice { fill: rgba(200, 220, 240, .35); stroke: rgba(255, 255, 255, .25); }
+.hs-snow .hs-ice { fill: rgba(200, 220, 240, .35); stroke: rgba(255, 255, 255, .25); }
+.hs-snow .hs-icicle { fill: rgba(220, 235, 255, .85); }
+[data-phase='night'] .hs-snow path, [data-phase='night'] .hs-snow rect { fill: #b9c4d8; }
+.hs-trunk { fill: none; stroke: #3a2a1e; stroke-width: 3.2; stroke-linecap: round; }
+.hs-tree { transform-box: fill-box; }
+.hs-tree.t-blossom, .hs-tree.t-autumn, .hs-tree.t-summer { animation: tree-sway 7s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes tree-sway { 50% { rotate: 1.2deg; } }
+[data-phase='night'] .hs-tree circle, [data-phase='dusk'] .hs-tree circle { filter: brightness(.55) saturate(.8); }
+.hs-leafpile { fill: #c45a26; opacity: .9; }
+.hs-sunflower path { stroke: #4b7a3a; stroke-width: 1.4; }
+.hs-sunflower circle { fill: #f2c13a; } .hs-sunflower .c { fill: #5a3a16; }
+.hs-pumpkin.lit ellipse { filter: brightness(1.15); }
+.hs-xmas .wreath { fill: none; stroke: #2f6b45; stroke-width: 4; }
+.hs-xmas .bulb { animation: twinkle 1.6s ease-in-out infinite alternate; filter: drop-shadow(0 0 3px currentColor); }
+@keyframes twinkle { from { opacity: .45; } to { opacity: 1; } }
+.hs-xmas .star { filter: drop-shadow(0 0 4px #ffd27a); }
+@media (prefers-reduced-motion: reduce) { .hs-tree, .hs-xmas .bulb { animation: none !important; } }

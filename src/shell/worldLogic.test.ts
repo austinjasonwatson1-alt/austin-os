@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anniversary, bedtime, daylight, greyness, growth, tricks , freshFinish } from './worldLogic';
+import { anniversary, bedtime, daylight, greyness, growth, tricks , freshFinish , holiday } from './worldLogic';
 
 describe('the living homestead', () => {
   it('grows with the hours and the streak', () => {
@@ -28,5 +28,17 @@ describe('freshFinish', () => {
     const b = (title: string, finished?: string, status = 'read') => ({ title, finished, status });
     expect(freshFinish([b('old', '2026-11-01'), b('y', '2026-11-20'), b('t', '2026-11-21'), b('r', '2026-11-21', 'reading')], '2026-11-21', '2026-11-20')).toBe('t');
     expect(freshFinish([b('old', '2026-11-01')], '2026-11-21', '2026-11-20')).toBeNull();
+  });
+});
+
+describe('holiday', () => {
+  it('knows Christmastide and Halloween week', () => {
+    expect(holiday(new Date(2026, 11, 1))).toBe('christmas');
+    expect(holiday(new Date(2027, 0, 6))).toBe('christmas');
+    expect(holiday(new Date(2027, 0, 7))).toBeNull();
+    expect(holiday(new Date(2026, 9, 24))).toBe('halloween');
+    expect(holiday(new Date(2026, 9, 31))).toBe('halloween');
+    expect(holiday(new Date(2026, 10, 1))).toBeNull();
+    expect(holiday(new Date(2026, 6, 4))).toBeNull();
   });
 });
