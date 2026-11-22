@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupProjects, parseProjectList, previewProjects } from './projects';
+import { coverSeed, groupProjects, parseProjectList, previewProjects } from './projects';
 import type { AreaItem } from './types';
 
 describe('projects', () => {
@@ -27,5 +27,18 @@ https://example.com/x Bare Link Project`);
     const g = groupProjects([it('B', 'Life', 'shipped'), it('A', 'Game', 'shipped', '2026-10-01'), it('C', 'Game', 'building'), it('D', 'Game', 'shipped', '2026-11-05')]);
     expect(g.map((x) => x.kind)).toEqual(['Game', 'Life']);
     expect(g[0].items.map((x) => x.text)).toEqual(['C', 'D', 'A']);
+  });
+});
+
+describe('drawn covers', () => {
+  it('gives each project its own colours, the same every time', () => {
+    const a = coverSeed('Road to the NFL');
+    expect(coverSeed('road to the nfl ')).toEqual(a);
+    expect(coverSeed('Baseball GM').hue).not.toBe(a.hue);
+    for (const n of ['A', 'Muster', 'The Haunted Hall', 'Hearthhold']) {
+      const s = coverSeed(n);
+      expect(s.hue).toBeGreaterThanOrEqual(0); expect(s.hue).toBeLessThan(360);
+      for (const v of [s.a, s.b, s.c]) { expect(v).toBeGreaterThanOrEqual(0); expect(v).toBeLessThan(1); }
+    }
   });
 });

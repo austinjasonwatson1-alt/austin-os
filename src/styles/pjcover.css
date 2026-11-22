@@ -1,0 +1,27 @@
+/* Drawn project covers (src/modules/areas/ProjectCover.tsx). */
+.pj-cover { display: block; width: 100%; height: 96px; border-bottom: 1px solid var(--line); }
+.pj-cover .pc-star { fill: rgba(255, 255, 255, .55); }
+.pj-cover .pc-fill { fill: var(--pf); }
+.pj-cover .pc-line { fill: none; stroke: var(--pl); stroke-width: 1.4; opacity: .6; }
+.pj-cover .pc-line-fill { fill: var(--pl); opacity: .5; }
+.pj-cover .pc-trail { fill: none; stroke: var(--pl); stroke-width: 1.6; stroke-dasharray: 3 5; opacity: .75; }
+.pj-cover .pc-glow { fill: #ffe3a6; filter: drop-shadow(0 0 6px rgba(255, 210, 120, .9)); }
+.pj-cover .pc-glow-soft { fill: var(--pf); opacity: .4; }
+.pj-cover .pc-node { fill: var(--pl); opacity: .85; }
+.pj-cover .pc-paper { fill: #efe6d2; opacity: .92; }
+.pj-cover .pc-rule { fill: none; stroke: rgba(60, 50, 40, .45); stroke-width: 1.2; }
+.pj-cover .pc-seal { fill: #c0453a; }
+.pj-cover .pc-hill { fill: rgba(0, 0, 0, .35); }
+.pj-cover .pc-grid line { stroke: rgba(150, 190, 255, .12); stroke-width: 1; }
+
+/* An idea is a blueprint: lines only, in drafting blue, until it's being built. */
+.pj-cover.st-idea { filter: saturate(.25) hue-rotate(0deg) brightness(.9); }
+.pj-cover.st-idea .pc-art * { fill: none !important; stroke: rgba(160, 200, 255, .7); stroke-width: 1.2; stroke-dasharray: 4 3; filter: none; }
+
+/* Being built: the light breathes. */
+.pj-cover.st-building .pc-glow { animation: pc-breathe 2.8s ease-in-out infinite; }
+@keyframes pc-breathe { 50% { opacity: .55; } }
+.pj-card:hover .pj-cover .pc-art { transform: translateY(-2px); }
+.pj-cover .pc-art { transition: transform .4s ease; }
+@media (prefers-reduced-motion: reduce) { .pj-cover.st-building .pc-glow { animation: none; } .pj-cover .pc-art { transition: none; } }
+.pj-cover-btn { display: block; padding: 0; border: 0; background: none; cursor: pointer; }

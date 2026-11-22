@@ -10,6 +10,7 @@ import { groupProjects, KINDS, parseProjectList, previewProjects, STAGE_LABEL, t
 import { areaMinutes } from './logic';
 import { AREA_STORES } from './store';
 import type { AreaItem } from './types';
+import { ProjectCover } from './ProjectCover';
 
 const KIND_GLYPH: Record<string, string> = { Game: '♟', 'Writing tool': '✒', 'Job search': '✉', Work: '▣', Life: '⌂', Agent: '✦', Other: '◇' };
 
@@ -56,6 +57,7 @@ export function ProjectsGallery() {
           <div className="pj-grid">
             {g.items.map((p) => (
               <article key={p.id} className={`pj-card st-${p.stage ?? 'shipped'}`} {...tilt(4)}>
+                <button className="pj-cover-btn" onClick={() => setOpen(p)} tabIndex={-1} aria-hidden><ProjectCover name={p.text} kind={p.kind ?? 'Other'} stage={p.stage ?? 'shipped'} /></button>
                 <button className="pj-main" onClick={() => setOpen(p)}>
                   <span className="pj-stage mono">{STAGE_LABEL[p.stage ?? 'shipped']}</span>
                   <b>{p.text}</b>

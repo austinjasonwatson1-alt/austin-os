@@ -42,3 +42,11 @@ export function groupProjects(items: AreaItem[]): { kind: string; items: AreaIte
   return [...by].sort(([a], [b]) => KINDS.indexOf(a) - KINDS.indexOf(b))
     .map(([kind, list]) => ({ kind, items: list.sort((a, b) => (order[a.stage ?? 'shipped'] - order[b.stage ?? 'shipped']) || b.date.localeCompare(a.date)) }));
 }
+
+/** A project's cover is drawn, not uploaded: its kind picks the scene, its name seeds the colours. */
+export function coverSeed(name: string): { hue: number; a: number; b: number; c: number } {
+  let h = 2166136261;
+  for (const ch of name.toLowerCase().trim()) { h ^= ch.codePointAt(0)!; h = Math.imul(h, 16777619); }
+  const r = (shift: number) => (((h >>> shift) & 0xff) / 256);
+  return { hue: (h >>> 0) % 360, a: r(3), b: r(11), c: r(19) };
+}
