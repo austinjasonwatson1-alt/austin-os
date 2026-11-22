@@ -6,6 +6,7 @@ A local-first personal operating system. The first "area" is the **Writer's Cabi
 - `npm run dev` — dev server (http://localhost:5173)
 - `npm test` — Vitest (pure logic only; keep it fast)
 - `npm run typecheck` / `npm run build` — must both pass before any change is "done"
+- `npm run smoke` (after a build) — opens every room on desktop and phone, empty and lived-in, and fails on any page error. Run it before every push to `main`: pushes go live. A new route goes in its `ROUTES` list. Needs Playwright + Chromium installed (not a dependency).
 
 ## Stack
 React 19 + TypeScript (strict) + Vite + Zustand. No router library (tiny hash router in `src/shell/router.ts`). No backend. Storage is IndexedDB via `src/core/storage.ts`.
@@ -42,6 +43,8 @@ Dark, moody, space-and-cabin. Palette lives in CSS variables in `src/styles/glob
 - Navigation (`src/shell/Sidebar.tsx`, `navLogic.ts`): the rail shows Home/The Day/The Keeper, "Your rooms" (most used, learned per device in localStorage), then collapsible groups from `navGroups()`; a new room goes in a group there. "All rooms" opens a full map (the phone's main way around). Buildings list rooms that live inside them (`ALSO` in `areas/AreaPage.tsx`).
 - Data safety (`src/core/exportLogic.ts`, `src/shell/DataSafety.tsx`): "Download everything as files" zips CSV/Markdown/photos + the backup JSON; a new module's data should get a file in `exportFiles` (with a test). `backupHealth` drives the Settings panel and the Home nudge; the restore test only reads. Settings opens with the setup checklist (`setupLogic.ts`).
 - Fonts are self-hosted (`@fontsource-variable/*`, imported in `main.tsx`); use the CSS vars `--display`, `--ui`, `--mono`, `--serif`, never a font name directly.
+- Edits sync by time: hand edits stamp `edited` (ISO time) on the item and the merger uses `newerEdit`, so the newest edit wins across devices (Kennel, Money). Use the same for any new list a person edits in place.
+- Each room renders inside `RoomGuard` (`src/shell/RoomGuard.tsx`): a crash shows a note in that room only.
 - Deletions: stores call `markDeleted(storeKey, id)` when removing an item, so sync drops it everywhere (`sync.deleted`). Cloud sync (`src/shell/cloud.ts`) is end-to-end encrypted to the user's own Supabase project; its config is device-only (`sys:cloud`).
 - Condensed buildings: the Office is **Job Search HQ** (`areas/jobLogic.ts`: the March 1 clock, the day's four moves stored as office days `{brief, apply, followup, referral}`; the doors to the Application Ledger and Recruiter Desk are office items in list `doors`, pasted by the user, never hard-coded since the repo is public). The Observatory is the **projects workbench** (`areas/projects.ts`, items in list `projects` with `link`/`stage`/`kind`; paste import previews and dedupes). The Forge logs no time; its numbers come from Health and the Kennel. Old minutes stay in storage.
 - Compass areas carry `unit`: Job search and Projects count days, not minutes (`amount`, `migrateTargets` in `life/logic.ts`).

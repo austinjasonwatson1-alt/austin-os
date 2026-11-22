@@ -30,6 +30,7 @@ import { todayISO } from './core/dates';
 import { useCloud } from './shell/cloud';
 import { useSky } from './core/skyStore';
 import { Soon } from './shell/Soon';
+import { RoomGuard } from './shell/RoomGuard';
 
 const ReviewPage = lazy(() => import('./modules/review/ReviewPage'));
 const YearPage = lazy(() => import('./modules/review/YearPage'));
@@ -117,7 +118,7 @@ export default function App() {
         <main className="main">
           <div key={route} className={`route route-${motion}`}>
             <Suspense fallback={<div className="route-wait" aria-hidden><span /></div>}>
-              <Screen route={route} />
+              <RoomGuard route={route}><Screen route={route} /></RoomGuard>
             </Suspense>
           </div>
         </main>

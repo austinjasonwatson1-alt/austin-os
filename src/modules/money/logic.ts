@@ -378,7 +378,7 @@ export function upsertRule(rules: Rule[], match: string, category: CatKey, id: s
   const m = normRule(match);
   if (!m) return rules;
   const i = rules.findIndex((r) => normRule(r.match) === m);
-  if (i >= 0) return rules.map((r, j) => (j === i ? { ...r, category } : r));
+  if (i >= 0) return rules.map((r, j) => (j === i ? { ...r, category, edited: now } : r));
   return [...rules, { id, match: m, category, createdAt: now }];
 }
 

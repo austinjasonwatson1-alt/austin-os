@@ -53,7 +53,9 @@ export const useKennel = create<KennelState>((set, get) => {
     update(list, item) {
       const tidy = list === 'walks' ? cleanWalk(item as Walk) : list === 'care' ? cleanCare(item as Care) : list === 'weights' ? cleanWeight(item as Weight) : cleanNote(item as Note);
       const cur = get()[list] as Item<typeof list>[];
-      const next = replaceById(cur as { id: string }[], tidy as { id: string });
+      const prev = cur.find((x) => x.id === item.id);
+      if (prev && JSON.stringify({ ...prev, edited: undefined }) === JSON.stringify({ ...tidy, edited: undefined })) return;
+      const next = replaceById(cur as { id: string }[], { ...tidy, edited: new Date().toISOString() } as unknown as { id: string });
       if (next === cur) return;
       set({ [list]: next } as Partial<KennelState>);
       persist();

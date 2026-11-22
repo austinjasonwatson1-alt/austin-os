@@ -51,6 +51,8 @@ export interface Txn {
   /** File it came from, for the record. */
   source?: string;
   addedAt: string;
+  /** When it was last changed by hand (ISO time), so sync keeps the newest edit. */
+  edited?: string;
 }
 
 /** "Always categorize <match> as <category>". `match` is a normalized merchant phrase. */
@@ -59,6 +61,7 @@ export interface Rule {
   match: string;
   category: CatKey;
   createdAt: string;
+  edited?: string;
 }
 
 export interface MoneyData {

@@ -24,6 +24,9 @@ export function unionById<T extends WithId>(local: T[], remote: T[], pick: (l: T
   return out;
 }
 
+/** For a shared id, keep the copy edited last (items stamp `edited` when changed by hand). Unstamped: local wins. */
+export const newerEdit = <T extends WithId>(l: T, r: T): T => (String(r.edited ?? '') > String(l.edited ?? '') ? r : l);
+
 /** Fill gaps in `l` from `r` field by field (local values always win). */
 const fill = (l: Obj, r: Obj): Obj => {
   const out = { ...l };
@@ -105,9 +108,9 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
     return { ...l, drafts, versions, ...(l.sprints || r.sprints ? { sprints: unionById(arr<WithId>(l.sprints), arr<WithId>(r.sprints)) } : {}) };
   },
   'life.v1': (l, r) => ({ ...r, ...l, targets: { ...(isObj(r.targets) ? r.targets : {}), ...(isObj(l.targets) ? l.targets : {}) } }),
-  'kennel.v1': (l, r) => ({ ...l, walks: unionById(arr<WithId>(l.walks), arr<WithId>(r.walks)), care: unionById(arr<WithId>(l.care), arr<WithId>(r.care)), weights: unionById(arr<WithId>(l.weights), arr<WithId>(r.weights)), notes: unionById(arr<WithId>(l.notes), arr<WithId>(r.notes)) }),
+  'kennel.v1': (l, r) => ({ ...l, walks: unionById(arr<WithId>(l.walks), arr<WithId>(r.walks), newerEdit), care: unionById(arr<WithId>(l.care), arr<WithId>(r.care), newerEdit), weights: unionById(arr<WithId>(l.weights), arr<WithId>(r.weights), newerEdit), notes: unionById(arr<WithId>(l.notes), arr<WithId>(r.notes), newerEdit) }),
   'body.v1': (l, r) => { const days: Obj = { ...(isObj(r.days) ? r.days : {}) }; for (const [k, v] of Object.entries(isObj(l.days) ? l.days : {})) days[k] = { ...(isObj(days[k]) ? (days[k] as Obj) : {}), ...(v as Obj) }; return { ...l, days }; },
-  'money.v1': (l, r) => ({ ...l, txns: unionById(arr<WithId>(l.txns), arr<WithId>(r.txns)), rules: unionById(arr<WithId>(l.rules), arr<WithId>(r.rules)) }),
+  'money.v1': (l, r) => ({ ...l, txns: unionById(arr<WithId>(l.txns), arr<WithId>(r.txns), newerEdit), rules: unionById(arr<WithId>(l.rules), arr<WithId>(r.rules), newerEdit) }),
   'memories.v1': (l, r) => ({ ...l, items: unionById(arr<WithId>(l.items), arr<WithId>(r.items)), capsules: unionById(arr<WithId>(l.capsules), arr<WithId>(r.capsules), (a, b) => (a.openedOn || !b.openedOn ? a : { ...a, openedOn: b.openedOn })) }),
   'goals.v1': (l, r) => ({ ...l, goals: unionById(arr<WithId>(l.goals), arr<WithId>(r.goals)), milestones: unionById(arr<WithId>(l.milestones), arr<WithId>(r.milestones)) }),
   'ideas.v1': (l, r) => ({ ...l, ideas: unionById(arr<WithId & { updated?: string }>(l.ideas), arr<WithId & { updated?: string }>(r.ideas), (a, b) => (String(b.updated ?? '') > String(a.updated ?? '') ? b : a)) }),

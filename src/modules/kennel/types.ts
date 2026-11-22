@@ -6,6 +6,8 @@ export type Who = DogId | 'both';
 
 export interface Walk {
   id: string;
+  /** When it was last changed by hand (ISO time), so sync keeps the newest edit. */
+  edited?: string;
   /** Local 'YYYY-MM-DD'. */
   date: string;
   who: Who;
@@ -17,6 +19,8 @@ export type CareKind = 'vet' | 'vaccine' | 'flea' | 'heartworm' | 'grooming' | '
 
 export interface Care {
   id: string;
+  /** When it was last changed by hand (ISO time), so sync keeps the newest edit. */
+  edited?: string;
   date: string;
   who: Who;
   kind: CareKind;
@@ -29,6 +33,8 @@ export interface Care {
 
 export interface Weight {
   id: string;
+  /** When it was last changed by hand (ISO time), so sync keeps the newest edit. */
+  edited?: string;
   date: string;
   dog: DogId;
   lb: number;
@@ -36,6 +42,8 @@ export interface Weight {
 
 export interface Note {
   id: string;
+  /** When it was last changed by hand (ISO time), so sync keeps the newest edit. */
+  edited?: string;
   date: string;
   who: Who;
   text: string;

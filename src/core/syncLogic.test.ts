@@ -151,3 +151,17 @@ describe('the day sync', () => {
     expect(out['day.v1'].days['2026-11-22'].closedAt).toBe('2026-11-22T22:00:00Z');
   });
 });
+
+describe('edits travel between devices', () => {
+  it('keeps the newest hand edit of a walk or a transaction; unstamped, this device wins', () => {
+    const l = { 'kennel.v1': { walks: [{ id: 'w', minutes: 20, edited: '2026-11-20T10:00:00Z' }, { id: 'x', minutes: 5 }], care: [], weights: [], notes: [] }, 'money.v1': { txns: [{ id: 't', category: 'food' }], rules: [] } };
+    const r = { 'kennel.v1': { walks: [{ id: 'w', minutes: 45, edited: '2026-11-21T08:00:00Z' }, { id: 'x', minutes: 9 }] }, 'money.v1': { txns: [{ id: 't', category: 'fun', edited: '2026-11-21T08:00:00Z' }], rules: [] } };
+    const out = syncMerge(l, r) as Record<string, { walks?: { id: string; minutes: number }[]; txns?: { id: string; category: string }[] }>;
+    expect(out['kennel.v1'].walks!.find((w) => w.id === 'w')!.minutes).toBe(45);
+    expect(out['kennel.v1'].walks!.find((w) => w.id === 'x')!.minutes).toBe(5);
+    expect(out['money.v1'].txns![0].category).toBe('fun');
+    // and the older remote edit never overwrites a newer local one
+    const back = syncMerge(r as never, l as never) as typeof out;
+    expect(back['kennel.v1'].walks!.find((w) => w.id === 'w')!.minutes).toBe(45);
+  });
+});

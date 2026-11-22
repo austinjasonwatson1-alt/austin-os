@@ -67,7 +67,7 @@ export const useMoney = create<MoneyState>((set, get) => {
         if (t.id !== id) return t;
         const n = editTxn(t, patch);
         changed = JSON.stringify(n) !== JSON.stringify(t);
-        return changed ? n : t;
+        return changed ? { ...n, edited: new Date().toISOString() } : t;
       });
       if (!changed) return;
       set({ txns });
@@ -85,9 +85,11 @@ export const useMoney = create<MoneyState>((set, get) => {
         const rules = upsertRule(get().rules, always, category, newId(), new Date().toISOString());
         // The chosen line follows the rule too (not pinned by hand), so removing the rule can undo it.
         const txns = applyRules(get().txns.map((t) => (t.id === id ? { ...t, manual: false } : t)), rules);
-        set({ rules, txns: txns.map((t) => (t.id === id && t.category !== category ? { ...t, category, manual: true } : t)) });
+        const now = new Date().toISOString();
+        set({ rules, txns: txns.map((t) => (t.id === id && t.category !== category ? { ...t, category, manual: true, edited: now } : t)) });
       } else {
-        set({ txns: get().txns.map((t) => (t.id === id ? { ...t, category, manual: true } : t)) });
+        const now = new Date().toISOString();
+        set({ txns: get().txns.map((t) => (t.id === id ? { ...t, category, manual: true, edited: now } : t)) });
       }
       persist();
     },

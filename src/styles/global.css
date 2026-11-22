@@ -554,3 +554,8 @@ html { scrollbar-color: rgba(232, 168, 75, .28) transparent; scrollbar-width: th
 /* the soundscape dial never sits on top of a page's last button on a phone */
 @media (max-width: 860px) { .home { padding-bottom: 84px; } }
 @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+
+/* a room that broke: only it shows this, the rest of the homestead keeps working */
+.room-broke { max-width: 620px; margin: 10vh auto; padding: 32px; display: grid; gap: 12px; }
+.room-broke-why { font-size: 11.5px; overflow-wrap: anywhere; }
+.room-broke-actions { display: flex; gap: 10px; margin-top: 6px; }

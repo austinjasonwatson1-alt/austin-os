@@ -189,7 +189,7 @@ describe('categories', () => {
   it('adds or replaces rules and re-applies them, leaving hand-set ones alone', () => {
     let rules = upsertRule([], 'Blue Bottle', 'dining', 'r1', NOW);
     rules = upsertRule(rules, 'blue  bottle', 'groceries', 'r2', NOW);
-    expect(rules).toEqual([{ id: 'r1', match: 'blue bottle', category: 'groceries', createdAt: NOW }]);
+    expect(rules).toEqual([{ id: 'r1', match: 'blue bottle', category: 'groceries', createdAt: NOW, edited: NOW }]);
     const txns = [T({ desc: 'SQ *BLUE BOTTLE', category: 'other' }), T({ desc: 'SQ *BLUE BOTTLE', category: 'pets', manual: true })];
     const out = applyRules(txns, rules);
     expect(out.map((t) => t.category)).toEqual(['groceries', 'pets']);
