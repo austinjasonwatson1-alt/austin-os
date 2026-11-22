@@ -9,7 +9,7 @@ npm test
 npm run build
 ```
 
-Open it, go to **Writer's Cabin → The Ledger**, and either load the Jan–Aug history or import a JSON export from the old Ledger.
+Open it, go to **Writer's Cabin → The Ledger**, and import a Ledger CSV, a full backup, or a JSON export from the old Ledger.
 
 All data stays in your browser (IndexedDB). Use **Back up everything** regularly — clearing site data erases it.
 

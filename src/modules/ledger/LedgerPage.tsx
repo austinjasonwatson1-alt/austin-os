@@ -312,7 +312,7 @@ function DeadlinesPanel() {
 /* ---------------- data ---------------- */
 
 function DataPanel() {
-  const { days, previewDays, applyDays, loadSeed, restore, snapshots } = useLedger();
+  const { days, previewDays, applyDays, restore, snapshots } = useLedger();
   const [undo, setUndo] = useState<Snapshot<LedgerData> | null>(null);
   const done = async (text: string) => {
     setMsg(text);
@@ -375,11 +375,10 @@ function DataPanel() {
       <div className="panel-h"><h2 className="panel-t">Your data</h2></div>
       {empty && (
         <p className="dim" style={{ marginTop: 0 }}>
-          The books are empty. Load your Jan–Aug history, or import a backup exported from the old Ledger to bring September onward.
+          The books are empty. Import a Ledger CSV, a backup, or an export from the old Ledger to bring your history in.
         </p>
       )}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {empty && <button className="btn primary" onClick={() => { const p = loadSeed(); void done(`Loaded ${p.add} days of history.`); }}>Load Jan–Aug history</button>}
         <button className="btn" onClick={() => fileRef.current?.click()}>Import backup</button>
         <button className="btn" onClick={() => void exportAll()}>Back up everything</button>
         <button className="btn" onClick={exportCsv}>Export CSV</button>

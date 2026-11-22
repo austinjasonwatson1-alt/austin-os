@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { useAutoBackup } from '../../core/autoBackup';
 import { kvGet, listSnapshots, saveWithSnapshot, snapshotNow, snapshotsSettled, type Snapshot } from '../../core/storage';
 import { mergeDays, type MergePreview } from './logic';
-import { SEED_DAYS } from './seed';
 import { CATS, DEFAULT_DATA, type CatKey, type Deadline, type DayMap, type LedgerData } from './types';
 
 export const KEY = 'ledger.v3';
@@ -19,7 +18,6 @@ interface LedgerState extends LedgerData {
   /** Merge days in, after taking a restore point named `why` ("Before import of x.csv"). */
   applyDays: (incoming: DayMap, why: string) => MergePreview;
   previewDays: (incoming: DayMap) => MergePreview;
-  loadSeed: () => MergePreview;
   /** Put the ledger back to a snapshot. Takes a restore point of the current state first. */
   restore: (snap: Snapshot<LedgerData>) => void;
   /** Restore points and autosaves, newest first, once pending writes have landed. */
@@ -83,10 +81,6 @@ export const useLedger = create<LedgerState>((set, get) => {
       set({ days: merged });
       persist();
       return preview;
-    },
-
-    loadSeed() {
-      return get().applyDays(SEED_DAYS, 'Before loading Jan–Aug history');
     },
 
     restore(snap) {
