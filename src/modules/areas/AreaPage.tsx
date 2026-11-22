@@ -5,6 +5,7 @@ import { rise } from '../../shell/lamp';
 import { RoomSound } from '../../shell/RoomSound';
 import { go } from '../../shell/router';
 import { HealthPanel } from '../feeds/FeedsUI';
+import { AreaArt } from './AreaArt';
 import { JobCountdown, JobHQ } from './JobHQ';
 import { BodyTally, ProjectsGallery, ProjectsTally } from './Projects';
 import { MoneyPanel } from '../money/MoneyPage';
@@ -187,55 +188,5 @@ function MoneySummary({ config, items }: { config: AreaConfig; items: AreaItem[]
       <span className="mono">net in {y}</span>
       <span className="mono faint">{money(m.in)} in · {money(m.out)} out</span>
     </div>
-  );
-}
-
-/** The building's own art: the Office's lit window grid, the Observatory's dome and telescope under the stars. */
-function AreaArt({ id, heat }: { id: AreaConfig['id']; heat: number }) {
-  return (
-    <svg className="area-art" viewBox="0 0 300 220" aria-hidden style={{ '--heat': heat } as CSSProperties}>
-      {id === 'office' ? (
-        <g>
-          <rect x="60" y="30" width="180" height="190" className="aa-wall" />
-          <path d="M50 32 H250 L238 14 H62 Z" className="aa-wall" />
-          {[0, 1, 2, 3].map((r) => [0, 1, 2, 3].map((c) => (
-            <rect key={`${r}${c}`} x={78 + c * 40} y={48 + r * 40} width="26" height="26" className={(r * 4 + c) / 16 < heat ? 'aa-win lit' : 'aa-win'} />
-          )))}
-        </g>
-      ) : id === 'forge' ? (
-        <g>
-          <path d="M60 220 V110 L150 60 L240 110 V220 Z" className="aa-wall" />
-          <rect x="120" y="150" width="60" height="70" className="aa-forge" />
-          <path d="M110 220 h80 v-12 h-24 l8 -14 h-48 l8 14 h-24 Z" className="aa-anvil" />
-          {[0, 1, 2, 3, 4].map((i) => <circle key={i} cx={140 + i * 5} cy={150} r="1.6" className="aa-spark" style={{ animationDelay: `${-i * 0.35}s` }} />)}
-        </g>
-      ) : id === 'bank' ? (
-        <g>
-          <path d="M40 92 L150 40 L260 92 Z" className="aa-wall" />
-          <rect x="50" y="92" width="200" height="12" className="aa-wall" />
-          {[70, 115, 160, 205].map((x) => <rect key={x} x={x} y="108" width="22" height="92" className="aa-col" />)}
-          <rect x="40" y="200" width="220" height="16" className="aa-wall" />
-          <text x="150" y="80" textAnchor="middle" className="aa-coin">¤</text>
-        </g>
-      ) : id === 'hearth' ? (
-        <g>
-          <path d="M50 220 V120 L150 50 L250 120 V220 Z" className="aa-wall" />
-          <rect x="196" y="56" width="20" height="44" className="aa-wall" />
-          <rect x="80" y="130" width="50" height="44" className={heat > 0.1 ? 'aa-win lit' : 'aa-win'} />
-          <rect x="170" y="130" width="50" height="44" className={heat > 0.4 ? 'aa-win lit' : 'aa-win'} />
-          <rect x="132" y="170" width="36" height="50" className="aa-door" />
-          <path d="M150 92 c-10 -12 -26 -2 -14 12 l14 12 l14 -12 c12 -14 -4 -24 -14 -12 Z" className="aa-heart" />
-        </g>
-      ) : (
-        <g>
-          {Array.from({ length: 26 }, (_, i) => <circle key={i} cx={(i * 47) % 300} cy={(i * 29) % 120} r={i % 5 ? 0.9 : 1.6} className="aa-star" style={{ animationDelay: `${-i * 0.37}s` }} />)}
-          <path d="M70 220 V140 A80 80 0 0 1 230 140 V220 Z" className="aa-wall" />
-          <path d="M150 60 A80 80 0 0 1 230 140 H70 A80 80 0 0 1 150 60 Z" className="aa-dome" />
-          <rect x="138" y="58" width="24" height="82" className="aa-slit" transform="rotate(24 150 140)" />
-          <line x1="160" y1="110" x2="214" y2="44" className="aa-scope" />
-          <circle cx="150" cy="140" r="90" className="aa-glow" />
-        </g>
-      )}
-    </svg>
   );
 }

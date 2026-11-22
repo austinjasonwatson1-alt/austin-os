@@ -1,0 +1,335 @@
+/* ================= the building pages: each header is a small painting =================
+   Painted like the homestead on Home: every colour comes from per-phase variables on
+   `.area-art[data-phase]`, light is radial gradients (no live SVG filters), grain is one baked tile.
+   `--heat` (0–1, how much of today is done here) and `--glow` (how much the lamps show at this hour)
+   drive everything that's lit. `--ac` is the building's own accent, set on the page. */
+
+.area-hero .area-art {
+  display: block; width: 100%; height: auto; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, .5), 0 0 0 1px rgba(0, 0, 0, .35), 0 0 46px color-mix(in srgb, var(--ac, #e8a84b) calc(6% + var(--heat) * 14%), transparent);
+}
+@media (max-width: 860px) {
+  .area-hero .area-art { width: min(100%, 380px); justify-self: center; border-radius: 16px; }
+}
+
+.area-art {
+  --sky-a: #05070f; --sky-b: #0a0f22; --sky-c: #131a34;
+  --far2-a: #2c3862; --far2-b: #1a2242;
+  --far-a: #1f2948; --far-b: #10162c;
+  --mid-a: #172039; --mid-b: #0b1121;
+  --trail-a: #2a2a32; --trail-b: #0d0d12;
+  --peb-a: #3e465c; --peb-b: #0e121c;
+  --gnd-a: #16203a; --gnd-m: #0a101d; --gnd-b: #04060b;
+  --haze: 120, 140, 196; --haze-o: .2;
+  --mist: 150, 168, 210; --mist-o: .16;
+  --rim: #b8caf4; --rim-o: .6;
+  --pine-a: #0a111c; --pine-b: #03050a; --pine-lit: #16223a;
+  --cap-a: #c9d4ea; --cap-b: #6f7c9a;
+  --fg-a: #05070d; --fg-b: #020306;
+  --smoke: 190, 198, 220;
+  --stars: 1; --moon: 1; --ac-o: .28;
+}
+.area-art[data-phase='dawn'] {
+  --sky-a: #0d1124; --sky-b: #2a2448; --sky-c: #6a4058;
+  --far2-a: #3e3a62; --far2-b: #2a2848;
+  --far-a: #403c64; --far-b: #26243f;
+  --mid-a: #262340; --mid-b: #141226;
+  --gnd-a: #1e1b2e; --gnd-m: #110f1c; --gnd-b: #06050b;
+  --haze: 236, 150, 140; --haze-o: .22;
+  --mist: 240, 180, 170; --mist-o: .18;
+  --rim: #ffb89c; --rim-o: .6;
+  --pine-a: #141424; --pine-b: #07060e; --pine-lit: #3a2a3a;
+  --cap-a: #f3d2cc; --cap-b: #8a7088;
+  --peb-a: #5a4a5a; --peb-b: #141020;
+  --smoke: 236, 200, 200;
+  --stars: .4; --moon: .6; --ac-o: .2;
+}
+.area-art[data-phase='day'] {
+  --sky-a: #1b2f50; --sky-b: #2e4870; --sky-c: #5f7ca4;
+  --far2-a: #4a6088; --far2-b: #3a4e72;
+  --far-a: #3e5680; --far-b: #2a3c5e;
+  --mid-a: #24384a; --mid-b: #15222f;
+  --gnd-a: #1e3030; --gnd-m: #142222; --gnd-b: #080f10;
+  --haze: 160, 186, 226; --haze-o: .28;
+  --mist: 200, 214, 236; --mist-o: .14;
+  --rim: #fff1d4; --rim-o: .5;
+  --pine-a: #12261f; --pine-b: #07120f; --pine-lit: #2c4a3a;
+  --cap-a: #eef3fb; --cap-b: #9aaac6;
+  --trail-a: #4a4034; --trail-b: #1c1812;
+  --peb-a: #6a6a70; --peb-b: #22242c;
+  --smoke: 220, 226, 236;
+  --stars: .05; --moon: .32; --ac-o: .14;
+}
+.area-art[data-phase='golden'] {
+  --sky-a: #1a2038; --sky-b: #4a3446; --sky-c: #a0623a;
+  --far2-a: #5a4a6a; --far2-b: #463a58;
+  --far-a: #5c4868; --far-b: #362c48;
+  --mid-a: #33283a; --mid-b: #1b1522;
+  --gnd-a: #2a2420; --gnd-m: #1a1512; --gnd-b: #0a0807;
+  --haze: 248, 172, 100; --haze-o: .26;
+  --mist: 250, 196, 140; --mist-o: .16;
+  --rim: #ffc477; --rim-o: .75;
+  --pine-a: #1a1814; --pine-b: #0a0806; --pine-lit: #5a3a1e;
+  --cap-a: #ffd9a8; --cap-b: #a07a78;
+  --trail-a: #4a3a2a; --trail-b: #1a120c;
+  --peb-a: #6a5040; --peb-b: #1e1610;
+  --smoke: 240, 210, 180;
+  --stars: .15; --moon: .5; --ac-o: .16;
+}
+.area-art[data-phase='dusk'] {
+  --sky-a: #080b1a; --sky-b: #1e1838; --sky-c: #4a2442;
+  --far2-a: #3a2f5c; --far2-b: #282244;
+  --far-a: #352c58; --far-b: #1e1a38;
+  --mid-a: #201b36; --mid-b: #100e1e;
+  --gnd-a: #181528; --gnd-m: #0e0c1a; --gnd-b: #05040a;
+  --haze: 206, 112, 160; --haze-o: .2;
+  --mist: 210, 150, 190; --mist-o: .15;
+  --rim: #f0a6c0; --rim-o: .55;
+  --pine-a: #100e1c; --pine-b: #05040a; --pine-lit: #2e2240;
+  --cap-a: #e6c4dc; --cap-b: #6a5a80;
+  --peb-a: #4a3e5a; --peb-b: #100c1a;
+  --smoke: 214, 190, 214;
+  --stars: .6; --moon: .9; --ac-o: .24;
+}
+
+/* ---- stops painted by the vars above ---- */
+.aa-s-sky-a { stop-color: var(--sky-a); } .aa-s-sky-b { stop-color: var(--sky-b); } .aa-s-sky-c { stop-color: var(--sky-c); }
+.aa-s-ac-1 { stop-color: var(--ac, #e8a84b); stop-opacity: var(--ac-o); } .aa-s-ac-0 { stop-color: var(--ac, #e8a84b); stop-opacity: 0; }
+.aa-s-acl-1 { stop-color: var(--ac, #e8a84b); stop-opacity: .55; } .aa-s-acl-h { stop-color: var(--ac, #e8a84b); stop-opacity: .18; } .aa-s-acl-0 { stop-color: var(--ac, #e8a84b); stop-opacity: 0; }
+.aa-s-far2-a { stop-color: var(--far2-a); } .aa-s-far2-b { stop-color: var(--far2-b); }
+.aa-s-far-a { stop-color: var(--far-a); } .aa-s-far-b { stop-color: var(--far-b); }
+.aa-s-haze-solid { stop-color: rgb(var(--haze)); stop-opacity: .35; }
+.aa-s-mid-a { stop-color: var(--mid-a); } .aa-s-mid-b { stop-color: var(--mid-b); }
+.aa-s-gnd-a { stop-color: var(--gnd-a); } .aa-s-gnd-m { stop-color: var(--gnd-m); } .aa-s-gnd-b { stop-color: var(--gnd-b); }
+.aa-s-haze-0 { stop-color: rgb(var(--haze)); stop-opacity: 0; } .aa-s-haze-1 { stop-color: rgb(var(--haze)); stop-opacity: var(--haze-o); }
+.aa-s-mist-1 { stop-color: rgb(var(--mist)); stop-opacity: var(--mist-o); }
+.aa-s-mist-h { stop-color: rgb(var(--mist)); stop-opacity: calc(var(--mist-o) * .5); }
+.aa-s-mist-0 { stop-color: rgb(var(--mist)); stop-opacity: 0; }
+.aa-s-cap-a { stop-color: var(--cap-a); } .aa-s-cap-b { stop-color: var(--cap-b); stop-opacity: .4; }
+.aa-s-pine-a { stop-color: var(--pine-a); } .aa-s-pine-b { stop-color: var(--pine-b); } .aa-s-pine-lit { stop-color: var(--pine-lit); }
+.aa-s-fg-a { stop-color: var(--fg-a); } .aa-s-fg-b { stop-color: var(--fg-b); }
+.aa-s-smoke-1 { stop-color: rgb(var(--smoke)); stop-opacity: .36; }
+.aa-s-trail-a { stop-color: var(--trail-a); } .aa-s-trail-b { stop-color: var(--trail-b); }
+.aa-s-peb-a { stop-color: var(--peb-a); } .aa-s-peb-b { stop-color: var(--peb-b); } .aa-s-smoke-0 { stop-color: rgb(var(--smoke)); stop-opacity: 0; }
+/* materials: daylight (--wall) warms them from a cool night tone */
+.aa-s-wood-a { stop-color: color-mix(in srgb, #8e6646 calc(var(--wall) * 130%), #2c2228); }
+.aa-s-wood-b { stop-color: color-mix(in srgb, #573a26 calc(var(--wall) * 130%), #150f14); }
+.aa-s-roof-a { stop-color: color-mix(in srgb, #4c4a58 calc(var(--wall) * 130%), #1c1e2a); }
+.aa-s-roof-b { stop-color: color-mix(in srgb, #2a2a34 calc(var(--wall) * 130%), #0a0b12); }
+.aa-s-stone-a { stop-color: color-mix(in srgb, #7c7a80 calc(var(--wall) * 130%), #2a2c3a); }
+.aa-s-stone-b { stop-color: color-mix(in srgb, #46444c calc(var(--wall) * 130%), #10111a); }
+.aa-s-white-a { stop-color: color-mix(in srgb, #cfc8b8 calc(var(--wall) * 130%), #323a52); }
+.aa-s-white-b { stop-color: color-mix(in srgb, #8c8678 calc(var(--wall) * 130%), #151a2a); }
+.aa-s-brick-a { stop-color: color-mix(in srgb, #8e4c3a calc(var(--wall) * 130%), #33212a); }
+.aa-s-brick-b { stop-color: color-mix(in srgb, #56302a calc(var(--wall) * 130%), #140c10); }
+.aa-s-trim-a { stop-color: color-mix(in srgb, #b49272 calc(var(--wall) * 130%), #44393a); }
+.aa-s-trim-b { stop-color: color-mix(in srgb, #6a523e calc(var(--wall) * 130%), #1c1618); }
+.aa-s-dome-a { stop-color: color-mix(in srgb, #5e6880 calc(var(--wall) * 130%), #1c2234); }
+.aa-s-dome-hi { stop-color: color-mix(in srgb, #dfe6f2 calc(var(--wall) * 130%), #5a6c94); }
+.aa-s-dome-b { stop-color: color-mix(in srgb, #404858 calc(var(--wall) * 130%), #121826); }
+.aa-s-col-a { stop-color: color-mix(in srgb, #8a8478 calc(var(--wall) * 130%), #20253a); }
+.aa-s-col-hi { stop-color: color-mix(in srgb, #e2dccc calc(var(--wall) * 130%), #4c5672); }
+.aa-s-col-b { stop-color: color-mix(in srgb, #5e5a52 calc(var(--wall) * 130%), #121520); }
+.aa-pt-line { fill: none; stroke: rgba(0, 0, 0, .38); stroke-width: .7; }
+.aa-pt-brick { fill: none; stroke: rgba(0, 0, 0, .32); stroke-width: .6; }
+.aa-pt-stone { fill: rgba(255, 255, 255, .035); stroke: rgba(0, 0, 0, .45); stroke-width: .6; }
+.aa-pt-siding { fill: none; stroke: rgba(0, 0, 0, .22); stroke-width: .6; }
+
+/* ---- the land ---- */
+.aa-stars circle { fill: #e6ecff; opacity: var(--stars); }
+.aa-stars circle.tw { animation: aa-twinkle 3.2s ease-in-out infinite alternate; }
+@keyframes aa-twinkle { from { opacity: calc(var(--stars) * .3); } to { opacity: var(--stars); } }
+.aa-moon { opacity: var(--moon); }
+.aa-crater { fill: rgba(150, 140, 120, .3); }
+.aa-caps { opacity: .85; }
+.aa-peaklit { fill: none; stroke: var(--rim); stroke-opacity: calc(var(--rim-o) * .3); stroke-width: 1; stroke-linecap: round; }
+.aa-trail { opacity: .6; }
+.aa-trail ellipse { stroke: rgba(0, 0, 0, .35); stroke-width: .4; }
+.aa-treeline { fill: var(--mid-b); opacity: .9; }
+.aa-groundrim { fill: none; stroke: var(--rim); stroke-opacity: calc(var(--rim-o) * .22); stroke-width: 1; }
+.aa-pine-lit { fill: none; stroke: var(--rim); stroke-opacity: calc(var(--rim-o) * .24); stroke-width: 1; stroke-linecap: round; }
+.aa-tufts { fill: var(--pine-a); opacity: .9; }
+.aa-tufts-lit { fill: none; stroke: var(--rim); stroke-opacity: calc(var(--rim-o) * .3); stroke-width: .7; stroke-linecap: round; }
+.aa-grain { pointer-events: none; opacity: .95; }
+.aa-frame { fill: none; stroke: color-mix(in srgb, var(--ac, #e8a84b) 32%, rgba(255, 255, 255, .06)); stroke-width: 1.5; }
+.aa-mistband { animation: aa-mist 40s ease-in-out infinite alternate; }
+@keyframes aa-mist { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
+
+/* ---- buildings ---- */
+.aa-b .aa-wall { stroke: rgba(0, 0, 0, .45); stroke-width: .9; stroke-linejoin: round; }
+.aa-b .m-wood { fill: url(#aa-wood); }
+.aa-b .m-roof { fill: url(#aa-roof); }
+.aa-b .m-stone { fill: url(#aa-stone); }
+.aa-b .m-white { fill: url(#aa-white); }
+.aa-b .m-brick { fill: url(#aa-brick); }
+.aa-b .m-trim { fill: url(#aa-trim); }
+.aa-b .m-dome { fill: url(#aa-dome); }
+.aa-b .m-col { fill: url(#aa-col); }
+.aa-rim { fill: none; stroke: var(--rim); stroke-opacity: var(--rim-o); stroke-width: 1.3; stroke-linecap: round; }
+.aa-rim.soft { stroke-opacity: calc(var(--rim-o) * .4); stroke-width: 1; }
+.aa-tympanum { fill: rgba(0, 0, 0, .2); }
+.aa-frame-t { fill: url(#aa-trim); stroke: rgba(0, 0, 0, .5); stroke-width: .6; }
+.aa-sill { fill: url(#aa-trim); stroke: rgba(0, 0, 0, .5); stroke-width: .5; }
+.aa-mullion { fill: none; stroke: #1a120c; stroke-width: 1.7; }
+.aa-mullion.thin { stroke-width: 1.1; }
+.aa-door { fill: #0a0b10; stroke: rgba(0, 0, 0, .6); stroke-width: .6; }
+.aa-panel { fill: rgba(255, 255, 255, .025); stroke: rgba(0, 0, 0, .55); stroke-width: .5; }
+.aa-knob { fill: #c9a227; }
+.aa-doorleaf { fill: url(#aa-wood); stroke: rgba(0, 0, 0, .55); stroke-width: .7; }
+.aa-post { fill: none; stroke: #12141c; stroke-width: 2.2; stroke-linecap: round; }
+.aa-iron { fill: #12141c; }
+.aa-lamphead { fill: #ffe2a0; opacity: calc(.55 + var(--glow) * .45); }
+
+/* light: windows by heat (time spent there today) and by the hour (--glow), thrown on the ground */
+.aa-win { fill: #182032; stroke: rgba(0, 0, 0, .5); stroke-width: .6; }
+.aa-win.on { fill: url(#aa-room); stroke: rgba(255, 220, 160, .45); opacity: calc((.42 + var(--heat) * .58) * (.55 + var(--glow) * .45)); }
+.aa-win.on.dim { opacity: calc((.25 + var(--heat) * .75) * (.55 + var(--glow) * .45)); }
+.aa-office .aa-win.on { opacity: calc(.92 * (.6 + var(--glow) * .4)); animation: aa-flicker 6s ease-in-out infinite; }
+.aa-glint { fill: none; stroke: rgba(190, 210, 255, .12); stroke-width: 1.4; stroke-linecap: round; }
+.aa-blind { fill: rgba(120, 60, 20, .35); }
+.aa-halo { opacity: calc((.2 + var(--heat) * .7) * var(--glow)); }
+.aa-halo.study { opacity: calc((.4 + var(--heat) * .6) * var(--glow)); }
+.aa-office .aa-halo:not(.study) { opacity: calc(.75 * var(--glow)); }
+.aa-study { opacity: calc((.62 + var(--heat) * .38) * (.6 + var(--glow) * .4)); }
+.aa-bglow { opacity: calc((.2 + var(--heat) * .45) * var(--glow)); }
+.aa-pool { opacity: calc((.25 + var(--heat) * .7) * var(--glow)); }
+.aa-lampglow { opacity: calc(.75 * var(--glow)); animation: aa-lantern 3s ease-in-out infinite alternate; }
+.aa-lamppool { opacity: calc(.55 * var(--glow)); }
+.aa-spill { opacity: calc((.3 + var(--heat) * .7) * var(--glow)); }
+@keyframes aa-lantern { from { opacity: calc(.6 * var(--glow)); } to { opacity: calc(.85 * var(--glow)); } }
+@keyframes aa-flicker { 0%, 100% { opacity: calc(.92 * (.6 + var(--glow) * .4)); } 46% { opacity: calc(.8 * (.6 + var(--glow) * .4)); } 54% { opacity: calc(.95 * (.6 + var(--glow) * .4)); } }
+
+/* smoke and sparks */
+.aa-smoke circle { fill: url(#aa-smoke-g); animation: aa-smoke 7s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+.aa-smoke circle.warm { fill: url(#aa-smoke-warm); }
+.aa-smoke circle:nth-child(2) { animation-delay: -1.8s; }
+.aa-smoke circle:nth-child(3) { animation-delay: -3.6s; }
+.aa-smoke circle:nth-child(4) { animation-delay: -5.2s; }
+@keyframes aa-smoke { 0% { transform: translate(0, 8px) scale(.6); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(12px, -26px) scale(1.7); opacity: 0; } }
+.aa-sparks circle { fill: #ffd27a; opacity: 0; animation: aa-ember 2.4s ease-out infinite; }
+@keyframes aa-ember { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: calc(.5 + var(--heat) * .5); } 100% { transform: translate(10px, -46px); opacity: 0; } }
+.aa-sparks.anvil circle { fill: #ffe39a; animation: aa-spark 1.6s ease-out infinite; }
+@keyframes aa-spark { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: calc(.35 + var(--heat) * .65); } 100% { transform: translate(var(--sx, 8px), 14px); opacity: 0; } }
+
+/* ---- the Office ---- */
+.aa-clockface { fill: #f1e4c2; opacity: calc(.55 + var(--glow) * .35); }
+.aa-clockring { fill: none; stroke: #2a2420; stroke-width: 1.2; }
+.aa-clockhands { fill: none; stroke: #1a120c; stroke-width: 1.1; stroke-linecap: round; }
+.aa-cal .cal-page { fill: #f6ecd6; }
+.aa-cal .cal-top { fill: #b8443a; }
+.aa-cal .cal-day { fill: rgba(60, 40, 30, .55); }
+.aa-cal .cal-ring { fill: none; stroke: #c23a2e; stroke-width: .8; }
+.aa-cone { opacity: .55; }
+.aa-lamparm { fill: none; stroke: #6a4a1a; stroke-width: 1.2; stroke-linecap: round; }
+.aa-lampbase { fill: #7a5420; }
+.aa-shade { fill: #1e5a3a; stroke: #0b2216; stroke-width: .5; }
+.aa-shade-hi { fill: none; stroke: rgba(170, 240, 200, .5); stroke-width: .6; stroke-linecap: round; }
+.aa-mug { fill: #2e4a6a; stroke: rgba(0, 0, 0, .4); stroke-width: .3; }
+.aa-mughandle { fill: none; stroke: #2e4a6a; stroke-width: .8; }
+.aa-desk { fill: rgba(56, 28, 10, .82); }
+.aa-letters rect { fill: #fbf2dc; stroke: rgba(120, 80, 40, .5); stroke-width: .4; }
+.aa-letters .flap { fill: none; stroke: rgba(120, 80, 40, .6); stroke-width: .5; }
+.aa-letters .seal { fill: #b8443a; }
+.aa-mailbox { fill: url(#aa-iron); stroke: rgba(0, 0, 0, .6); stroke-width: .6; }
+.aa-letter { fill: #f4ead2; }
+.aa-flag path { fill: none; stroke: #2a2420; stroke-width: 1; }
+.aa-flag rect { fill: #c23a2e; }
+.aa-flag { transform-box: view-box; transform-origin: 236.6px 168px; transform: rotate(90deg); transition: transform .8s cubic-bezier(.2, 1.3, .4, 1); }
+.aa-flag.up { transform: none; }
+
+/* ---- the Observatory ---- */
+.aa-nebula { opacity: calc(var(--stars) * .55 + .05); }
+.aa-constel { fill: none; stroke: rgba(200, 210, 255, .2); stroke-width: .6; opacity: var(--stars); }
+.aa-cstar { fill: #eef2ff; opacity: var(--stars); }
+.aa-target { opacity: calc(.25 + var(--stars) * .75); }
+.aa-target path { stroke: rgba(240, 244, 255, .6); stroke-width: .6; stroke-linecap: round; }
+.aa-target circle:last-child { fill: #fff; }
+.aa-ribs { fill: none; stroke: rgba(0, 0, 0, .3); stroke-width: .7; }
+.aa-slit { fill: #04060c; stroke: rgba(0, 0, 0, .7); stroke-width: .8; }
+.aa-slitlit { opacity: calc((.45 + var(--heat) * .55) * var(--glow)); }
+.aa-slitstars circle { fill: #fff6dc; }
+.aa-scope { stroke: color-mix(in srgb, #c8ccd6 calc(var(--wall) * 130%), #7a84a0); stroke-width: 4.6; stroke-linecap: round; }
+.aa-scope-end { stroke: #232733; stroke-width: 6.4; stroke-linecap: round; }
+.aa-lens { fill: #9fd0ff; opacity: calc(.4 + var(--heat) * .6); }
+.aa-string { fill: none; stroke: #c94a5a; stroke-width: .5; }
+.aa-card { stroke: rgba(0, 0, 0, .4); stroke-width: .3; }
+.aa-card.c1 { fill: #a99af6; } .aa-card.c2 { fill: #fbe2a8; } .aa-card.c3 { fill: #8fc6f6; } .aa-card.c4 { fill: #7fd3a6; }
+.aa-pin { fill: #c23a2e; }
+.aa-blueprint { fill: #2f4c8e; stroke: rgba(0, 0, 0, .35); stroke-width: .3; }
+.aa-bpgrid { fill: none; stroke: rgba(210, 228, 255, .55); stroke-width: .3; }
+.aa-screen { fill: #12243a; stroke: #1a120c; stroke-width: .6; }
+.aa-code { fill: none; stroke: #9fd0ff; stroke-width: .7; stroke-linecap: round; animation: aa-code 2.6s steps(3) infinite; }
+@keyframes aa-code { 50% { opacity: .55; } }
+
+/* ---- the Forge ---- */
+.aa-fireglow { opacity: calc((.5 + var(--heat) * .5) * (.6 + var(--glow) * .4)); }
+.aa-pool.fire { opacity: calc((.3 + var(--heat) * .7) * (.6 + var(--glow) * .4)); }
+.aa-bay { fill: #170904; stroke: rgba(0, 0, 0, .6); stroke-width: .6; }
+.aa-fire { opacity: calc(.55 + var(--heat) * .45); transform-box: fill-box; transform-origin: 50% 100%; animation: aa-fire 1.8s ease-in-out infinite alternate; }
+@keyframes aa-fire { 0% { transform: scale(1, 1); } 40% { transform: scale(1.06, .93); } 100% { transform: scale(.96, 1.07); } }
+.aa-flames { transform-box: fill-box; transform-origin: 50% 100%; animation: aa-flame 1.1s ease-in-out infinite alternate; opacity: calc(.6 + var(--heat) * .4); }
+@keyframes aa-flame { 0% { transform: scale(1, 1) skewX(0); } 50% { transform: scale(.94, 1.1) skewX(-3deg); } 100% { transform: scale(1.04, .92) skewX(2deg); } }
+.aa-tools { fill: none; stroke: rgba(12, 4, 2, .85); stroke-width: 1.1; stroke-linecap: round; }
+.aa-hearthbox { fill: #24100a; stroke: rgba(0, 0, 0, .6); stroke-width: .5; }
+.aa-coals { stroke: #ff7a2a; stroke-width: 1.6; stroke-linecap: round; opacity: calc(.5 + var(--heat) * .5); }
+.aa-arch { fill: none; stroke: url(#aa-stone); stroke-width: 3.6; }
+.aa-horseshoe { fill: none; stroke: #8a8a96; stroke-width: 1.5; stroke-linecap: round; }
+.aa-hoop { fill: none; stroke: #1a1a20; stroke-width: 1.2; }
+.aa-water { fill: #0a1220; stroke: rgba(255, 170, 90, .35); stroke-width: .5; }
+.aa-stumptop { fill: #6a4a30; stroke: rgba(0, 0, 0, .5); stroke-width: .4; }
+.aa-anvil { fill: url(#aa-iron); stroke: rgba(0, 0, 0, .6); stroke-width: .5; }
+.aa-anvil-hot { fill: none; stroke: #ff9c4a; stroke-width: 1.1; opacity: calc(.3 + var(--heat) * .7); }
+.aa-bar { fill: none; stroke: #ffb347; stroke-width: 2; stroke-linecap: round; opacity: calc(.55 + var(--heat) * .45); }
+.aa-barglow { opacity: calc(.5 + var(--heat) * .5); }
+.aa-handle { fill: none; stroke: #5a3a22; stroke-width: 1.6; stroke-linecap: round; }
+.aa-bell { fill: url(#aa-iron); stroke: rgba(0, 0, 0, .6); stroke-width: .5; }
+.aa-bell-h { fill: none; stroke: #2a2c38; stroke-width: 2; stroke-linecap: round; }
+.aa-firerim { fill: none; stroke: #ff9c4a; stroke-width: .9; stroke-linecap: round; opacity: calc(.35 + var(--heat) * .55); }
+
+/* ---- the Ledger House ----
+   It keeps no time, so its heat is usually 0: the counting room is lit regardless, and burns brighter with heat. */
+.aa-bank .aa-win.on { opacity: calc((.78 + var(--heat) * .22) * (.6 + var(--glow) * .4)); }
+.aa-bank .aa-study { opacity: calc((.85 + var(--heat) * .15) * (.6 + var(--glow) * .4)); }
+.aa-bank .aa-halo { opacity: calc((.5 + var(--heat) * .5) * var(--glow)); }
+.aa-bank .aa-bglow { opacity: calc((.3 + var(--heat) * .35) * var(--glow)); }
+.aa-bank .aa-pool { opacity: calc((.45 + var(--heat) * .5) * var(--glow)); }
+.aa-scales { fill: none; stroke: rgba(46, 22, 6, .8); stroke-width: 1; stroke-linejoin: round; }
+.aa-coins ellipse { fill: #e8c25a; stroke: #7a5a14; stroke-width: .35; }
+.aa-doorframe { fill: none; stroke: url(#aa-trim); stroke-width: 2.4; }
+.aa-flute { fill: none; stroke: rgba(0, 0, 0, .22); stroke-width: .6; }
+.aa-dentils { fill: none; stroke: rgba(0, 0, 0, .35); stroke-width: 2.2; stroke-dasharray: 2 2; }
+.aa-coinglow { opacity: calc((.55 + var(--heat) * .45) * (.6 + var(--glow) * .4)); animation: aa-coin 4s ease-in-out infinite alternate; }
+@keyframes aa-coin { from { opacity: calc(.5 * (.6 + var(--glow) * .4)); } to { opacity: calc(.95 * (.6 + var(--glow) * .4)); } }
+.aa-coin { stroke: #6a4a10; stroke-width: .6; }
+.aa-coin-ring { fill: none; stroke: rgba(106, 74, 16, .7); stroke-width: .6; }
+.aa-coin-hole { fill: #4a3208; }
+
+/* ---- the Hearth ---- */
+.aa-heartglow { opacity: calc((.45 + var(--heat) * .55) * (.55 + var(--glow) * .45)); animation: aa-heartbeat 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes aa-heartbeat { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.08); } 24% { transform: scale(1); } 36% { transform: scale(1.05); } }
+.aa-heartframe { fill: url(#aa-trim); stroke: rgba(0, 0, 0, .5); stroke-width: .5; }
+.aa-heartwin { opacity: calc((.6 + var(--heat) * .4) * (.6 + var(--glow) * .4)); }
+.aa-lead { fill: none; stroke: rgba(70, 20, 30, .55); stroke-width: .7; }
+.aa-curtain { fill: rgba(150, 52, 76, .55); }
+.aa-shutter { fill: url(#aa-wood); stroke: rgba(0, 0, 0, .5); stroke-width: .5; }
+.aa-bloom { stroke: rgba(0, 0, 0, .25); stroke-width: .3; }
+.aa-bloom.b0 { fill: #e5737a; } .aa-bloom.b1 { fill: #f2c46a; } .aa-bloom.b2 { fill: #d97ba4; }
+.aa-win.doorway { opacity: calc((.55 + var(--heat) * .45) * (.6 + var(--glow) * .4)); }
+.aa-wreath { fill: none; stroke: #2f6b45; stroke-width: 1.8; }
+.aa-bow { fill: #c23a2e; }
+.aa-dog { fill: #0c0c11; stroke: rgba(0, 0, 0, .6); stroke-width: .4; }
+.aa-dogtail { fill: none; stroke: #0c0c11; stroke-width: 2; stroke-linecap: round; }
+.aa-dogear { fill: #1c1c24; }
+.aa-dogeye { fill: #ffd590; opacity: calc(.4 + var(--glow) * .4); }
+.aa-dogmoon { fill: none; stroke: var(--rim); stroke-opacity: calc(var(--rim-o) * .45); stroke-width: .6; stroke-linecap: round; }
+.aa-dogrim { fill: none; stroke: #ffc884; stroke-width: .7; stroke-linecap: round; opacity: calc((.3 + var(--heat) * .5) * var(--glow)); }
+.aa-fence .aa-rail { fill: none; stroke: url(#aa-white); stroke-width: 1.6; }
+.aa-picket { fill: url(#aa-white); stroke: rgba(0, 0, 0, .45); stroke-width: .5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-stars circle.tw, .aa-mistband, .aa-lampglow, .aa-fire, .aa-flames, .aa-code, .aa-coinglow, .aa-heartglow, .aa-office .aa-win.on { animation: none; }
+  .aa-smoke circle { animation: none; opacity: .7; }
+  .aa-smoke circle:nth-child(n+3) { opacity: .4; }
+  .aa-sparks circle, .aa-sparks.anvil circle { animation: none; opacity: 0; }
+  .aa-flag { transition: none; }
+}
