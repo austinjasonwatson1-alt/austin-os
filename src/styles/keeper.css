@@ -22,7 +22,7 @@
 .turn.keeper { justify-self: start; border: 1px solid rgba(232, 168, 75, .25);
   background: repeating-linear-gradient(180deg, transparent 0 29px, rgba(233, 228, 216, .03) 29px 30px), linear-gradient(170deg, #17130f, #0e0b09); }
 .turn.keeper .mono { color: var(--lamp); }
-.turn.keeper p { font-family: 'Literata', Georgia, serif; font-size: 16px; }
+.turn.keeper p { font-family: var(--serif); font-size: 16px; }
 .turn.thinking p { display: flex; gap: 6px; }
 .turn.thinking i { width: 7px; height: 7px; border-radius: 50%; background: var(--lamp); animation: dot-pulse .7s ease-in-out infinite alternate; }
 .turn.thinking i:nth-child(2) { animation-delay: .2s; }
@@ -34,7 +34,7 @@
   border: 1px solid rgba(232, 168, 75, .3); background: repeating-linear-gradient(180deg, transparent 0 29px, rgba(233, 228, 216, .03) 29px 30px), linear-gradient(170deg, #17130f, #0e0b09); }
 .keeper-note:hover { border-color: rgba(232, 168, 75, .6); }
 .keeper-note .mono { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--lamp); }
-.keeper-note p { margin: 6px 0 0; font-family: 'Literata', Georgia, serif; font-size: 15.5px; line-height: 1.6; }
+.keeper-note p { margin: 6px 0 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.6; }
 @media (prefers-reduced-motion: reduce) { .keeper-lantern i, .turn.thinking i { animation: none; } }
 @media (max-width: 860px) { .keeper-hero { grid-template-columns: minmax(0, 1fr); } .keeper-lantern { width: 60px; height: 80px; } }
 @keyframes candle { 0% { transform: translate(-50%, -40%) rotate(-2deg); } 100% { transform: translate(-50%, -40%) rotate(2deg) scaleY(1.06); } }

@@ -12,7 +12,8 @@ function precache(): Plugin {
     name: 'austin-precache',
     apply: 'build',
     generateBundle(_, bundle) {
-      files = Object.keys(bundle).filter((f) => !f.endsWith('.map'));
+      // Fonts come in a file per alphabet; keep only the Latin ones offline (others load if ever needed).
+      files = Object.keys(bundle).filter((f) => !f.endsWith('.map') && !(f.endsWith('.woff2') && !/-latin-(wght|opsz|standard)/.test(f)));
     },
     writeBundle(opts) {
       const dir = opts.dir ?? 'dist';

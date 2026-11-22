@@ -37,7 +37,7 @@
 .note { display: grid; gap: 8px; padding: 16px 18px; border-radius: 14px; border: 1px solid var(--line); background: repeating-linear-gradient(180deg, transparent 0 27px, rgba(233, 228, 216, .04) 27px 28px), linear-gradient(170deg, #17130f, #0e0b09); }
 .note header { display: flex; justify-content: space-between; gap: 8px; font-size: 10.5px; color: var(--lamp); }
 .note-ch { font-size: 10.5px; color: var(--bone-dim); }
-.note p { margin: 0; font-family: 'Literata', Georgia, serif; font-size: 15px; line-height: 1.6; white-space: pre-wrap; }
+.note p { margin: 0; font-family: var(--serif); font-size: 15px; line-height: 1.6; white-space: pre-wrap; }
 .note footer { display: flex; justify-content: flex-end; gap: 6px; }
 .note.resolved { opacity: .55; }
 .note.resolved p { text-decoration: line-through; text-decoration-color: rgba(233, 228, 216, .25); }

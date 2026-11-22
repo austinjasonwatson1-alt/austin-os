@@ -24,7 +24,7 @@
 .w-title { width: 100%; border: 0; background: none; outline: none; text-align: center; font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4vw, 40px); color: var(--bone); }
 .w-text {
   display: block; width: 100%; min-height: 60vh; resize: none; border: 0; outline: none; background: none; overflow: hidden;
-  font-family: 'Literata', Georgia, serif; font-size: 20px; line-height: 1.85; color: #ece5d6; caret-color: var(--lamp);
+  font-family: var(--serif); font-size: 20px; line-height: 1.85; color: #ece5d6; caret-color: var(--lamp);
   text-shadow: 0 0 calc(var(--lamp-heat) * 14px) rgba(232, 168, 75, .06);
 }
 .w-text::placeholder { color: var(--bone-faint); font-style: italic; }
@@ -39,7 +39,7 @@
 .w-v:hover, .w-versions li.on .w-v { border-color: var(--line-strong); background: rgba(233, 228, 216, .03); }
 .w-v .mono { font-size: 10.5px; }
 .w-peek { padding: 8px 10px 12px; }
-.w-peek p { margin: 0 0 10px; font-family: 'Literata', Georgia, serif; font-size: 14px; line-height: 1.6; color: var(--bone-dim); white-space: pre-wrap; }
+.w-peek p { margin: 0 0 10px; font-family: var(--serif); font-size: 14px; line-height: 1.6; color: var(--bone-dim); white-space: pre-wrap; }
 
 @media (max-width: 860px) {
   .w-bar { padding: 8px 12px; gap: 8px; }

@@ -110,7 +110,7 @@
 .page-hours { margin-top: 14px; display: grid; gap: 2px; text-align: left; border: 0; background: none; padding: 0; color: var(--bone); font-family: var(--display); font-size: 26px; }
 .page-hours small { font-size: 10.5px; color: var(--bone-faint); }
 .page-body { display: grid; gap: 8px; align-content: start; }
-.pg { margin: 0; font-family: 'Literata', Georgia, serif; font-size: 15.5px; line-height: 1.6; color: var(--bone-dim); }
+.pg { margin: 0; font-family: var(--serif); font-size: 15.5px; line-height: 1.6; color: var(--bone-dim); }
 .pg b { font-family: var(--mono); font-weight: 500; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; margin-right: 8px; color: var(--lamp); }
 .pg i { color: var(--bone); }
 .pg-prayer b { color: #f2c46a; }
@@ -121,5 +121,5 @@
 @media (max-width: 860px) { .page { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 18px 16px; } .page header { grid-template-columns: auto auto 1fr; align-items: baseline; gap: 10px; } .page-hours { margin: 0; justify-self: end; font-size: 20px; } }
 
 .keeper-week { justify-self: start; max-width: 720px; }
-.keeper-week-t { margin: 0; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(232, 168, 75, .3); font-family: 'Literata', Georgia, serif; font-size: 15px; line-height: 1.6; white-space: pre-wrap; }
+.keeper-week-t { margin: 0; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(232, 168, 75, .3); font-family: var(--serif); font-size: 15px; line-height: 1.6; white-space: pre-wrap; }
 .keeper-week-t .mono { display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--lamp); margin-bottom: 4px; font-family: var(--mono); }

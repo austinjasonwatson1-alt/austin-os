@@ -20,9 +20,10 @@
   --zero: #232a36;
   --r: 14px;
   --rail: 248px;
-  --display: 'Bodoni Moda', Georgia, serif;
-  --ui: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --display: 'Bodoni Moda Variable', 'Bodoni Moda', Georgia, serif;
+  --ui: 'Inter Tight Variable', 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --serif: 'Literata Variable', 'Literata', Georgia, serif;
 }
 
 * { box-sizing: border-box; }
