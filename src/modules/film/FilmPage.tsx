@@ -1,4 +1,3 @@
-import { LookBackTabs } from '../../shell/LookBackTabs';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { rise } from '../../shell/lamp';
 import { Dog } from '../../shell/Dogs';
@@ -145,7 +144,6 @@ export default function FilmPage() {
   if (!ready) return null;
   return (
     <div className="home film">
-      <LookBackTabs />
       <section className="film-hero rise" style={rise(0)}>
         <div className="page-eyebrow">The year in review · the film</div>
         <h1 className="hero-title">Your <em>{year}.</em></h1>

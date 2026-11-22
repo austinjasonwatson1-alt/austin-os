@@ -329,3 +329,4 @@
   .eclose-embers { display: none; }
   .lantern-flame, .int-meter span, .hcell-fill { transition: none; }
 }
+.day-lamp { margin-top: 14px; }

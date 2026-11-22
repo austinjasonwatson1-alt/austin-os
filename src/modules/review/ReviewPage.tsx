@@ -1,4 +1,3 @@
-import { LookBackTabs } from '../../shell/LookBackTabs';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { addDays, mondayOf, parseISO, todayISO } from '../../core/dates';
 import { CountUp, embers } from '../../shell/fx';
@@ -57,7 +56,6 @@ export default function ReviewPage() {
 
   return (
     <div className="home review">
-      <LookBackTabs />
       <section className="hero review-hero rise" style={rise(0)}>
         <div className="hero-copy">
           <div className="page-eyebrow">The weekly review · {short(s.monday)} – {short(s.sunday)}</div>

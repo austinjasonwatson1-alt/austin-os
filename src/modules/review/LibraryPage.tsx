@@ -1,4 +1,3 @@
-import { LookBackTabs } from '../../shell/LookBackTabs';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { MONTHS_LONG, parseISO } from '../../core/dates';
 import { rise } from '../../shell/lamp';
@@ -35,7 +34,6 @@ export default function LibraryPage() {
   if (!ledger.loaded) return null;
   return (
     <div className="home library">
-      <LookBackTabs />
       <section className="lib-hero rise" style={rise(0)}>
         <div className="page-eyebrow">The Library of You</div>
         <h1 className="hero-title">Every month,<br /><em>kept.</em></h1>

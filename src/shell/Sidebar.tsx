@@ -5,7 +5,7 @@ import { AppStatus } from './AppStatus';
 import { openPalette } from './CommandPalette';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { groupOf, mostUsed, recordVisit, roomOf, type NavGroup, type NavItem, type Visits } from './navLogic';
+import { groupOf, mostUsed, recordVisit, roomOf, setOf, tucked, type NavGroup, type NavItem, type Visits } from './navLogic';
 import { useTimer } from '../modules/timer/store';
 import { elapsedMs, fmtClock } from '../modules/timer/logic';
 
@@ -27,17 +27,19 @@ function TimerNav({ current }: { current: boolean }) {
   );
 }
 
-/** Every room, grouped the way the homestead is laid out. */
+/** Every room, grouped the way the homestead is laid out. Rooms that are views of another (tabs) stay out. */
 export function navGroups(): NavGroup[] {
   const cabin = AREAS[0];
   const live = (a: (typeof AREAS)[number]): NavItem => ({ path: a.path, glyph: a.glyph, name: a.name, soon: !a.live });
+  const named = (i: NavItem): NavItem => { const set = setOf(i.path); return set && set.tabs[0].path === i.path ? { ...i, name: set.label } : i; };
+  const rail = (items: NavItem[]) => items.filter((i) => !tucked(i.path)).map(named);
   return [
-    { id: 'cabin', label: "The Writer's Cabin", items: [{ path: cabin.path, glyph: cabin.glyph, name: 'The Cabin' }, ...MODULES.filter((m) => m.section === 'cabin').map((m) => ({ path: m.path, glyph: m.glyph, name: m.name, soon: !m.component }))] },
-    { id: 'homestead', label: 'The Homestead', items: [...AREAS.filter((a) => a.id !== 'cabin').map(live), { path: '/kennel', glyph: '🐾', name: 'The Kennel' }, { path: '/money', glyph: '$', name: 'Money' }] },
-    { id: 'time', label: 'Ahead & behind', items: [
+    { id: 'cabin', label: "The Writer's Cabin", items: rail([{ path: cabin.path, glyph: cabin.glyph, name: 'The Cabin' }, ...MODULES.filter((m) => m.section === 'cabin').map((m) => ({ path: m.path, glyph: m.glyph, name: m.name, soon: !m.component }))]) },
+    { id: 'homestead', label: 'The Homestead', items: rail(AREAS.filter((a) => a.id !== 'cabin').map(live)) },
+    { id: 'time', label: 'Ahead & behind', items: rail([
       { path: '/life', glyph: '✧', name: 'The Compass' }, { path: '/goals', glyph: '⛰', name: 'Seasons of life' },
-      { path: '/review', glyph: '◷', name: 'Looking back' }, { path: '/memories', glyph: '❀', name: 'Memories' },
-    ] },
+      { path: '/review', glyph: '◷', name: 'Looking back' },
+    ]) },
   ];
 }
 const TOP: NavItem[] = [{ path: '/home', glyph: '◈', name: 'Home' }, { path: '/day', glyph: '☼', name: 'The Day' }, { path: '/keeper', glyph: '♨', name: 'The Keeper' }];

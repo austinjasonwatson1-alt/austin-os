@@ -1,3 +1,4 @@
+import { go } from '../../shell/router';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { addDays, parseISO, prettyDate } from '../../core/dates';
 import { CountUp, embers, tilt } from '../../shell/fx';
@@ -48,6 +49,7 @@ export default function DayPage() {
           <h1 className="hero-title">{t1}<br /><em>{t2}</em></h1>
           <p className="hero-line"><span className="day-greet">{greeting(now.getHours())}.</span> {entry.closedAt ? 'Marked, written down, and banked. Rest; tomorrow lights itself.' : LINE[ph]}</p>
           <div className="day-date mono">{prettyDate(today)}</div>
+          <button className="qlamp day-lamp" onClick={() => go('/cabin/timer')}><span aria-hidden>◉</span> Lamp mode</button>
         </div>
         <div className="day-dial" aria-label={`${doneN} of ${habits.length} habits done, ${kept} of ${entry.intentions.length} intentions kept`}>
           <div className={entry.closedAt ? 'day-dial-lamp sealed' : 'day-dial-lamp'}>

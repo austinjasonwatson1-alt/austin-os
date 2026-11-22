@@ -23,8 +23,6 @@ const short = (d: string) => parseISO(d).toLocaleDateString(undefined, { month: 
 /** Rooms that live inside a building. */
 const ALSO: Partial<Record<string, { path: string; glyph: string; name: string }[]>> = {
   forge: [{ path: '/kennel', glyph: '🐾', name: 'The Kennel · Cooper & Shadow' }],
-  hearth: [{ path: '/memories', glyph: '❀', name: 'Memories & the time capsule' }],
-  bank: [{ path: '/money', glyph: '$', name: 'All of Money' }],
 };
 
 export function AreaPage({ config }: { config: AreaConfig }) {

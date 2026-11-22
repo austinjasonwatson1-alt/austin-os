@@ -6,10 +6,50 @@ export interface NavGroup { id: string; label: string; items: NavItem[] }
 /** Paths that are always at the top, so never repeated under "Your rooms". */
 export const PINNED = ['/home', '/day', '/keeper'];
 
+/** Rooms that are one room with tabs: the rail shows the first, the rest are views inside it. */
+export interface RoomSet { id: string; label: string; tabs: { path: string; label: string; glyph: string }[] }
+export const ROOM_SETS: RoomSet[] = [
+  { id: 'lookback', label: 'Looking back', tabs: [
+    { path: '/review', label: 'This week', glyph: '◷' }, { path: '/year', label: 'The year', glyph: '◎' },
+    { path: '/library', label: 'Library of You', glyph: '❦' }, { path: '/records', label: 'Hall of Records', glyph: '♛' },
+    { path: '/film', label: 'The film', glyph: '▶' },
+  ] },
+  { id: 'publication', label: 'Road to publication', tabs: [
+    { path: '/cabin/queries', label: 'Queries', glyph: '✉' }, { path: '/cabin/contests', label: 'Contests', glyph: '✧' },
+    { path: '/cabin/editorial', label: 'Editorial Vault', glyph: '✎' }, { path: '/cabin/marketing', label: 'Outreach', glyph: '◎' },
+  ] },
+  { id: 'ledger', label: 'The Ledger', tabs: [
+    { path: '/cabin/ledger', label: 'Minutes', glyph: '▤' }, { path: '/cabin/lounge', label: 'The Lounge', glyph: '✦' },
+  ] },
+  { id: 'bank', label: 'The Ledger House', tabs: [
+    { path: '/bank', label: 'The house', glyph: '⌂' }, { path: '/money', label: 'Money', glyph: '$' },
+  ] },
+  { id: 'hearth', label: 'The Hearth', tabs: [
+    { path: '/hearth', label: 'Family', glyph: '♥' }, { path: '/kennel', label: 'The Kennel', glyph: '🐾' }, { path: '/memories', label: 'Memories', glyph: '❀' },
+  ] },
+];
+
+/** Rooms reached from inside another (a button, not a rail entry), and where they count. */
+const INSIDE: Record<string, string> = { '/cabin/timer': '/cabin' };
+
+/** The family a route belongs to, if it is one of several views. */
+export function setOf(route: string): RoomSet | null {
+  const r = route.split('?')[0];
+  return ROOM_SETS.find((s) => s.tabs.some((t) => t.path === r)) ?? null;
+}
+
+/** Where a route lives in the rail: the first tab of its family, its host room, or itself. */
+export function railPath(route: string): string {
+  const r = route.split('?')[0];
+  return setOf(r)?.tabs[0].path ?? INSIDE[r] ?? r;
+}
+
+/** True for paths the rail leaves out because they live inside another room. */
+export const tucked = (path: string) => railPath(path) !== path;
+
 /** The group a route belongs to (sub-pages like /cabin/write/… count as their room). */
 export function groupOf(groups: NavGroup[], route: string): string | null {
-  const r = route.split('?')[0];
-  if (['/year', '/library', '/records', '/film'].includes(r)) return groupOf(groups, '/review');
+  const r = railPath(route);
   for (const g of groups) if (g.items.some((i) => r === i.path || (i.path !== '/cabin' && r.startsWith(`${i.path}/`)))) return g.id;
   if (r.startsWith('/cabin')) return groups.find((g) => g.items.some((i) => i.path === '/cabin'))?.id ?? null;
   return null;
@@ -17,10 +57,8 @@ export function groupOf(groups: NavGroup[], route: string): string | null {
 
 /** The room a route counts as (the editor counts as Manuscripts). */
 export function roomOf(items: NavItem[], route: string): string | null {
-  const r = route.split('?')[0];
+  const r = railPath(route);
   if (r.startsWith('/cabin/write')) return '/cabin/manuscripts';
-  // Looking back is one room with several views.
-  if (['/year', '/library', '/records', '/film'].includes(r)) return '/review';
   const exact = items.find((i) => i.path === r);
   if (exact) return exact.path;
   const parent = items.filter((i) => r.startsWith(`${i.path}/`)).sort((a, b) => b.path.length - a.path.length)[0];

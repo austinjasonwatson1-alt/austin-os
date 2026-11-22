@@ -31,6 +31,7 @@ import { useCloud } from './shell/cloud';
 import { useSky } from './core/skyStore';
 import { Soon } from './shell/Soon';
 import { RoomGuard } from './shell/RoomGuard';
+import { RoomTabs } from './shell/RoomTabs';
 
 const ReviewPage = lazy(() => import('./modules/review/ReviewPage'));
 const YearPage = lazy(() => import('./modules/review/YearPage'));
@@ -116,6 +117,7 @@ export default function App() {
       <div className="app">
         <Sidebar />
         <main className="main">
+          <RoomTabs route={route} />
           <div key={route} className={`route route-${motion}`}>
             <Suspense fallback={<div className="route-wait" aria-hidden><span /></div>}>
               <RoomGuard route={route}><Screen route={route} /></RoomGuard>
