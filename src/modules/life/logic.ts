@@ -182,3 +182,24 @@ export const describeLife: Describer = {
   size: (v) => Object.keys((v as Partial<LifeData> | undefined)?.targets ?? {}).length,
   detail: (v) => ((v as Partial<LifeData> | undefined)?.targets ? 'weekly targets for six areas' : 'nothing yet'),
 };
+
+/* ---------------- no zero days, across the whole life ---------------- */
+
+/** The areas that got any time (or a counted day) on `day`. */
+export function tendedOn(x: LifeInput, day: string): LifeArea[] {
+  return LIFE_AREAS.map((a) => a.id).filter((a) => minutesOn(x, a, day) > 0);
+}
+
+/**
+ * The whole-life streak: days in a row where at least one part of life was tended. A still-empty
+ * today doesn't break it (it counts up to yesterday until something lands). `best` looks back a year.
+ */
+export function lifeStreak(x: LifeInput, today: string, lookback = 366): { current: number; best: number; today: LifeArea[] } {
+  const lit = (d: string) => tendedOn(x, d).length > 0;
+  let cursor = lit(today) ? today : addDays(today, -1);
+  let current = 0;
+  while (current < lookback && lit(cursor)) { current++; cursor = addDays(cursor, -1); }
+  let best = 0, run = 0;
+  for (let i = lookback - 1; i >= 0; i--) { if (lit(addDays(today, -i))) { run++; best = Math.max(best, run); } else run = 0; }
+  return { current, best: Math.max(best, current), today: tendedOn(x, today) };
+}

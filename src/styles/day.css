@@ -329,4 +329,38 @@
   .eclose-embers { display: none; }
   .lantern-flame, .int-meter span, .hcell-fill { transition: none; }
 }
-.day-lamp { margin-top: 14px; }
+
+/* ---------------- today at a glance ---------------- */
+.brief { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 18px; margin-bottom: 18px; }
+.brief-main, .brief-streak { border-radius: var(--r, 18px); border: 1px solid var(--line-strong); background: linear-gradient(180deg, rgba(20, 24, 34, .78), rgba(10, 12, 18, .82)); padding: 18px 20px; }
+.brief-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.brief-h .mono { font-size: 11px; }
+.brief-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.brief-row { width: 100%; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid transparent; background: rgba(255, 255, 255, .02); color: var(--bone); text-align: left; transition: background .2s, border-color .2s; }
+.brief-row:hover { background: color-mix(in srgb, var(--ac) 9%, transparent); border-color: color-mix(in srgb, var(--ac) 30%, transparent); }
+.brief-row.done { background: color-mix(in srgb, var(--ac) 7%, transparent); }
+.brief-txt { display: grid; gap: 2px; min-width: 0; }
+.brief-txt b { font-family: var(--display); font-weight: 600; font-size: 16.5px; }
+.brief-txt span { color: var(--bone-dim); font-size: 13.5px; }
+.brief-row.done .brief-txt span { color: color-mix(in srgb, var(--ac) 70%, var(--bone)); }
+.brief-go { color: var(--bone-faint); transition: transform .2s; }
+.brief-row:hover .brief-go { transform: translateX(3px); color: var(--ac); }
+.brief-acts { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.brief-k { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--lamp); margin: 0; }
+.brief-cal { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.brief-cal ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.brief-cal li { display: grid; grid-template-columns: 78px 1fr; gap: 10px; font-size: 14px; }
+.brief-cal li .mono { color: var(--bone-faint); font-size: 11.5px; padding-top: 2px; }
+.brief-streak { display: grid; align-content: center; justify-items: center; text-align: center; gap: 6px; position: relative; overflow: hidden; }
+.brief-streak::before { content: ''; position: absolute; inset: auto -30% -60% -30%; height: 90%; background: radial-gradient(closest-side, rgba(232, 168, 75, .22), transparent); pointer-events: none; }
+.brief-n { font-family: var(--display); font-size: 72px; line-height: .95; background: linear-gradient(180deg, #fff3d6, var(--lamp)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.brief-streak .faint { font-size: 11px; }
+.brief-marks { display: flex; gap: 6px; margin-top: 6px; }
+.brief-marks > span { opacity: .28; filter: grayscale(.8); transition: opacity .3s, filter .3s; }
+.brief-marks > span.on { opacity: 1; filter: none; }
+.brief-hint { margin-top: 2px; }
+@media (max-width: 860px) {
+  .brief { grid-template-columns: minmax(0, 1fr); }
+  .brief-streak { order: -1; grid-template-columns: auto 1fr; justify-items: start; text-align: left; column-gap: 16px; padding: 14px 18px; }
+  .brief-streak .brief-n { grid-row: 1 / span 4; font-size: 56px; }
+}

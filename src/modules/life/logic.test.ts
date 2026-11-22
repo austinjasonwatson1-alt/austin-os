@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addDays } from '../../core/dates';
-import { amount, balanceScore, balanceWeek, DEFAULT_TARGETS, insights, lastTended, migrateTargets, minutesOn, neglectLevel, type LifeInput } from './logic';
+import { amount, balanceScore, balanceWeek, DEFAULT_TARGETS, insights, lastTended, lifeStreak, migrateTargets, minutesOn, neglectLevel, type LifeInput } from './logic';
 
 const empty: LifeInput = { ledger: {}, chapel: {}, office: {}, observatory: {}, forge: {}, hearth: {} };
 
@@ -66,5 +66,17 @@ describe('day-counted areas', () => {
   it('bring old minute targets back as day targets', () => {
     expect(migrateTargets({ work: 1500, learning: 180, writing: 600 })).toMatchObject({ work: 5, learning: 3, writing: 600 });
     expect(migrateTargets({ work: 4 })).toMatchObject({ work: 4 });
+  });
+});
+
+describe('the whole-life streak', () => {
+  it('counts days any part of life was tended, and an empty today does not break it', () => {
+    const x = { ledger: { '2026-11-18': { writing: 30 } }, chapel: { '2026-11-19': { prayer: 10 } }, office: { '2026-11-20': { apply: 1 } }, observatory: {}, forge: {}, hearth: {}, walks: { '2026-11-15': 20 } } as unknown as LifeInput;
+    const s = lifeStreak(x, '2026-11-21');
+    expect(s.current).toBe(3);
+    expect(s.today).toEqual([]);
+    expect(lifeStreak(x, '2026-11-20').today).toEqual(['work']);
+    expect(s.best).toBe(3);
+    expect(lifeStreak(x, '2026-11-23').current).toBe(0);
   });
 });

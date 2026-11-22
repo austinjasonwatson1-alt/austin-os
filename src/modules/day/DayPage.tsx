@@ -1,4 +1,3 @@
-import { go } from '../../shell/router';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { addDays, parseISO, prettyDate } from '../../core/dates';
 import { CountUp, embers, tilt } from '../../shell/fx';
@@ -7,6 +6,7 @@ import { LIFE_AREAS } from '../life/logic';
 import { AREA, carryOver, closeable, dayScore, daysLabel, entryOf, habitChain, habitsFor, historyStrip, nextState, phase, unusedStarters, type Phase, type StripDay } from './logic';
 import { AreaMark, Chain, Lantern, STATE_GLYPH, areaColor, stateTitle, useNow } from './parts';
 import { useDay } from './store';
+import { MorningBrief } from './Brief';
 import { EVERY_DAY, STARTERS, STATE_LABEL, type DayEntry, type Habit, type IntentionState, type LifeArea } from './types';
 import '../../styles/cabin.css';
 import '../../styles/day.css';
@@ -49,7 +49,6 @@ export default function DayPage() {
           <h1 className="hero-title">{t1}<br /><em>{t2}</em></h1>
           <p className="hero-line"><span className="day-greet">{greeting(now.getHours())}.</span> {entry.closedAt ? 'Marked, written down, and banked. Rest; tomorrow lights itself.' : LINE[ph]}</p>
           <div className="day-date mono">{prettyDate(today)}</div>
-          <button className="qlamp day-lamp" onClick={() => go('/cabin/timer')}><span aria-hidden>◉</span> Lamp mode</button>
         </div>
         <div className="day-dial" aria-label={`${doneN} of ${habits.length} habits done, ${kept} of ${entry.intentions.length} intentions kept`}>
           <div className={entry.closedAt ? 'day-dial-lamp sealed' : 'day-dial-lamp'}>
@@ -62,6 +61,8 @@ export default function DayPage() {
           {entry.closedAt && <span className="day-sealed-tag mono">Sealed {clock(entry.closedAt)}</span>}
         </div>
       </section>
+
+      <MorningBrief today={today} />
 
       <div className="day-grid">
         <Intentions day={today} entry={entry} ph={ph} />
