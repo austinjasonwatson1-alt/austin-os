@@ -559,3 +559,11 @@ html { scrollbar-color: rgba(232, 168, 75, .28) transparent; scrollbar-width: th
 .room-broke { max-width: 620px; margin: 10vh auto; padding: 32px; display: grid; gap: 12px; }
 .room-broke-why { font-size: 11.5px; overflow-wrap: anywhere; }
 .room-broke-actions { display: flex; gap: 10px; margin-top: 6px; }
+
+/* ---------------- one chart language ----------------
+   Every horizontal meter shares the same sunk track and rounded fill; vertical bars share the
+   same well. Colours stay each chart's own (the area or grade it shows). */
+:root { --chart-track: rgba(233, 228, 216, .055); --chart-well: inset 0 1px 2px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(233, 228, 216, .03); }
+.week-track, .mix-bar, .int-meter, .near-bar, .la-bar, .mny-bar { background: var(--chart-track); border-radius: 99px; box-shadow: var(--chart-well); }
+.mix-bar span, .int-meter span, .near-bar i, .la-bar i, .mny-bar span, .rr-bar i { border-radius: 99px; }
+.wk-bar-track, .ym-bar { background: var(--chart-track); box-shadow: var(--chart-well); }
