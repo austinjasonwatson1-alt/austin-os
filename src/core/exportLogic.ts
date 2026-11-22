@@ -106,7 +106,7 @@ CSV files open in Excel, Numbers or Google Sheets. Markdown (.md) files are plai
     const days = obj(a.days);
     if (Object.keys(days).length) f[`life/${name}-time.csv`] = csv(['date', 'minutes', 'detail'], Object.keys(days).sort().map((d) => [d, sum(days[d]), Object.entries(obj(days[d])).map(([k, v]) => `${k} ${str(v)}`).join('; ')]));
     const items = arr(a.items);
-    if (items.length) f[`life/${name}-lists.csv`] = csv(['list', 'text', 'details', 'date', 'when', 'amount', 'done', 'progress'], items.map((i) => [i.list, i.text, i.body ?? '', i.date, i.when ?? '', i.amount ?? '', i.done ? 'yes' : '', i.progress ?? '']));
+    if (items.length) f[`life/${name}-lists.csv`] = csv(['list', 'text', 'details', 'date', 'when', 'amount', 'done', 'progress', 'link', 'stage', 'kind'], items.map((i) => [i.list, i.text, i.body ?? '', i.date, i.when ?? '', i.amount ?? '', i.done ? 'yes' : '', i.progress ?? '', i.link ?? '', i.stage ?? '', i.kind ?? '']));
   }
   if (has('kennel.v1')) {
     const k = obj(dump['kennel.v1']);

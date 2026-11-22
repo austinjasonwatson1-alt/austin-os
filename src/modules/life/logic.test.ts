@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addDays } from '../../core/dates';
-import { balanceScore, balanceWeek, DEFAULT_TARGETS, insights, lastTended, minutesOn, neglectLevel, type LifeInput } from './logic';
+import { amount, balanceScore, balanceWeek, DEFAULT_TARGETS, insights, lastTended, migrateTargets, minutesOn, neglectLevel, type LifeInput } from './logic';
 
 const empty: LifeInput = { ledger: {}, chapel: {}, office: {}, observatory: {}, forge: {}, hearth: {} };
 
@@ -51,5 +51,20 @@ describe('insights', () => {
     const ledger: LifeInput['ledger'] = {};
     for (let i = 1; i <= 56; i++) { const d = addDays('2026-11-22', -i); ledger[d] = { writing: new Date(`${d}T12:00:00`).getDay() === 2 ? 180 : 40 }; }
     expect(insights({ ...empty, ledger }, '2026-11-22').map((f) => f.id)).toContain('best-day');
+  });
+});
+
+describe('day-counted areas', () => {
+  it('count the days you showed up, not minutes', () => {
+    const x: LifeInput = { ...empty, office: { '2026-11-16': { hq: 1 }, '2026-11-17': { hq: 1 }, '2026-11-18': { hq: 1 } }, observatory: { '2026-11-19': { build: 1 } } };
+    const w = balanceWeek(x, '2026-11-16', DEFAULT_TARGETS);
+    expect(w.find((s) => s.area === 'work')).toMatchObject({ mins: 3, target: 5, score: 0.6 });
+    expect(w.find((s) => s.area === 'learning')).toMatchObject({ mins: 1, target: 3 });
+    expect(amount('work', 3)).toBe('3 days');
+    expect(amount('writing', 150)).toBe('2h 30m');
+  });
+  it('bring old minute targets back as day targets', () => {
+    expect(migrateTargets({ work: 1500, learning: 180, writing: 600 })).toMatchObject({ work: 5, learning: 3, writing: 600 });
+    expect(migrateTargets({ work: 4 })).toMatchObject({ work: 4 });
   });
 });

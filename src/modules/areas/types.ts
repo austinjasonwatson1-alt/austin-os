@@ -15,6 +15,10 @@ export interface AreaItem {
   amount?: number;
   /** A date it's about (a birthday, a race), for dated lists. */
   when?: string;
+  /** Projects: where it lives, how far along, and what kind of thing it is. */
+  link?: string;
+  stage?: 'idea' | 'building' | 'shipped';
+  kind?: string;
 }
 
 export interface AreaData {
@@ -52,29 +56,30 @@ export interface AreaConfig {
 export const DEFAULT_AREA: AreaData = { days: {}, items: [] };
 
 export const OFFICE: AreaConfig = {
-  id: 'office', key: 'area.office', name: 'The Office', word: 'Office.', glyph: '▣', accent: '#6FB3F2', fullDay: 240,
-  lede: 'The PM job, kept in its own room: focus blocks, the week’s wins, and the notes worth keeping.',
-  kinds: [{ k: 'focus', label: 'Deep focus', color: '#6FB3F2' }, { k: 'planning', label: 'Planning', color: '#8E7CF0' }],
+  id: 'office', key: 'area.office', name: 'The Office', word: 'Office.', glyph: '▣', accent: '#6FB3F2', fullDay: 4,
+  lede: 'Job Search HQ: the road to an offer by March 1. Your Application Ledger and the recruiter’s desk, one door away, and the day’s four moves.',
+  kinds: [],
   lists: [
-    { id: 'wins', title: 'Wins this week', placeholder: 'Shipped the onboarding fix', empty: 'Every win, however small, for the review and the brag list.' },
-    { id: 'notes', title: 'Notes & follow-ups', placeholder: 'Ask Dana about the Q1 roadmap', body: true, empty: 'Meeting notes, follow-ups, ideas for the team.' },
+    { id: 'wins', title: 'Wins', placeholder: 'Recruiter screen booked with Toast', empty: 'Every callback, screen and kind reply. They add up.' },
+    { id: 'notes', title: 'Notes & follow-ups', placeholder: 'Send Jordan the blurb for the Ops role', body: true, empty: 'Interview notes, people to thank, things to remember.' },
   ],
 };
 
 export const OBSERVATORY: AreaConfig = {
-  id: 'observatory', key: 'area.observatory', name: 'The Observatory', word: 'Observatory.', glyph: '◐', accent: '#8E7CF0', fullDay: 120,
-  lede: 'AI study and learning, counted on their own: hours at the telescope, courses in progress, and notes from the experiments.',
-  kinds: [{ k: 'study', label: 'Study', color: '#8E7CF0' }, { k: 'build', label: 'Building', color: '#3FA8A0' }],
+  id: 'observatory', key: 'area.observatory', name: 'The Observatory', word: 'Observatory.', glyph: '◐', accent: '#8E7CF0', fullDay: 1,
+  lede: 'Everything you’ve built: games, writing tools, job-search agents, the homestead itself. Ideas waiting their turn, things in the works, and what shipped.',
+  kinds: [],
   lists: [
-    { id: 'courses', title: 'Courses & papers', placeholder: 'Deep learning specialization', progress: true, empty: 'What you’re working through, and how far along.' },
     { id: 'notes', title: 'Notes & experiments', placeholder: 'Tried retrieval with smaller chunks', body: true, empty: 'Things learned, things tried, things to come back to.' },
+    { id: 'courses', title: 'Courses & papers', placeholder: 'IBM AI Product Manager', progress: true, empty: 'What you’re working through, and how far along.' },
   ],
 };
 
 export const FORGE: AreaConfig = {
   id: 'forge', key: 'area.forge', name: 'The Forge', word: 'Forge.', glyph: '⚒', accent: '#E07A3F', fullDay: 60,
-  lede: 'The body that carries the work: training, walks and rest, goals with a finish line, and how it felt.',
-  kinds: [{ k: 'strength', label: 'Strength', color: '#E07A3F' }, { k: 'cardio', label: 'Cardio', color: '#E0A426' }, { k: 'walk', label: 'Walks', color: '#4FBF87' }],
+  lede: 'The body that carries the work: steps, sleep and workouts from Apple Health, walks with Cooper and Shadow, goals with a finish line.',
+  // No manual time log: workouts arrive from Apple Health (stored as minutes per kind), walks from the Kennel.
+  kinds: [],
   lists: [
     { id: 'goals', title: 'Goals', placeholder: 'Run a 10K by spring', progress: true, when: true, empty: 'Something to train toward, with a date if it has one.' },
     { id: 'notes', title: 'Training log', placeholder: 'Felt strong on the hills', body: true, check: false, empty: 'How sessions went, injuries, what worked.' },

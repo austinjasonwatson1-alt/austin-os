@@ -1,3 +1,4 @@
+import { LookBackTabs } from '../../shell/LookBackTabs';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { addDays, mondayOf, parseISO, todayISO } from '../../core/dates';
 import { CountUp, embers } from '../../shell/fx';
@@ -13,7 +14,7 @@ import { useReview } from './store';
 import { useKeeper } from '../keeper/store';
 import { useLifeInput } from '../life/useLifeInput';
 import { useLife } from '../life/store';
-import { balanceScore, balanceWeek, insights, LIFE_AREAS } from '../life/logic';
+import { amount, balanceScore, balanceWeek, insights, LIFE_AREAS } from '../life/logic';
 import { BalanceWheel } from '../life/Wheel';
 import { useDrafts } from '../drafts/store';
 import '../../styles/cabin.css';
@@ -56,6 +57,7 @@ export default function ReviewPage() {
 
   return (
     <div className="home review">
+      <LookBackTabs />
       <section className="hero review-hero rise" style={rise(0)}>
         <div className="hero-copy">
           <div className="page-eyebrow">The weekly review · {short(s.monday)} – {short(s.sunday)}</div>
@@ -208,7 +210,6 @@ function WholeLife({ monday, today }: { monday: string; today: string }) {
   const prev = useMemo(() => balanceWeek(input, addDays(monday, -7), targets), [input, monday, targets]);
   const top = useMemo(() => insights(input, today, 120, sprints ?? [])[0], [input, today, sprints]);
   if (!ready) return null;
-  const fm = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`);
   return (
     <section className="panel wl rise" style={rise(3)}>
       <div className="panel-h"><p className="panel-t">Across the homestead</p><button className="linkish" onClick={() => go('/life')}>Open the Compass →</button></div>
@@ -217,7 +218,7 @@ function WholeLife({ monday, today }: { monday: string; today: string }) {
         <div className="wl-list">
           <p className="wl-score"><b>{balanceScore(now)}</b> balance this week</p>
           <ul>
-            {now.map((sp) => { const a = LIFE_AREAS.find((l) => l.id === sp.area)!; return <li key={sp.area}><span style={{ color: a.color }}>{a.glyph}</span> {a.name}<span className="mono faint">{fm(sp.mins)}</span></li>; })}
+            {now.map((sp) => { const a = LIFE_AREAS.find((l) => l.id === sp.area)!; return <li key={sp.area}><span style={{ color: a.color }}>{a.glyph}</span> {a.name}<span className="mono faint">{amount(sp.area, sp.mins)}</span></li>; })}
           </ul>
           {top && <p className="wl-ins"><span className="mono">The Compass noticed</span>{top.title}</p>}
         </div>

@@ -5,6 +5,7 @@ import { season, skyPhase, type Phase, type Season } from '../core/skyLogic';
 import { usePub } from '../modules/pub/store';
 import { areaHeat, areaMinutes, money, moneyYear } from '../modules/areas/logic';
 import { AREA_STORES } from '../modules/areas/store';
+import { jobClock } from '../modules/areas/jobLogic';
 import { AREA_CONFIGS, OBSERVATORY, OFFICE } from '../modules/areas/types';
 import { OWNER } from '../config';
 import { addDays, parseISO, todayISO } from '../core/dates';
@@ -198,13 +199,13 @@ export default function Home() {
             const cfg = AREA_CONFIGS[id];
             const st = areaStates[id];
             const today2 = areaMinutes(st.days[today]);
-            const open = st.items.filter((x) => !x.done && x.list !== 'out' && x.list !== 'in')[0];
+            const open = st.items.filter((x) => !x.done && ['wins', 'notes', 'goals', 'courses', 'dates', 'moments'].includes(x.list))[0];
             return (
               <button key={cfg.id} className="area-plan area-live rise tilt" style={{ ...rise(3 + i), '--ac': cfg.accent } as CSSProperties} onClick={() => go(`/${cfg.id}`)} {...tilt(4)}>
                 <span className="area-glyph" aria-hidden style={{ color: cfg.accent, borderColor: `${cfg.accent}66` }}>{cfg.glyph}</span>
                 <span className="area-plan-body">
                   <span className="area-plan-name">{cfg.name}</span>
-                  <span className="area-plan-blurb">{cfg.kinds.length ? (today2 ? `${fmtMins(today2)} today` : 'Quiet today') : `${money(moneyYear(st.items, { out: -1, in: 1 }, Number(today.slice(0, 4))).net)} net this year`}{open ? ` · ${open.text}` : ''}</span>
+                  <span className="area-plan-blurb">{blurb(cfg.id, st, today, today2)}{open && cfg.id !== 'office' && cfg.id !== 'observatory' ? ` · ${open.text}` : ''}</span>
                 </span>
                 <span className="chip live">Open</span>
               </button>
@@ -241,4 +242,13 @@ export default function Home() {
       </div>
     </div>
   );
+}
+
+/** One line for each building on Home. */
+function blurb(id: string, st: { items: { list: string; amount?: number; date: string; when?: string; stage?: string }[]; days: Record<string, Record<string, number>> }, today: string, todayAmt: number): string {
+  if (id === 'office') { const c = jobClock(today); return `${Math.max(0, c.left)} days to March 1 · ${todayAmt} of 4 moves today`; }
+  if (id === 'observatory') { const p = st.items.filter((i) => i.list === 'projects'); return p.length ? `${p.length} projects · ${p.filter((i) => i.stage === 'building').length} in the works` : 'Your workbench of builds'; }
+  if (id === 'forge') return todayAmt ? `${fmtMins(todayAmt)} of workouts today` : 'Quiet today';
+  if (id === 'bank') return `${money(moneyYear(st.items, { out: -1, in: 1 }, Number(today.slice(0, 4))).net)} net this year`;
+  return todayAmt ? `${fmtMins(todayAmt)} today` : 'Quiet today';
 }

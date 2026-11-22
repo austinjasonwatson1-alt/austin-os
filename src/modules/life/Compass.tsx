@@ -4,14 +4,13 @@ import { rise } from '../../shell/lamp';
 import { go } from '../../shell/router';
 import { CountUp } from '../../shell/fx';
 import { useDrafts } from '../drafts/store';
-import { balanceScore, balanceWeek, insights, LIFE_AREAS } from './logic';
+import { amount, balanceScore, balanceWeek, insights, LIFE_AREAS } from './logic';
 import { BalanceWheel } from './Wheel';
 import { useLife } from './store';
 import { useLifeInput } from './useLifeInput';
 import '../../styles/cabin.css';
 import '../../styles/life.css';
 
-const fm = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`);
 
 /** The Compass: the week's balance across the whole life, and what the numbers say about how it fits together. */
 export default function CompassPage() {
@@ -62,10 +61,12 @@ export default function CompassPage() {
               <div key={s.area} className="la" style={{ '--c': a.color } as CSSProperties}>
                 <button className="la-h" onClick={() => go(a.path)}><span className="la-g" aria-hidden>{a.glyph}</span><b>{a.name}</b><span className="mono faint">{a.place}</span></button>
                 <div className="la-bar"><i style={{ width: `${s.score * 100}%` }} /></div>
-                <span className="mono la-n">{fm(s.mins)} <span className="faint">of {fm(s.target)}</span>{p.mins ? <span className={s.mins >= p.mins ? 'up' : 'down'}> · {s.mins >= p.mins ? '▲' : '▼'} {fm(Math.abs(s.mins - p.mins))}</span> : null}</span>
+                <span className="mono la-n">{amount(s.area, s.mins)} <span className="faint">of {amount(s.area, s.target)}</span>{p.mins ? <span className={s.mins >= p.mins ? 'up' : 'down'}> · {s.mins >= p.mins ? '▲' : '▼'} {amount(s.area, Math.abs(s.mins - p.mins))}</span> : null}</span>
                 {editing && (
                   <label className="la-target"><span className="mono">target a week</span>
-                    <input inputMode="numeric" value={Math.round(s.target / 60 * 10) / 10} onChange={(e) => life.setTarget(s.area, (Number(e.target.value.replace(/[^\d.]/g, '')) || 0) * 60)} aria-label={`${a.name} weekly target in hours`} /><span className="mono">h</span>
+                    {a.unit === 'days'
+                      ? <><input inputMode="numeric" value={s.target} onChange={(e) => life.setTarget(s.area, Math.min(7, Number(e.target.value.replace(/\D/g, '')) || 0))} aria-label={`${a.name} weekly target in days`} /><span className="mono">days</span></>
+                      : <><input inputMode="numeric" value={Math.round(s.target / 60 * 10) / 10} onChange={(e) => life.setTarget(s.area, (Number(e.target.value.replace(/[^\d.]/g, '')) || 0) * 60)} aria-label={`${a.name} weekly target in hours`} /><span className="mono">h</span></>}
                   </label>
                 )}
               </div>
@@ -73,7 +74,7 @@ export default function CompassPage() {
           })}
         </div>
         {weakest.score < 0.35 && isThisWeek && (
-          <p className="life-nudge">{weakA.place} has had the least of you this week{weakest.mins ? ` (${fm(weakest.mins)})` : ''}. <button className="linkish" onClick={() => go(weakA.path)}>Go there →</button></p>
+          <p className="life-nudge">{weakA.place} has had the least of you this week{weakest.mins ? ` (${amount(weakest.area, weakest.mins)})` : ''}. <button className="linkish" onClick={() => go(weakA.path)}>Go there →</button></p>
         )}
       </section>
 

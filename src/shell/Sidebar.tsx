@@ -35,9 +35,8 @@ export function navGroups(): NavGroup[] {
     { id: 'cabin', label: "The Writer's Cabin", items: [{ path: cabin.path, glyph: cabin.glyph, name: 'The Cabin' }, ...MODULES.filter((m) => m.section === 'cabin').map((m) => ({ path: m.path, glyph: m.glyph, name: m.name, soon: !m.component }))] },
     { id: 'homestead', label: 'The Homestead', items: [...AREAS.filter((a) => a.id !== 'cabin').map(live), { path: '/kennel', glyph: '🐾', name: 'The Kennel' }, { path: '/money', glyph: '$', name: 'Money' }] },
     { id: 'time', label: 'Ahead & behind', items: [
-      { path: '/life', glyph: '✧', name: 'The Compass' }, { path: '/goals', glyph: '⛰', name: 'Seasons of life' }, { path: '/review', glyph: '◷', name: 'Weekly review' },
-      { path: '/year', glyph: '◎', name: 'Year in review' }, { path: '/records', glyph: '♛', name: 'Hall of Records' }, { path: '/library', glyph: '❦', name: 'Library of You' },
-      { path: '/memories', glyph: '❀', name: 'Memories' },
+      { path: '/life', glyph: '✧', name: 'The Compass' }, { path: '/goals', glyph: '⛰', name: 'Seasons of life' },
+      { path: '/review', glyph: '◷', name: 'Looking back' }, { path: '/memories', glyph: '❀', name: 'Memories' },
     ] },
   ];
 }

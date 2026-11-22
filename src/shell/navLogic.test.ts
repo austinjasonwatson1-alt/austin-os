@@ -17,6 +17,7 @@ describe('nav', () => {
     expect(roomOf(all, '/cabin/write/m/c')).toBe('/cabin/manuscripts');
     expect(roomOf(all, '/cabin/ledger?x=1')).toBe('/cabin/ledger');
     expect(roomOf(all, '/nowhere')).toBeNull();
+    expect(roomOf(all, '/records')).toBe('/review');
   });
 
   it('surfaces the rooms used most lately', () => {

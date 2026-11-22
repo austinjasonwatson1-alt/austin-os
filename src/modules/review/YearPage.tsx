@@ -1,3 +1,4 @@
+import { LookBackTabs } from '../../shell/LookBackTabs';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { MONTHS_LONG, MONTHS_SHORT, parseISO, todayISO } from '../../core/dates';
 import { CountUp, tilt } from '../../shell/fx';
@@ -34,6 +35,7 @@ export default function YearPage() {
   if (!ledger.loaded) return null;
   return (
     <div className="home year">
+      <LookBackTabs />
       <section className="hero year-hero rise" style={rise(0)}>
         <div className="hero-copy">
           <div className="page-eyebrow">Year in review</div>

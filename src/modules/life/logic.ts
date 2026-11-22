@@ -9,18 +9,27 @@ import type { DayMap } from '../ledger/types';
 
 export type LifeArea = 'writing' | 'faith' | 'work' | 'learning' | 'body' | 'family';
 
-export const LIFE_AREAS: { id: LifeArea; name: string; place: string; path: string; glyph: string; color: string }[] = [
-  { id: 'writing', name: 'Writing', place: 'The Cabin', path: '/cabin', glyph: '✒', color: '#E8A84B' },
-  { id: 'faith', name: 'Faith', place: 'The Chapel', path: '/chapel', glyph: '✝', color: '#F2D58A' },
-  { id: 'work', name: 'Work', place: 'The Office', path: '/office', glyph: '▣', color: '#6FB3F2' },
-  { id: 'learning', name: 'Learning', place: 'The Observatory', path: '/observatory', glyph: '◐', color: '#8E7CF0' },
-  { id: 'body', name: 'Body', place: 'The Forge', path: '/forge', glyph: '⚒', color: '#E07A3F' },
-  { id: 'family', name: 'Family', place: 'The Hearth', path: '/hearth', glyph: '♥', color: '#D97BA4' },
+/** Most areas count minutes; job search and projects count the days you showed up. */
+export type Unit = 'min' | 'days';
+export const LIFE_AREAS: { id: LifeArea; name: string; place: string; path: string; glyph: string; color: string; unit: Unit }[] = [
+  { id: 'writing', name: 'Writing', place: 'The Cabin', path: '/cabin', glyph: '✒', color: '#E8A84B' , unit: 'min' },
+  { id: 'faith', name: 'Faith', place: 'The Chapel', path: '/chapel', glyph: '✝', color: '#F2D58A' , unit: 'min' },
+  { id: 'work', name: 'Job search', place: 'The Office', path: '/office', glyph: '▣', color: '#6FB3F2', unit: 'days' },
+  { id: 'learning', name: 'Projects', place: 'The Observatory', path: '/observatory', glyph: '◐', color: '#8E7CF0', unit: 'days' },
+  { id: 'body', name: 'Body', place: 'The Forge', path: '/forge', glyph: '⚒', color: '#E07A3F' , unit: 'min' },
+  { id: 'family', name: 'Family', place: 'The Hearth', path: '/hearth', glyph: '♥', color: '#D97BA4' , unit: 'min' },
 ];
 
-/** Minutes a week that make an area "full" on the wheel. Austin can change these. */
+/** What makes an area "full" on the wheel each week: minutes, or days for the day-counted areas. Austin can change these. */
 export type Targets = Record<LifeArea, number>;
-export const DEFAULT_TARGETS: Targets = { writing: 450, faith: 105, work: 1500, learning: 180, body: 210, family: 300 };
+export const DEFAULT_TARGETS: Targets = { writing: 450, faith: 105, work: 5, learning: 3, body: 210, family: 300 };
+export const unitOf = (a: LifeArea): Unit => LIFE_AREAS.find((x) => x.id === a)!.unit;
+/** Saved targets from before job search and projects counted days (minutes) come back as the day defaults. */
+export function migrateTargets(t: Partial<Targets>): Targets {
+  const out = { ...DEFAULT_TARGETS, ...t };
+  for (const a of LIFE_AREAS) if (a.unit === 'days' && (out[a.id] > 7 || out[a.id] <= 0)) out[a.id] = DEFAULT_TARGETS[a.id];
+  return out;
+}
 
 export interface LifeData { targets: Targets }
 export const DEFAULT_LIFE: LifeData = { targets: DEFAULT_TARGETS };
@@ -50,13 +59,16 @@ export function minutesOn(x: LifeInput, area: LifeArea, day: string): number {
 
 const week = (monday: string) => Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 
+/** `mins` is minutes, or days for the day-counted areas (see `unitOf`). */
 export interface Spoke { area: LifeArea; mins: number; target: number; score: number }
+/** "2h 30m" or "3 days": a spoke's amount in its own unit. */
+export const amount = (a: LifeArea, n: number) => (unitOf(a) === 'days' ? `${n} day${n === 1 ? '' : 's'}` : n >= 60 ? `${Math.floor(n / 60)}h${n % 60 ? ` ${n % 60}m` : ''}` : `${n}m`);
 
 /** The wheel for one week: each area's minutes against its target (0–1, capped). */
 export function balanceWeek(x: LifeInput, monday: string, t: Targets, upTo?: string): Spoke[] {
   const days = week(monday).filter((d) => !upTo || d <= upTo);
   return LIFE_AREAS.map(({ id }) => {
-    const mins = days.reduce((n, d) => n + minutesOn(x, id, d), 0);
+    const mins = unitOf(id) === 'days' ? days.filter((d) => minutesOn(x, id, d) > 0).length : days.reduce((n, d) => n + minutesOn(x, id, d), 0);
     return { area: id, mins, target: t[id], score: t[id] > 0 ? Math.min(1, mins / t[id]) : 0 };
   });
 }

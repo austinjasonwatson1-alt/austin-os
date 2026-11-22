@@ -1,3 +1,4 @@
+import { LookBackTabs } from '../../shell/LookBackTabs';
 import { useEffect, useMemo, type CSSProperties } from 'react';
 import { parseISO } from '../../core/dates';
 import { rise } from '../../shell/lamp';
@@ -38,6 +39,7 @@ export default function HallPage() {
 
   return (
     <div className="home hall">
+      <LookBackTabs />
       <section className="hall-hero rise" style={rise(0)}>
         <div className="hall-arch" aria-hidden><i /><i /><i /></div>
         <div className="page-eyebrow">The Homestead · Hall of Records</div>

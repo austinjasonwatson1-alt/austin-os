@@ -9,6 +9,7 @@ export const PINNED = ['/home', '/day', '/keeper'];
 /** The group a route belongs to (sub-pages like /cabin/write/… count as their room). */
 export function groupOf(groups: NavGroup[], route: string): string | null {
   const r = route.split('?')[0];
+  if (['/year', '/library', '/records', '/film'].includes(r)) return groupOf(groups, '/review');
   for (const g of groups) if (g.items.some((i) => r === i.path || (i.path !== '/cabin' && r.startsWith(`${i.path}/`)))) return g.id;
   if (r.startsWith('/cabin')) return groups.find((g) => g.items.some((i) => i.path === '/cabin'))?.id ?? null;
   return null;
@@ -18,6 +19,8 @@ export function groupOf(groups: NavGroup[], route: string): string | null {
 export function roomOf(items: NavItem[], route: string): string | null {
   const r = route.split('?')[0];
   if (r.startsWith('/cabin/write')) return '/cabin/manuscripts';
+  // Looking back is one room with several views.
+  if (['/year', '/library', '/records', '/film'].includes(r)) return '/review';
   const exact = items.find((i) => i.path === r);
   if (exact) return exact.path;
   const parent = items.filter((i) => r.startsWith(`${i.path}/`)).sort((a, b) => b.path.length - a.path.length)[0];

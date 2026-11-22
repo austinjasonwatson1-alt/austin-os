@@ -5,6 +5,8 @@ import { rise } from '../../shell/lamp';
 import { RoomSound } from '../../shell/RoomSound';
 import { go } from '../../shell/router';
 import { HealthPanel } from '../feeds/FeedsUI';
+import { JobCountdown, JobHQ } from './JobHQ';
+import { BodyTally, ProjectsGallery, ProjectsTally } from './Projects';
 import { MoneyPanel } from '../money/MoneyPage';
 import { fmtMins } from '../ledger/logic';
 import { areaMinutes, areaStreak, areaWeek, daysTo, money, moneyYear, nextOccurrence } from './logic';
@@ -67,7 +69,7 @@ export function AreaPage({ config }: { config: AreaConfig }) {
           <span className="big">{mins ? <CountUp value={mins} format={fmtMins} /> : '—'}</span>
           <span className="mono">today</span>
           <span className="mono faint">{fmtMins(weekTotal)} this week{streak > 1 ? ` · ${streak}-day streak` : ''}</span>
-        </div> : <MoneySummary config={config} items={a.items} />}
+        </div> : config.id === 'office' ? <JobCountdown /> : config.id === 'observatory' ? <ProjectsTally /> : config.id === 'forge' ? <BodyTally /> : <MoneySummary config={config} items={a.items} />}
       </section>
 
       {config.kinds.length > 0 && <section className="panel area-week rise" style={rise(1)}>
@@ -93,6 +95,8 @@ export function AreaPage({ config }: { config: AreaConfig }) {
           {ALSO[config.id]!.map((r) => <button key={r.path} className="also-room" onClick={() => go(r.path)}><span aria-hidden>{r.glyph}</span>{r.name}<span aria-hidden>→</span></button>)}
         </nav>
       )}
+      {config.id === 'office' && <JobHQ />}
+      {config.id === 'observatory' && <ProjectsGallery />}
       {config.id === 'forge' && <HealthPanel />}
       {config.id === 'bank' && <MoneyPanel startIndex={2} />}
       <div className="area-lists">
