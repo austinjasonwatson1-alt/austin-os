@@ -81,3 +81,10 @@ describe('deletions sync', () => {
     expect(prune({ manuscripts: [{ id: 'm', chapters: [{ id: '1' }, { id: '2' }] }] }, { '2': 'x' })).toEqual({ manuscripts: [{ id: 'm', chapters: [{ id: '1' }] }] });
   });
 });
+
+describe('shelf goals sync', () => {
+  it('keeps both devices\' goals, local winning a clash', () => {
+    const out = syncMerge({ 'shelf.v1': { books: [], goals: { '2026': 30 } } }, { 'shelf.v1': { books: [], goals: { '2026': 20, '2027': 40 } } }) as Record<string, { goals: unknown }>;
+    expect(out['shelf.v1'].goals).toEqual({ '2026': 30, '2027': 40 });
+  });
+});

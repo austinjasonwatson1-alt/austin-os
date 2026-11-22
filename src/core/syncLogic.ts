@@ -29,6 +29,8 @@ const fill = (l: Obj, r: Obj): Obj => {
   return out;
 };
 
+const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
+
 const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
   'ledger.v3': (l, r) => ({
     ...l,
@@ -53,7 +55,11 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
     outreach: unionById(arr<WithId>(l.outreach), arr<WithId>(r.outreach)),
     road: fill(isObj(l.road) ? l.road : {}, isObj(r.road) ? r.road : {}),
   }),
-  'shelf.v1': (l, r) => ({ ...l, books: unionById(arr<WithId>(l.books), arr<WithId>(r.books)) }),
+  'shelf.v1': (l, r) => ({
+    ...l,
+    books: unionById(arr<WithId>(l.books), arr<WithId>(r.books)),
+    ...(l.goals || r.goals ? { goals: { ...obj(r.goals), ...obj(l.goals) } } : {}),
+  }),
   'manuscripts.v1': (l, r) => ({
     ...l,
     manuscripts: unionById(arr<WithId>(l.manuscripts), arr<WithId>(r.manuscripts), (a, b) => ({

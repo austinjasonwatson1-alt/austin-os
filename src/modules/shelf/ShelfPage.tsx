@@ -3,7 +3,7 @@ import { todayISO } from '../../core/dates';
 import { CountUp, embers, tilt } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { parseCsvRows } from '../ledger/logic';
-import { coverSearchUrl, finishMilestone, type Milestone, csvToObjects, filterBooks, genres, parseCoverResults, parseShelfJson, previewImport, readingYear, readWall, shelfOrder, spine, type CoverHit } from './logic';
+import { coverSearchUrl, finishMilestone, goalPace, isGoodreads, parseGoodreads, readingStats, readingYears, type Milestone, csvToObjects, filterBooks, genres, parseCoverResults, parseShelfJson, previewImport, readingYear, readWall, shelfOrder, spine, type CoverHit } from './logic';
 import { useShelf } from './store';
 import { STATUS_LABEL, type Book, type BookStatus } from './types';
 import '../../styles/cabin.css';
@@ -82,6 +82,9 @@ export default function ShelfPage() {
           {shown.map((b) => <Spine key={b.id} b={b} onOpen={() => setOpen(b)} />)}
         </div>
       </section>
+
+      <GoalShelf books={books} year={year} />
+      {books.some((b) => b.status === 'read') && <ReadingRoom books={books} />}
 
       {wall.length > 0 && (
         <section className="rise read-wall" style={rise(3)}>
@@ -242,7 +245,10 @@ function ImportShelf() {
   const input = useRef<HTMLInputElement>(null);
   const ref = useRef<HTMLDialogElement>(null);
   const books = useShelf((s) => s.books);
-  const [file, setFile] = useState<{ name: string; found: Book[] | null } | null>(null);
+  const [file, setFile] = useState<{ name: string; found: Book[] | null; goodreads?: boolean } | null>(null);
+  const [help, setHelp] = useState(false);
+  const helpRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => { if (help) helpRef.current?.showModal(); }, [help]);
   const [done, setDone] = useState<number | null>(null);
   useEffect(() => { if (file) ref.current?.showModal(); }, [file]);
   const plan = file?.found ? previewImport(books, file.found) : null;
@@ -250,30 +256,53 @@ function ImportShelf() {
   const read = async (f: File) => {
     const text = await f.text();
     let found: Book[] | null = null;
+    let goodreads = false;
     try {
       found = parseShelfJson(JSON.parse(text), new Date().toISOString());
     } catch {
-      found = parseShelfJson(csvToObjects(parseCsvRows(text)), new Date().toISOString());
+      const rows = csvToObjects(parseCsvRows(text));
+      goodreads = isGoodreads(rows);
+      found = goodreads ? parseGoodreads(rows, new Date().toISOString()) : parseShelfJson(rows, new Date().toISOString());
     }
     setDone(null);
-    setFile({ name: f.name, found });
+    setFile({ name: f.name, found, goodreads });
   };
   const close = () => { ref.current?.close(); setFile(null); };
 
   return (
     <>
-      <button className="btn" onClick={() => input.current?.click()}>Import old shelf</button>
+      <button className="btn" onClick={() => setHelp(true)}>Import from Goodreads</button>
+      {help && (
+        <dialog ref={helpRef} className="sheet gr-help" onClose={() => setHelp(false)} aria-labelledby="gr-title">
+          <div className="page-eyebrow" style={{ fontSize: 10.5 }}>Import</div>
+          <h2 id="gr-title" className="sheet-title">Bring your Goodreads shelf home</h2>
+          <ol className="gr-steps">
+            <li>On a computer, open <b>goodreads.com → My Books</b>.</li>
+            <li>In the left column, under <b>Tools</b>, choose <b>Import and export</b>.</li>
+            <li>Click <b>Export Library</b>, wait a moment, then download the <b>.csv</b> file it makes.</li>
+            <li>Choose that file below. You’ll see every book before anything is added.</li>
+          </ol>
+          <p className="mono faint" style={{ fontSize: 11 }}>Ratings, dates read, page counts, reviews and your shelves all come across. Books already on your shelf are left as they are. Also takes a backup from the old Shelf, or any CSV with a Title column.</p>
+          <div className="sheet-actions">
+            <button className="btn ghost" onClick={() => { helpRef.current?.close(); setHelp(false); }}>Cancel</button>
+            <button className="btn primary" onClick={() => { helpRef.current?.close(); setHelp(false); input.current?.click(); }}>Choose the file…</button>
+          </div>
+        </dialog>
+      )}
       <input ref={input} type="file" hidden accept=".json,.csv,application/json,text/csv"
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void read(f); }} />
       {file && (
         <dialog ref={ref} className="sheet" onClose={() => setFile(null)} aria-labelledby="imp-title">
           <div className="page-eyebrow" style={{ fontSize: 10.5 }}>Import</div>
-          <h2 id="imp-title" className="sheet-title">{done !== null ? 'On the shelf.' : 'Bring your books in'}</h2>
+          <h2 id="imp-title" className="sheet-title">{done !== null ? 'On the shelf.' : file.goodreads ? 'Your Goodreads library' : 'Bring your books in'}</h2>
           <p className="sheet-src mono">{file.name}</p>
           {!plan ? (
             <p className="sheet-warn">No books found in that file. It needs a list of books with at least a title (JSON, or a CSV such as a Goodreads export).</p>
           ) : done !== null ? (
-            <p className="dim">Added {done} book{done === 1 ? '' : 's'}. Changed your mind? A restore point named “Before importing {file.name}” was saved first.</p>
+            <>
+              <p className="dim">Added {done} book{done === 1 ? '' : 's'}. Changed your mind? A restore point named “Before importing {file.name}” was saved first.</p>
+              <CoverFill />
+            </>
           ) : (
             <>
               <p className="dim" style={{ fontSize: 14 }}>
@@ -411,5 +440,172 @@ function Celebration({ book, from, m, onDone }: { book: Book; from: DOMRect | nu
         </div>
       )}
     </>
+  );
+}
+
+/* ---------------- the reading goal ---------------- */
+
+function GoalShelf({ books, year }: { books: Book[]; year: number }) {
+  const goals = useShelf((st) => st.goals);
+  const goal = goals?.[String(year)] ?? 0;
+  const [edit, setEdit] = useState(false);
+  const [n, setN] = useState(String(goal || 24));
+  const p = goal ? goalPace(books, goal, year, todayISO()) : null;
+  const done = books.filter((b) => b.status === 'read' && b.finished?.startsWith(String(year))).sort((a, b) => (a.finished ?? '').localeCompare(b.finished ?? ''));
+  const editor = (
+    <form className="goal-set" onSubmit={(e) => { e.preventDefault(); useShelf.getState().setGoal(year, Number(n) || 0); setEdit(false); }}>
+      <label><span className="mono">Books in {year}</span><input inputMode="numeric" value={n} onChange={(e) => setN(e.target.value.replace(/\D/g, '').slice(0, 3))} aria-label={`Reading goal for ${year}`} autoFocus /></label>
+      <button className="btn primary sm" disabled={!Number(n)}>Set the goal</button>
+      {goal > 0 && <button type="button" className="linkish" onClick={() => { useShelf.getState().setGoal(year, 0); setEdit(false); }}>Remove</button>}
+    </form>
+  );
+  if (!p) {
+    return (
+      <section className="panel goal-shelf empty rise" style={rise(3)}>
+        <div><p className="panel-t">A reading goal</p><p className="dim" style={{ margin: '4px 0 0', fontSize: 13.5 }}>Pick a number of books for {year}. The shelf will keep a slot for each one and show whether you’re on pace.</p></div>
+        {edit ? editor : <button className="btn sm" onClick={() => setEdit(true)}>Set a goal for {year}</button>}
+      </section>
+    );
+  }
+  const slots = Math.max(goal, done.length);
+  const tick = (p.expected / slots) * 100;
+  const pace = p.done ? `Goal met${done.length > goal ? `, and ${done.length - goal} more` : ''}.` : p.ahead > 0 ? `${p.ahead} ${p.ahead === 1 ? 'book' : 'books'} ahead of pace` : p.ahead < 0 ? `${-p.ahead} behind pace` : 'Right on pace';
+  return (
+    <section className={p.done ? 'panel goal-shelf met rise' : 'panel goal-shelf rise'} style={rise(3)}>
+      <div className="goal-head">
+        <div>
+          <p className="panel-t">The {year} goal</p>
+          <p className="goal-big"><b>{p.read}</b><span> of {goal} books</span></p>
+        </div>
+        <div className="goal-pace">
+          <span className={p.done || p.ahead >= 0 ? 'g-good' : 'g-warn'}>{pace}</span>
+          {!p.done && <span className="mono faint">{p.perMonth} a month to finish on time</span>}
+          {edit ? editor : <button className="linkish" onClick={() => { setN(String(goal)); setEdit(true); }}>Change the goal</button>}
+        </div>
+      </div>
+      <div className={slots > 60 ? 'goal-row dense' : 'goal-row'} role="img" aria-label={`${p.read} of ${goal} books read; ${pace}`}>
+        <div className="goal-slots" style={{ width: slots > 60 ? '100%' : `min(100%, ${slots * 25}px)` }}>
+        {Array.from({ length: slots }, (_, i) => {
+          const b = done[i];
+          return <i key={i} className={b ? 'gs on' : 'gs'} style={b ? ({ '--c': spine(b).color } as CSSProperties) : undefined} title={b ? b.title : undefined} />;
+        })}
+        {!p.done && <span className="goal-tick" style={{ left: `${Math.min(100, tick)}%` }}><span className="mono">pace</span></span>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- reading stats ---------------- */
+
+const MONTHS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+
+function ReadingRoom({ books }: { books: Book[] }) {
+  const years = readingYears(books);
+  const [pick, setPick] = useState<number | null>(years[0] ?? null);
+  const st = useMemo(() => readingStats(books, pick), [books, pick]);
+  const maxStar = Math.max(1, ...st.stars);
+  const maxMonth = Math.max(1, ...(st.months ?? [1]));
+  return (
+    <section className="panel reading-room rise" style={rise(3)} aria-label="Reading stats">
+      <div className="panel-h">
+        <p className="panel-t">The reading room</p>
+        <div className="seg" role="radiogroup" aria-label="Which years">
+          {years.slice(0, 5).map((y) => <button key={y} role="radio" aria-checked={pick === y} onClick={() => setPick(y)}>{y}</button>)}
+          <button role="radio" aria-checked={pick === null} onClick={() => setPick(null)}>All time</button>
+        </div>
+      </div>
+      <div className="rr-nums">
+        <div><b><CountUp value={st.count} /></b><span className="mono">books</span></div>
+        <div><b><CountUp value={st.pages} /></b><span className="mono">pages</span></div>
+        <div><b>{st.avgRating ?? '—'}</b><span className="mono">avg rating</span></div>
+        <div><b>{st.avgDays ?? '—'}</b><span className="mono">days a book</span></div>
+        <div><b>{st.favorites}</b><span className="mono">5-star</span></div>
+      </div>
+      <div className="rr-grid">
+        <div className="rr-card">
+          <p className="rr-h mono">How I rate</p>
+          {[5, 4, 3, 2, 1].map((n) => (
+            <div key={n} className="rr-bar"><span className="mono">{'★'.repeat(n)}</span><i style={{ width: `${(st.stars[n - 1] / maxStar) * 100}%` }} /><span className="mono faint">{st.stars[n - 1]}</span></div>
+          ))}
+        </div>
+        {st.months && (
+          <div className="rr-card">
+            <p className="rr-h mono">Month by month</p>
+            <div className="rr-months">{st.months.map((m, i) => <div key={i} title={`${m} in ${MONTHS[i]}`}><i style={{ height: `${(m / maxMonth) * 100}%` }} className={m ? 'on' : ''} /><span className="mono">{MONTHS[i]}</span></div>)}</div>
+          </div>
+        )}
+        <div className="rr-card">
+          <p className="rr-h mono">Most read</p>
+          <TopList label="Authors" items={st.authors} />
+          <TopList label="Genres" items={st.genres} />
+        </div>
+        <div className="rr-card rr-records">
+          <p className="rr-h mono">Records</p>
+          {st.longest && <p><span className="mono faint">Longest</span>{st.longest.title} <em>· {st.longest.pages} pp</em></p>}
+          {st.shortest && <p><span className="mono faint">Shortest</span>{st.shortest.title} <em>· {st.shortest.pages} pp</em></p>}
+          {st.fastest && <p><span className="mono faint">Fastest</span>{st.fastest.book.title} <em>· {st.fastest.days} {st.fastest.days === 1 ? 'day' : 'days'}</em></p>}
+          {st.avgPages && <p><span className="mono faint">Average</span>{st.avgPages} pages</p>}
+          {!st.longest && !st.fastest && <p className="dim">Add page counts and start dates to see records.</p>}
+        </div>
+      </div>
+      <CoverFill quiet />
+    </section>
+  );
+}
+
+function TopList({ label, items }: { label: string; items: { name: string; n: number }[] }) {
+  if (!items.length) return null;
+  return (
+    <div className="rr-top">
+      <span className="mono faint">{label}</span>
+      <ol>{items.slice(0, 3).map((it) => <li key={it.name}><span>{it.name}</span><span className="mono faint">{it.n}</span></li>)}</ol>
+    </div>
+  );
+}
+
+/* ---------------- covers for books that have none (after an import) ---------------- */
+
+function CoverFill({ quiet = false }: { quiet?: boolean }) {
+  const books = useShelf((st) => st.books);
+  // No cover yet, or a cover guessed from the ISBN (Goodreads) that may turn out not to exist.
+  const candidates = books.filter((b) => !b.cover || b.cover.includes('/b/isbn/'));
+  const missing = books.filter((b) => !b.cover).length;
+  const [run, setRun] = useState<{ done: number; found: number; of: number } | null>(null);
+  const stop = useRef(false);
+  useEffect(() => () => { stop.current = true; }, []);
+  if (!candidates.length && !run) return null;
+  const loads = (url: string) => new Promise<boolean>((res) => { const im = new Image(); im.onload = () => res(im.naturalWidth > 20); im.onerror = () => res(false); im.src = url; });
+  const start = async () => {
+    stop.current = false;
+    // Check the ISBN guesses first; only the ones that don't load need a search.
+    const list: Book[] = [];
+    for (const b of candidates) if (!b.cover || !(await loads(b.cover))) list.push(b);
+    let found = 0;
+    setRun({ done: 0, found: 0, of: list.length });
+    for (let i = 0; i < list.length && !stop.current; i++) {
+      try {
+        const r = await fetch(coverSearchUrl(list[i].title, list[i].author));
+        const hit = parseCoverResults(await r.json())[0];
+        if (hit) { useShelf.getState().setCover(list[i].id, hit.cover); found++; }
+      } catch { /* offline or rate-limited: leave it drawn */ }
+      setRun({ done: i + 1, found, of: list.length });
+      await new Promise((res) => setTimeout(res, 250));
+    }
+  };
+  if (run) {
+    const finished = run.done >= run.of;
+    return (
+      <div className="cover-fill" role="status">
+        <div className="cf-bar"><i style={{ width: `${run.of ? (run.done / run.of) * 100 : 100}%` }} /></div>
+        <span className="mono faint">{!run.of ? 'Every book has its cover.' : finished ? `Found ${run.found} of ${run.of} missing covers.` : `Finding covers… ${run.done} of ${run.of}`}</span>
+      </div>
+    );
+  }
+  const label = missing ? `Find covers for ${missing} ${missing === 1 ? 'book' : 'books'} without one` : 'Check for missing covers';
+  return (
+    <div className={quiet ? 'cover-fill quiet' : 'cover-fill'}>
+      <button className={quiet ? 'linkish' : 'btn sm'} onClick={() => void start()}>{quiet || missing ? label : 'Find any missing covers'}</button>
+    </div>
   );
 }

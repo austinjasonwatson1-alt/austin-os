@@ -206,3 +206,133 @@ export function finishMilestone(books: Book[], book: Book): Milestone {
   if (nth === 1 && year) return { headline: `The first book of ${year}.`, line, big: true };
   return { headline: 'Finished.', line, big: false };
 }
+
+/* ---------------- the reading goal ---------------- */
+
+export interface GoalPace {
+  goal: number;
+  read: number;
+  /** Where you'd be today on an even pace (fractional). */
+  expected: number;
+  /** Books ahead (+) or behind (−) of that pace, to the nearest book. */
+  ahead: number;
+  /** Books a month still needed to finish on time (0 once met). */
+  perMonth: number;
+  done: boolean;
+}
+
+export function goalPace(books: Book[], goal: number, year: number, today: string): GoalPace {
+  const read = books.filter((b) => b.status === 'read' && b.finished?.startsWith(String(year))).length;
+  const start = Date.UTC(year, 0, 1), end = Date.UTC(year + 1, 0, 1);
+  const [ty, tm, td] = today.split('-').map(Number);
+  const now = Math.min(end, Math.max(start, Date.UTC(ty, tm - 1, td + 1)));
+  const frac = (now - start) / (end - start);
+  const expected = goal * frac;
+  const monthsLeft = Math.max(0, (end - now) / (end - start) * 12);
+  const left = Math.max(0, goal - read);
+  return {
+    goal, read, expected,
+    ahead: Math.round(read - expected),
+    perMonth: left === 0 ? 0 : monthsLeft < 0.05 ? left : Math.round((left / monthsLeft) * 10) / 10,
+    done: read >= goal,
+  };
+}
+
+/* ---------------- reading stats ---------------- */
+
+export interface ReadingStats {
+  count: number;
+  pages: number;
+  avgRating: number | null;
+  /** How many books at each whole star, 1–5 (a half rounds down). */
+  stars: number[];
+  genres: { name: string; n: number }[];
+  authors: { name: string; n: number }[];
+  avgPages: number | null;
+  longest: Book | null;
+  shortest: Book | null;
+  /** Quickest from start to finish, in days (both dates needed). */
+  fastest: { book: Book; days: number } | null;
+  avgDays: number | null;
+  /** Books finished each month (only for a single year). */
+  months: number[] | null;
+  favorites: number;
+}
+
+const dayNum = (s: string) => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d) / 86400000; };
+const tally = (xs: string[]) => [...xs.reduce((m, x) => m.set(x, (m.get(x) ?? 0) + 1), new Map<string, number>())]
+  .map(([name, n]) => ({ name, n })).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).slice(0, 5);
+
+/** Stats over books read in one year, or all time when year is null. */
+export function readingStats(books: Book[], year: number | null): ReadingStats {
+  const read = books.filter((b) => b.status === 'read' && (year === null || b.finished?.startsWith(String(year))));
+  const rated = read.filter((b) => b.rating > 0);
+  const paged = read.filter((b) => (b.pages ?? 0) > 0);
+  const spans = read.filter((b) => b.started && b.finished && b.finished >= b.started)
+    .map((b) => ({ book: b, days: dayNum(b.finished!) - dayNum(b.started!) + 1 }));
+  const byPages = [...paged].sort((a, b) => b.pages! - a.pages!);
+  const stars = [0, 0, 0, 0, 0];
+  for (const b of rated) stars[Math.min(5, Math.max(1, Math.floor(b.rating))) - 1]++;
+  let months: number[] | null = null;
+  if (year !== null) { months = Array(12).fill(0); for (const b of read) if (b.finished) months[Number(b.finished.slice(5, 7)) - 1]++; }
+  return {
+    count: read.length,
+    pages: paged.reduce((n, b) => n + b.pages!, 0),
+    avgRating: rated.length ? Math.round((rated.reduce((n, b) => n + b.rating, 0) / rated.length) * 10) / 10 : null,
+    stars,
+    genres: tally(read.map((b) => b.genre.trim()).filter(Boolean)),
+    authors: tally(read.map((b) => b.author.trim()).filter(Boolean)),
+    avgPages: paged.length ? Math.round(paged.reduce((n, b) => n + b.pages!, 0) / paged.length) : null,
+    longest: byPages[0] ?? null,
+    shortest: byPages.length > 1 ? byPages[byPages.length - 1] : null,
+    fastest: spans.length ? spans.reduce((a, b) => (b.days < a.days ? b : a)) : null,
+    avgDays: spans.length ? Math.round(spans.reduce((n, s) => n + s.days, 0) / spans.length) : null,
+    months,
+    favorites: read.filter((b) => b.rating >= 5).length,
+  };
+}
+
+/** Years that have at least one finished book, newest first. */
+export const readingYears = (books: Book[]): number[] =>
+  [...new Set(books.filter((b) => b.status === 'read' && b.finished).map((b) => Number(b.finished!.slice(0, 4))))].sort((a, b) => b - a);
+
+/* ---------------- Goodreads ---------------- */
+
+/** Is this CSV (as objects) a Goodreads library export? */
+export const isGoodreads = (rows: Record<string, string>[]): boolean =>
+  rows.length > 0 && 'Exclusive Shelf' in rows[0] && 'My Rating' in rows[0];
+
+const GR_SHELVES = new Set(['read', 'currently-reading', 'to-read', 'did-not-finish', 'dnf', 'favorites', 'owned', 'books-i-own', 'abandoned']);
+const grDate = (s: string | undefined) => { const m = (s ?? '').match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : undefined; };
+const grIsbn = (s: string | undefined) => { const d = (s ?? '').replace(/[^0-9Xx]/g, ''); return d.length === 13 || d.length === 10 ? d : ''; };
+
+/**
+ * A Goodreads export, book by book: the shelf becomes the status, "Date Read" the finish,
+ * the review the notes, the first custom shelf the genre, and the ISBN finds the cover.
+ */
+export function parseGoodreads(rows: Record<string, string>[], now: string): Book[] {
+  return rows.filter((r) => (r['Title'] ?? '').trim()).map((r) => {
+    const shelf = (r['Exclusive Shelf'] ?? '').trim().toLowerCase();
+    const status: BookStatus = shelf === 'read' ? 'read' : shelf === 'currently-reading' ? 'reading' : shelf === 'did-not-finish' || shelf === 'dnf' || shelf === 'abandoned' ? 'dnf' : 'want';
+    const finished = status === 'read' ? grDate(r['Date Read']) : undefined;
+    const isbn = grIsbn(r['ISBN13']) || grIsbn(r['ISBN']);
+    const genre = (r['Bookshelves'] ?? '').split(',').map((x) => x.trim()).find((x) => x && !GR_SHELVES.has(x.toLowerCase())) ?? '';
+    const review = (r['My Review'] ?? '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+    const title = r['Title'].replace(/\s*\([^)]*#\s*[\d.]+\)\s*$/, '').trim();
+    return {
+      id: `b-gr-${(r['Book Id'] || hash(title + r['Author']).toString(36)).trim()}`,
+      title,
+      author: (r['Author'] ?? '').replace(/\s+/g, ' ').trim(),
+      genre: genre.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      status,
+      rating: Math.max(0, Math.min(5, Number(r['My Rating']) || 0)),
+      finished,
+      started: status === 'reading' ? grDate(r['Date Added']) : undefined,
+      pages: Number(r['Number of Pages']) || undefined,
+      notes: review || undefined,
+      craft: [],
+      cover: isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false` : undefined,
+      addedAt: now,
+    } satisfies Book;
+  });
+}

@@ -13,13 +13,17 @@ interface ShelfState extends ShelfData {
   remove: (id: string) => void;
   /** Add books from an old shelf (only ones not already here), after a restore point. */
   importBooks: (incoming: Book[], why: string) => Promise<number>;
+  /** Set (or clear, with 0) the reading goal for a year. */
+  setGoal: (year: number, n: number) => void;
+  /** Give a book a cover found later, without touching anything else about it. */
+  setCover: (id: string, cover: string) => void;
 }
 
 const newId = () => `b-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
 export const useShelf = create<ShelfState>((set, get) => {
   // Never write before the saved copy has been read: that would replace real data with defaults.
-  const persist = () => { if (get().loaded) void saveWithSnapshot(KEY, { books: get().books } satisfies ShelfData); };
+  const persist = () => { if (get().loaded) void saveWithSnapshot(KEY, { books: get().books, goals: get().goals } satisfies ShelfData); };
 
   return {
     ...DEFAULT_SHELF,
@@ -49,10 +53,22 @@ export const useShelf = create<ShelfState>((set, get) => {
     async importBooks(incoming, why) {
       const { add } = previewImport(get().books, incoming);
       if (!add.length) return 0;
-      await snapshotNow(KEY, { books: get().books }, why);
+      await snapshotNow(KEY, { books: get().books, goals: get().goals }, why);
       set({ books: [...get().books, ...add] });
       persist();
       return add.length;
+    },
+
+    setGoal(year, n) {
+      const goals = { ...(get().goals ?? {}) };
+      if (n > 0) goals[String(year)] = Math.round(n); else delete goals[String(year)];
+      set({ goals });
+      persist();
+    },
+
+    setCover(id, cover) {
+      set({ books: get().books.map((b) => (b.id === id ? { ...b, cover } : b)) });
+      persist();
     },
   };
 });

@@ -21,6 +21,8 @@ export interface Book {
 
 export interface ShelfData {
   books: Book[];
+  /** Reading goal per year: { "2027": 30 }. */
+  goals?: Record<string, number>;
 }
 
 export const STATUS_LABEL: Record<BookStatus, string> = { reading: 'Reading now', read: 'Read', want: 'Want to read', dnf: 'Set aside' };

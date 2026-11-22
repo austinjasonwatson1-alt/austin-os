@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bookKey, describeShelf, filterBooks, genres, parseShelfJson, previewImport, readingYear, shelfOrder, spine, coverSearchUrl, coverUrl, parseCoverResults, readWall, finishMilestone } from './logic';
+import { bookKey, describeShelf, filterBooks, genres, parseShelfJson, previewImport, readingYear, shelfOrder, spine, coverSearchUrl, coverUrl, parseCoverResults, readWall, finishMilestone, goalPace, readingStats, readingYears, isGoodreads, parseGoodreads } from './logic';
 import type { Book } from './types';
 
 const B = (p: Partial<Book>): Book => ({ id: p.title ?? 'x', title: 'T', author: 'A', genre: '', status: 'want', rating: 0, craft: [], addedAt: '', ...p });
@@ -99,5 +99,66 @@ describe('finishMilestone', () => {
     expect(finishMilestone(two, two[1]).headline).toBe('A new favorite.');
     const ten = Array.from({ length: 10 }, (_, i) => bk(`b${i}`, `2026-0${(i % 9) + 1}-01`));
     expect(finishMilestone(ten, ten[9])).toMatchObject({ headline: '10 books in 2026.', big: true });
+  });
+});
+
+describe('goalPace', () => {
+  const r = (f: string): Book => B({ status: 'read', finished: f, title: f });
+  it('measures against an even pace through the year', () => {
+    const books = [r('2026-01-10'), r('2026-02-10'), r('2026-03-10'), r('2025-05-01')];
+    const p = goalPace(books, 24, 2026, '2026-07-01');
+    expect(p.read).toBe(3);
+    expect(p.expected).toBeCloseTo(24 * 182 / 365, 5);
+    expect(p.ahead).toBe(-9);
+    expect(p.perMonth).toBeCloseTo(21 / (184 / 365 * 12), 0);
+    expect(p.done).toBe(false);
+  });
+  it('is done once the goal is met', () => {
+    const p = goalPace([r('2026-01-01'), r('2026-01-02')], 2, 2026, '2026-01-03');
+    expect(p).toMatchObject({ done: true, perMonth: 0 });
+    expect(p.ahead).toBeGreaterThan(0);
+  });
+});
+
+describe('readingStats', () => {
+  const books = [
+    B({ title: 'a', author: 'Flynn', genre: 'Thriller', status: 'read', rating: 5, pages: 400, started: '2026-01-01', finished: '2026-01-10' }),
+    B({ title: 'b', author: 'Flynn', genre: 'Thriller', status: 'read', rating: 3.5, pages: 200, started: '2026-02-01', finished: '2026-02-03' }),
+    B({ title: 'c', author: 'Tartt', genre: 'Literary', status: 'read', rating: 0, finished: '2025-06-01' }),
+    B({ title: 'd', status: 'reading', pages: 900 }),
+  ];
+  it('sums a year', () => {
+    const s = readingStats(books, 2026);
+    expect(s).toMatchObject({ count: 2, pages: 600, avgRating: 4.3, avgPages: 300, avgDays: 7, favorites: 1 });
+    expect(s.stars).toEqual([0, 0, 1, 0, 1]);
+    expect(s.longest?.title).toBe('a');
+    expect(s.shortest?.title).toBe('b');
+    expect(s.fastest).toMatchObject({ days: 3 });
+    expect(s.authors[0]).toEqual({ name: 'Flynn', n: 2 });
+    expect(s.months?.slice(0, 3)).toEqual([1, 1, 0]);
+  });
+  it('covers all time and handles an empty shelf', () => {
+    expect(readingStats(books, null)).toMatchObject({ count: 3, months: null });
+    expect(readingStats([], 2026)).toMatchObject({ count: 0, avgRating: null, longest: null, fastest: null });
+    expect(readingYears(books)).toEqual([2026, 2025]);
+  });
+});
+
+describe('Goodreads import', () => {
+  const row = (o: Record<string, string>) => ({ 'Book Id': '1', Title: '', Author: '', 'My Rating': '0', 'Exclusive Shelf': 'read', Bookshelves: '', 'Date Read': '', 'Date Added': '', ISBN13: '', ISBN: '', 'Number of Pages': '', 'My Review': '', ...o });
+  it('recognizes the export', () => {
+    expect(isGoodreads([row({})])).toBe(true);
+    expect(isGoodreads([{ Title: 'x' }])).toBe(false);
+  });
+  it('maps shelves, dates, ratings, covers and series titles', () => {
+    const [a, b, c] = parseGoodreads([
+      row({ 'Book Id': '19288043', Title: 'Gone Girl (Gone Girl, #1)', Author: 'Gillian  Flynn', 'My Rating': '5', 'Date Read': '2024/03/07', ISBN13: '="9780307588371"', 'Number of Pages': '432', Bookshelves: 'favorites, domestic-thriller', 'My Review': 'Wow.<br/><br/>Twist.' }),
+      row({ 'Book Id': '2', Title: 'Rebecca', Author: 'Daphne du Maurier', 'Exclusive Shelf': 'currently-reading', 'Date Added': '2026/11/01', ISBN13: '=""' }),
+      row({ 'Book Id': '3', Title: 'The Secret History', 'Exclusive Shelf': 'to-read' }),
+    ], '2026-11-22T00:00:00.000Z');
+    expect(a).toMatchObject({ id: 'b-gr-19288043', title: 'Gone Girl', author: 'Gillian Flynn', status: 'read', rating: 5, finished: '2024-03-07', pages: 432, genre: 'Domestic Thriller', notes: 'Wow.\n\nTwist.' });
+    expect(a.cover).toBe('https://covers.openlibrary.org/b/isbn/9780307588371-L.jpg?default=false');
+    expect(b).toMatchObject({ status: 'reading', started: '2026-11-01', cover: undefined, finished: undefined });
+    expect(c.status).toBe('want');
   });
 });
