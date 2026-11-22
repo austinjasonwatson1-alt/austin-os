@@ -46,6 +46,7 @@ export default function YearPage() {
             <span className="mono">{year}</span>
             <button className="brass" aria-label="Next year" disabled={year >= Number(today.slice(0, 4))} onClick={() => setYear(year + 1)}>›</button>
           </div>
+          <button className="btn primary film-cta" onClick={() => go('/film')}>▶ Watch {year} as a film</button>
         </div>
         <div className="wk-grade" style={{ '--g': 'var(--lamp)' } as CSSProperties}>
           <span className="big"><CountUp value={Math.round(y.minutes / 60)} /></span>

@@ -34,6 +34,7 @@ const YearPage = lazy(() => import('./modules/review/YearPage'));
 const WritePage = lazy(() => import('./modules/drafts/WritePage'));
 const LibraryPage = lazy(() => import('./modules/review/LibraryPage'));
 const HallPage = lazy(() => import('./modules/records/HallPage'));
+const FilmPage = lazy(() => import('./modules/film/FilmPage'));
 const SettingsPage = lazy(() => import('./shell/SettingsPage'));
 const KeeperPage = lazy(() => import('./modules/keeper/KeeperPage'));
 
@@ -48,6 +49,7 @@ function Screen({ route }: { route: string }) {
   if (route === '/year') return <YearPage />;
   if (route === '/library') return <LibraryPage />;
   if (route === '/records') return <HallPage />;
+  if (route === '/film') return <FilmPage />;
   if (route.startsWith('/cabin/write/')) return <WritePage />;
   const area = areaByPath(route);
   if (area && !area.live) return <AreaSoon a={area} />;

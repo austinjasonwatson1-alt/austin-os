@@ -40,6 +40,7 @@ export function CommandPalette() {
       nav('/home', 'Home', 'homestead dashboard'),
       nav('/review', 'Weekly review', 'sunday week'),
       nav('/year', 'Year in review', 'annual stats'),
+      nav('/film', 'The year as a film', 'video share wrapped recap movie year end'),
       nav('/library', 'Library of You', 'archive journal months memories'),
       nav('/records', 'Hall of Records', 'trophies achievements bests milestones records'),
       nav('/keeper', 'The Keeper', 'ai mentor ask help coach query letter craft'),

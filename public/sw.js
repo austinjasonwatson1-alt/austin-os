@@ -26,7 +26,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   // Book covers: keep a copy once seen, so the shelf still shows them offline.
-  if (url.hostname === 'covers.openlibrary.org') {
+  if (url.hostname === 'covers.openlibrary.org' && req.mode === 'no-cors') {
     e.respondWith(caches.open('austin-os-covers').then(async (c) => {
       const hit = await c.match(req, { ignoreVary: true });
       if (hit) return hit;

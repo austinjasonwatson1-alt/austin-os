@@ -280,3 +280,8 @@
 @keyframes twinkle { from { opacity: .45; } to { opacity: 1; } }
 .hs-xmas .star { filter: drop-shadow(0 0 4px #ffd27a); }
 @media (prefers-reduced-motion: reduce) { .hs-tree, .hs-xmas .bulb { animation: none !important; } }
+
+.film-nudge { display: flex; gap: 14px; align-items: center; width: 100%; margin: 0 0 16px; padding: 14px 18px; border-radius: 16px; text-align: left; color: inherit; font-size: 14.5px;
+  border: 1px solid rgba(232, 168, 75, .45); background: radial-gradient(80% 140% at 0% 50%, rgba(232, 168, 75, .16), transparent 60%), rgba(12, 14, 22, .8); }
+.film-nudge b { font-family: var(--display); font-size: 19px; }
+.fn-play { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #3a2606; background: radial-gradient(circle at 35% 30%, #fff1c8, #e8a84b 60%, #a8721f); box-shadow: 0 0 24px rgba(232, 168, 75, .5); }

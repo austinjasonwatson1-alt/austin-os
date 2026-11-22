@@ -103,6 +103,12 @@ export default function Home() {
       )}
 
       <KeeperNote />
+      {(now.getMonth() === 11 && now.getDate() >= 15) || (now.getMonth() === 0 && now.getDate() <= 10) ? (
+        <button className="film-nudge rise" style={rise(1)} onClick={() => go('/film')}>
+          <span className="fn-play" aria-hidden>▶</span>
+          <span><b>Your {now.getMonth() === 11 ? now.getFullYear() : now.getFullYear() - 1}, as a film.</b><span className="dim"> The hours, the books, the trophies, in under a minute. Watch it, keep it, share it.</span></span>
+        </button>
+      ) : null}
 
       {years && (
         <div className="review-nudge anniv rise" style={rise(1)}>
