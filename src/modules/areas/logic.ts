@@ -56,3 +56,17 @@ export function moneyYear(items: { list: string; amount?: number; date: string; 
 }
 
 export const money = (n: number) => `${n < 0 ? '\u2212' : ''}$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: Math.abs(n) % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+
+/** The Hearth at a glance: the next date that matters, time together this week, the last moment kept. */
+export function hearthGlance(items: { list: string; text: string; date: string; when?: string }[], days: AreaData['days'], today: string, monday: string): {
+  next: { text: string; in: number; also: number } | null; weekMins: number; lastMoment: { text: string; ago: number } | null;
+} {
+  const ahead = items.filter((i) => i.list === 'dates' && i.when)
+    .map((i) => ({ text: i.text, in: daysTo(nextOccurrence(i.when!, today, true), today) }))
+    .sort((a, b) => a.in - b.in);
+  const next = ahead[0] ? { ...ahead[0], also: ahead.filter((a) => a.in <= 30).length - (ahead[0].in <= 30 ? 1 : 0) } : null;
+  let weekMins = 0;
+  for (let d = monday; d <= today; d = addDays(d, 1)) weekMins += areaMinutes(days[d]);
+  const m = items.filter((i) => i.list === 'moments').sort((a, b) => b.date.localeCompare(a.date))[0];
+  return { next, weekMins, lastMoment: m ? { text: m.text, ago: Math.max(0, daysTo(today, m.date)) } : null };
+}

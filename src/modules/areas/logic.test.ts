@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { areaHeat, areaMinutes, areaStreak, areaWeek, describeArea } from './logic';
+import { areaHeat, areaMinutes, areaStreak, areaWeek, describeArea, hearthGlance } from './logic';
 
 describe('office and observatory', () => {
   const days = { '2026-11-19': { focus: 90, planning: 30 }, '2026-11-20': { focus: 60 } };
@@ -25,5 +25,25 @@ describe('dates and money', () => {
     const m = moneyYear([{ list: 'out', amount: 15, date: '2026-03-01' }, { list: 'in', amount: 250, date: '2026-06-01' }, { list: 'out', amount: 800, date: '2025-12-01' }], { out: -1, in: 1 }, 2026);
     expect(m).toEqual({ in: 250, out: 15, net: 235 });
     expect([money(235), money(-12.5)]).toEqual(['$235', '\u2212$12.50']);
+  });
+});
+
+describe('the Hearth at a glance', () => {
+  const items = [
+    { list: 'dates', text: 'Mom’s birthday', date: '2026-01-02', when: '1961-12-04' },
+    { list: 'dates', text: 'Anniversary', date: '2026-01-02', when: '2019-06-14' },
+    { list: 'dates', text: 'Dad’s birthday', date: '2026-01-02', when: '1960-12-20' },
+    { list: 'moments', text: 'Cooper stole the pancake', date: '2026-11-19' },
+    { list: 'moments', text: 'Older one', date: '2026-10-01' },
+  ];
+  it('names the next date that comes round, how many more are close, and the last moment', () => {
+    const g = hearthGlance(items, { '2026-11-16': { together: 60 }, '2026-11-20': { together: 45 }, '2026-11-12': { together: 99 } }, '2026-11-22', '2026-11-16');
+    expect(g.next).toEqual({ text: 'Mom’s birthday', in: 12, also: 1 });
+    expect(g.weekMins).toBe(105);
+    expect(g.lastMoment).toEqual({ text: 'Cooper stole the pancake', ago: 3 });
+  });
+  it('wraps a date into next year and is calm when empty', () => {
+    expect(hearthGlance(items, {}, '2026-12-21', '2026-12-21').next).toEqual({ text: 'Anniversary', in: 175, also: 0 });
+    expect(hearthGlance([], {}, '2026-11-22', '2026-11-16')).toEqual({ next: null, weekMins: 0, lastMoment: null });
   });
 });

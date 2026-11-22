@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import { skyPhase, type Phase } from '../../core/skyLogic';
+import { season as seasonOf, skyPhase, type Phase, type Season } from '../../core/skyLogic';
 import { daylight } from '../../shell/worldLogic';
 import type { AreaKey } from './types';
 import '../../styles/areaart.css';
@@ -143,6 +143,41 @@ function phaseNow(): Phase {
   return v === 'night' || v === 'dawn' || v === 'day' || v === 'golden' || v === 'dusk' ? v : skyPhase(new Date());
 }
 
+/** The season: the real date, or `?season=` to preview another (same as Home). */
+function seasonNow(): Season {
+  const v = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('season');
+  return v === 'winter' || v === 'spring' || v === 'summer' || v === 'autumn' ? v : seasonOf(new Date());
+}
+
+/* ---------------- the seasons: scattered once, drawn over every building ---------------- */
+const FLAKES = (() => { const r = rng(53); return Array.from({ length: 52 }, () => ({ x: r() * W, y: r() * H, r: 0.45 + r() * 1.05, dur: 8 + r() * 8, d: -r() * 16, dx: (r() - 0.5) * 22 })); })();
+const LEAF = 'M0 -3.2 C2.4 -1.6 2.3 1.6 0 3.2 C-2.3 1.6 -2.4 -1.6 0 -3.2 Z';
+const LEAF_FILL = ['#d8692a', '#b8361c', '#e8a43a', '#a84a22'];
+const FALLING = (() => { const r = rng(61); return Array.from({ length: 13 }, () => ({ x: r() * W, s: 0.6 + r() * 0.6, dur: 10 + r() * 8, d: -r() * 18, dx: 20 + r() * 40, c: Math.floor(r() * 4) })); })();
+const LITTER = (() => { const r = rng(67); return Array.from({ length: 46 }, () => ({ x: r() * W, y: 186 + r() * 34, rot: Math.round(r() * 180), s: 0.45 + r() * 0.6, c: Math.floor(r() * 4) })); })();
+const BLOOMS = (() => { const r = rng(71); return Array.from({ length: 34 }, () => ({ x: r() * W, y: 188 + r() * 32, r: 1.3 + r() * 1.2, c: Math.floor(r() * 3) })); })();
+const FLIES = (() => { const r = rng(79); return Array.from({ length: 14 }, () => ({ x: 10 + r() * 280, y: 130 + r() * 70, d: -r() * 4, dur: 2.5 + r() * 3 })); })();
+
+/** Snow on the ground and falling; leaves turning and blowing; spring flowers; summer fireflies. */
+function SeasonLayer({ season, part }: { season: Season; part: 'ground' | 'fore' | 'air' }) {
+  if (season === 'winter') {
+    if (part === 'ground') return <><path d={NEAR} className="aa-snow" /><path d={NEAR_TOP} className="aa-snowrim" /></>;
+    if (part === 'fore') return <path d={FORE} className="aa-snow fore" />;
+    return <g className="aa-flakes">{FLAKES.map((f, i) => <circle key={i} cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r={f.r.toFixed(2)} style={{ animationDuration: `${f.dur.toFixed(1)}s`, animationDelay: `${f.d.toFixed(1)}s`, '--dx': `${f.dx.toFixed(1)}px` } as CSSProperties} />)}</g>;
+  }
+  if (season === 'autumn') {
+    if (part === 'ground') return null;
+    if (part === 'fore') return <g className="aa-litter">{LITTER.map((l, i) => <path key={i} d={LEAF} fill={LEAF_FILL[l.c]} transform={`translate(${l.x.toFixed(1)} ${l.y.toFixed(1)}) rotate(${l.rot}) scale(${l.s.toFixed(2)} ${(l.s * 0.7).toFixed(2)})`} />)}</g>;
+    return <g className="aa-leaves">{FALLING.map((l, i) => <g key={i} transform={`translate(${l.x.toFixed(1)} 0)`}><path d={LEAF} fill={LEAF_FILL[l.c]} style={{ animationDuration: `${l.dur.toFixed(1)}s`, animationDelay: `${l.d.toFixed(1)}s`, '--dx': `${l.dx.toFixed(1)}px`, '--s': l.s.toFixed(2) } as CSSProperties} /></g>)}</g>;
+  }
+  if (season === 'spring') {
+    if (part !== 'fore') return null;
+    return <g className="aa-blooms">{BLOOMS.map((b, i) => <circle key={i} cx={b.x.toFixed(1)} cy={b.y.toFixed(1)} r={b.r.toFixed(2)} className={`c${b.c}`} />)}</g>;
+  }
+  if (part !== 'air') return null;
+  return <g className="aa-flies">{FLIES.map((f, i) => <circle key={i} cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r="1.6" style={{ animationDuration: `${f.dur.toFixed(1)}s`, animationDelay: `${f.d.toFixed(1)}s` } as CSSProperties} />)}</g>;
+}
+
 /** Gradient stops whose colours come from CSS, so each light of day repaints them. */
 const Stops = ({ list }: { list: [number, string][] }) => <>{list.map(([o, c]) => <stop key={o} offset={o} className={c} />)}</>;
 
@@ -151,13 +186,14 @@ interface Scene { moon?: [number, number]; pines: [number, number, number][]; ri
 export function AreaArt({ id, heat }: { id: AreaKey; heat: number }) {
   const [tex] = useState(grain);
   const [phase] = useState(phaseNow);
+  const [season] = useState(seasonNow);
   const light = daylight(phase);
   const h = Math.max(0, Math.min(1, heat));
   const scene = SCENES[id](h);
   const stars = scene.rich ? STARS_RICH : STARS;
 
   return (
-    <svg className={`area-art aa-${id}`} viewBox={`0 0 ${W} ${H}`} aria-hidden data-phase={phase}
+    <svg className={`area-art aa-${id}`} viewBox={`0 0 ${W} ${H}`} aria-hidden data-phase={phase} data-season={season}
       style={{ '--heat': h, '--wall': light.wall, '--glow': light.glow } as CSSProperties}>
       <defs>
         {/* ---- sky and land, coloured by the light of day ---- */}
@@ -260,6 +296,7 @@ export function AreaArt({ id, heat }: { id: AreaKey; heat: number }) {
         </g>
         <path d={NEAR} fill="url(#aa-near)" />
         <path d={NEAR_TOP} className="aa-groundrim" />
+        <SeasonLayer season={season} part="ground" />
 
         {/* ================= the building, drawn a little larger than life ================= */}
         <g transform="translate(150 186) scale(1.1) translate(-150 -186)">{scene.body}</g>
@@ -269,6 +306,8 @@ export function AreaArt({ id, heat }: { id: AreaKey; heat: number }) {
         <path d={FORE} fill="url(#aa-fg)" />
         <path d={TUFTS.dark} className="aa-tufts" />
         <path d={TUFTS.lit} className="aa-tufts-lit" />
+        <SeasonLayer season={season} part="fore" />
+        <SeasonLayer season={season} part="air" />
 
         {tex && <rect width={W} height={H} fill="url(#aa-grain)" className="aa-grain" />}
         <rect width={W} height={H} fill="url(#aa-vignette)" />

@@ -146,3 +146,12 @@
 .pj-empty p { margin: 0; font-family: var(--display); font-size: 22px; } .pj-empty .mono { font-size: 11px; color: var(--bone-faint); max-width: 520px; }
 @media (max-width: 860px) { .jq { grid-template-columns: minmax(0, 1fr); } .jq-clock { justify-items: start; text-align: left; } }
 @media (prefers-reduced-motion: reduce) { .pj-card.st-building::before { animation: none; } .jq-open { transition: none; } }
+.hearth-tally { max-width: 250px; }
+.hearth-tally .mono:not(.faint) { color: color-mix(in srgb, var(--ac) 70%, var(--bone)); }
+.hearth-moment { margin-top: 8px; font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--bone-dim); line-height: 1.4; }
+.hearth-moment i { display: block; font-style: normal; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--bone-faint); margin-top: 3px; }
+@media (max-width: 1100px) {
+  .hearth-tally { max-width: none; grid-template-columns: auto minmax(0, 1fr); column-gap: 16px; row-gap: 4px; align-items: center; }
+  .hearth-tally .big { grid-row: 1 / span 2; }
+  .hearth-tally .hearth-moment { grid-column: 1 / -1; }
+}

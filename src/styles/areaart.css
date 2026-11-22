@@ -333,3 +333,44 @@
   .aa-sparks circle, .aa-sparks.anvil circle { animation: none; opacity: 0; }
   .aa-flag { transition: none; }
 }
+
+/* ---------------- the seasons ----------------
+   Snow takes the mountain caps' colour, so it's blue at night and bright by day. */
+.aa-snow { fill: var(--cap-a); opacity: .5; }
+.aa-snow.fore { opacity: .34; }
+.aa-snowrim { fill: none; stroke: var(--cap-a); stroke-opacity: .7; stroke-width: 1.4; }
+.area-art[data-season='winter'] .aa-pine-lit { stroke: var(--cap-a); stroke-opacity: .85; stroke-width: 2.4; }
+.area-art[data-season='winter'] .aa-treeline { fill: var(--cap-b); opacity: .75; }
+.area-art[data-season='winter'] .aa-tufts, .area-art[data-season='winter'] .aa-tufts-lit { opacity: .35; }
+.aa-flakes circle { fill: #f4f7ff; opacity: .85; animation: aa-snowfall linear infinite; }
+@keyframes aa-snowfall { from { transform: translate(0, -230px); } to { transform: translate(var(--dx), 0); } }
+
+/* Autumn: the far woods turn, leaves blow through and gather in the grass. */
+.area-art[data-season='autumn'] .aa-treeline { fill: color-mix(in srgb, #b4521c 50%, var(--mid-b)); opacity: .85; }
+.aa-litter { opacity: calc(.45 + var(--glow) * .45); }
+.aa-leaves path { opacity: 0; animation: aa-leaffall ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes aa-leaffall {
+  0% { opacity: 0; transform: translate(0, -10px) rotate(0deg) scale(var(--s)); }
+  10% { opacity: .95; }
+  50% { transform: translate(calc(var(--dx) * .5), 110px) rotate(200deg) scale(var(--s)); }
+  90% { opacity: .9; }
+  100% { opacity: 0; transform: translate(var(--dx), 225px) rotate(400deg) scale(var(--s)); }
+}
+
+/* Spring: wildflowers in the grass. */
+.aa-blooms circle { opacity: calc(.7 + var(--glow) * .3); }
+.area-art[data-season='spring'] .aa-treeline { fill: color-mix(in srgb, #8cc26e 32%, var(--mid-b)); }
+.area-art[data-season='summer'] .aa-treeline { fill: color-mix(in srgb, #3f8a3e 38%, var(--mid-b)); }
+.area-art[data-season='summer'] .aa-tufts { fill: color-mix(in srgb, #2f6a2e 35%, var(--pine-a)); }
+.aa-blooms .c0 { fill: #f6c6da; } .aa-blooms .c1 { fill: #fff4c8; } .aa-blooms .c2 { fill: #c8b6f4; }
+
+/* Summer: fireflies, only once the light goes. */
+.aa-flies circle { fill: #e9ff9a; opacity: 0; }
+.area-art:is([data-phase='dusk'], [data-phase='night']) .aa-flies circle { animation: aa-firefly ease-in-out infinite; filter: drop-shadow(0 0 3px #d8ff70) drop-shadow(0 0 6px #b8ff40); }
+@keyframes aa-firefly { 0%, 100% { opacity: 0; transform: translate(0, 0); } 50% { opacity: 1; transform: translate(4px, -5px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .aa-flakes circle { animation: none; }
+  .aa-leaves path { animation: none; opacity: .85; transform: translate(0, 60px) rotate(30deg) scale(var(--s)); }
+  .area-art:is([data-phase='dusk'], [data-phase='night']) .aa-flies circle { animation: none; opacity: .6; }
+}

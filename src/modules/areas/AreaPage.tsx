@@ -10,7 +10,7 @@ import { JobCountdown, JobHQ } from './JobHQ';
 import { BodyTally, ProjectsGallery, ProjectsTally } from './Projects';
 import { MoneyPanel } from '../money/MoneyPage';
 import { fmtMins } from '../ledger/logic';
-import { areaMinutes, areaStreak, areaWeek, daysTo, money, moneyYear, nextOccurrence } from './logic';
+import { areaMinutes, areaStreak, areaWeek, daysTo, hearthGlance, money, moneyYear, nextOccurrence } from './logic';
 import { AREA_STORES } from './store';
 import type { AreaConfig, AreaItem, AreaList } from './types';
 import '../../styles/cabin.css';
@@ -64,7 +64,7 @@ export function AreaPage({ config }: { config: AreaConfig }) {
             ))}
           </div>}
         </div>
-        {config.kinds.length > 0 ? <div className="area-today">
+        {config.id === 'hearth' ? <HearthTally items={a.items} days={a.days} today={today} /> : config.kinds.length > 0 ? <div className="area-today">
           <span className="big">{mins ? <CountUp value={mins} format={fmtMins} /> : '—'}</span>
           <span className="mono">today</span>
           <span className="mono faint">{fmtMins(weekTotal)} this week{streak > 1 ? ` · ${streak}-day streak` : ''}</span>
@@ -175,6 +175,31 @@ function Item({ i, list, config }: { i: AreaItem; list: AreaList; config: AreaCo
         ? <button className="btn danger sm" onClick={() => a.removeItem(i.id)}>Remove</button>
         : <button className="btn ghost sm" aria-label="Remove" onClick={() => setSure(true)}>✕</button>}
     </li>
+  );
+}
+
+/** The Hearth's hero side: the next date that matters, time together, the last moment kept. */
+function HearthTally({ items, days, today }: { items: AreaItem[]; days: Record<string, Record<string, number>>; today: string }) {
+  const g = hearthGlance(items, days, today, mondayOf(today));
+  const ago = (n: number) => (n === 0 ? 'today' : n === 1 ? 'yesterday' : `${n} days ago`);
+  const together = `${g.weekMins ? fmtMins(g.weekMins) : 'No time'} together this week`;
+  return (
+    <div className="area-today pj-tally hearth-tally">
+      {g.next ? (
+        <>
+          <span className="big">{g.next.in === 0 ? '♥' : <CountUp value={g.next.in} />}</span>
+          <span className="mono">{g.next.in === 0 ? `Today: ${g.next.text}` : `${g.next.in === 1 ? 'day' : 'days'} to ${g.next.text}`}</span>
+          <span className="mono faint">{g.next.also ? `${g.next.also} more this month · ` : ''}{together}</span>
+        </>
+      ) : (
+        <>
+          <span className="big">{g.weekMins ? <CountUp value={g.weekMins} format={fmtMins} /> : '—'}</span>
+          <span className="mono">together this week</span>
+          <span className="mono faint">Add a birthday below and the next one shows here</span>
+        </>
+      )}
+      {g.lastMoment && <span className="hearth-moment">“{g.lastMoment.text}” <i className="mono">kept {ago(g.lastMoment.ago)}</i></span>}
+    </div>
   );
 }
 
