@@ -95,6 +95,10 @@ export const MODULES: ModuleDef[] = [
     id: 'manuscripts', path: '/cabin/manuscripts', name: 'Manuscripts', glyph: '❡', section: 'cabin', blurb: 'The Life I Deserve and Silence Speaks — chapter boards and word counts.',
     component: lazy(() => import('./manuscripts/ManuscriptsPage')),
   },
+  {
+    id: 'ideas', path: '/cabin/ideas', name: 'The Idea Vault', glyph: '✺', section: 'cabin', blurb: 'Every book, story and scene idea, caught before it’s gone.',
+    component: lazy(() => import('./ideas/IdeasPage')),
+  },
   { id: 'queries', path: '/cabin/queries', name: 'Query Tracker', glyph: '✉', section: 'cabin', blurb: 'Agents, submissions, responses, follow-ups.',
     component: lazy(() => import('./pub/PubPages').then((m) => ({ default: m.QueriesPage }))) },
   { id: 'contests', path: '/cabin/contests', name: 'Contests', glyph: '✧', section: 'cabin', blurb: 'Short-story contests: deadlines, rules, what you entered.',

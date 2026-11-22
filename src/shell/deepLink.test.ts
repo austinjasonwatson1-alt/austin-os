@@ -24,3 +24,10 @@ describe('health and calendar links', () => {
     expect(parseDeepLink('/cal?e=' + encodeURIComponent('09:00-10:00 Standup\nall-day Trip'), '2026-11-22')).toEqual({ kind: 'cal', day: '2026-11-22', events: [{ day: '2026-11-22', start: '09:00', end: '10:00', title: 'Standup' }, { day: '2026-11-22', title: 'Trip', allDay: true }] });
   });
 });
+
+describe('idea links', () => {
+  it('carry the idea text', () => {
+    expect(parseDeepLink('/idea?t=' + encodeURIComponent('short: The Lighthouse Wife'), '2026-11-22')).toEqual({ kind: 'idea', text: 'short: The Lighthouse Wife' });
+    expect(parseDeepLink('/idea?t=', '2026-11-22')!.kind).toBe('bad');
+  });
+});

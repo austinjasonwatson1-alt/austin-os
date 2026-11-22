@@ -5,6 +5,7 @@
  *   #/lamp                     start a lamp-mode session
  *   #/health?steps=8412&sleep=7.4&workout=35&kind=cardio   Apple Health, nightly
  *   #/cal?d=2026-11-23&e=09:00-10:00 Standup%0A…            today's calendar
+ *   #/idea?t=short: The Lighthouse Wife — she keeps the light   an idea, into the vault
  * Pure parsing only.
  */
 import { CATS, type CatKey } from '../modules/ledger/types';
@@ -16,6 +17,7 @@ export type DeepLink =
   | { kind: 'lamp' }
   | { kind: 'health'; h: HealthLink }
   | { kind: 'cal'; day: string; events: CalEvent[] }
+  | { kind: 'idea'; text: string }
   | { kind: 'bad'; reason: string };
 
 export function parseDeepLink(route: string, today = ''): DeepLink | null {
@@ -24,6 +26,10 @@ export function parseDeepLink(route: string, today = ''): DeepLink | null {
   if (path === '/health') {
     const h = parseHealth(query, today);
     return h ? { kind: 'health', h } : { kind: 'bad', reason: 'The link needs steps, sleep or workout, like steps=8000.' };
+  }
+  if (path === '/idea') {
+    const t = (new URLSearchParams(query).get('t') ?? '').trim();
+    return t ? { kind: 'idea', text: t } : { kind: 'bad', reason: 'The link needs the idea, like t=What if….' };
   }
   if (path === '/cal') {
     const q = new URLSearchParams(query);
@@ -47,3 +53,4 @@ export const logLink = (base: string, mins: number, cat: string) => `${base.repl
 /** The nightly Apple Health link, with the Shortcut's variables written in brackets. */
 export const healthLink = (base: string) => `${base.replace(/#.*$/, '')}#/health?steps=[Steps]&sleep=[Sleep]&workout=[Workout minutes]`;
 export const calLink = (base: string) => `${base.replace(/#.*$/, '')}#/cal?e=[Events]`;
+export const ideaLink = (base: string) => `${base.replace(/#.*$/, '')}#/idea?t=[Dictated Text]`;

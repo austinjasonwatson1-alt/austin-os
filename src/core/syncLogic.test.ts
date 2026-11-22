@@ -133,3 +133,12 @@ describe('goals sync', () => {
     expect(out['goals.v1'].milestones).toHaveLength(1);
   });
 });
+
+describe('ideas sync', () => {
+  it('keeps ideas from both devices; the newest edit of one idea wins', () => {
+    const out = syncMerge({ 'ideas.v1': { ideas: [{ id: 'a', spark: 'old', updated: '2026-11-01' }, { id: 'b', spark: 'mine', updated: '2026-11-02' }] } },
+      { 'ideas.v1': { ideas: [{ id: 'a', spark: 'edited on the phone', updated: '2026-11-20' }, { id: 'c', spark: 'new', updated: '2026-11-21' }] } }) as Record<string, { ideas: { id: string; spark: string }[] }>;
+    const by = Object.fromEntries(out['ideas.v1'].ideas.map((i) => [i.id, i.spark]));
+    expect(by).toEqual({ a: 'edited on the phone', b: 'mine', c: 'new' });
+  });
+});

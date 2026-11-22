@@ -91,6 +91,7 @@ function QuickLinks() {
           </li>
         ))}
       </ul>
+      <p className="set-note"><b>“Hey Siri, new idea”:</b> in Shortcuts make a shortcut called <b>New idea</b> with <b>Dictate Text</b>, then <b>URL Encode</b> it, then <b>Open URLs</b> with <code className="mono">{base.replace(/#.*$/, '')}#/idea?t=</code> followed by the encoded text. Say “short story” or “novel” first and it lands in the right drawer of the Idea Vault.</p>
       <p className="set-note">Make your own: change <code className="mono">m=</code> to any number of minutes and <code className="mono">c=</code> to {CATS.map((c) => c.k).join(', ')}, prayer or scripture.</p>
     </section>
   );

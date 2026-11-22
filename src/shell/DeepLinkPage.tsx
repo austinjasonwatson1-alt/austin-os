@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { todayISO } from '../core/dates';
 import { useChapel } from '../modules/chapel/store';
 import { useFeeds } from '../modules/feeds/store';
+import { useIdeas } from '../modules/ideas/store';
+import { parseCapture } from '../modules/ideas/logic';
 import { AREA_STORES } from '../modules/areas/store';
 import { dayTotal, fmtMins } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
@@ -18,11 +20,12 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
   const ledger = useLedger();
   const chapel = useChapel();
   const feeds = useFeeds();
+  const ideas = useIdeas();
   const forge = AREA_STORES.forge();
   const done = useRef(false);
   const [msg, setMsg] = useState<{ big: string; small: string; bad?: boolean } | null>(null);
 
-  useEffect(() => { void ledger.load(); void chapel.load(); void useTimer.getState().load(); void feeds.load(); void forge.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void ledger.load(); void chapel.load(); void useTimer.getState().load(); void feeds.load(); void forge.load(); void ideas.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (done.current) return;
@@ -32,6 +35,14 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
       const t = useTimer.getState();
       if (!t.running) t.start(t.lastCat, t.lastGoal);
       go('/cabin/timer');
+      return;
+    }
+    if (link.kind === 'idea') {
+      if (!ideas.loaded) return;
+      done.current = true;
+      const pc = parseCapture(link.text, 'novel');
+      ideas.add(pc);
+      setMsg({ big: 'Into the vault.', small: `${pc.title ? `“${pc.title}”: ` : ''}${pc.spark.slice(0, 120)}` });
       return;
     }
     if (link.kind === 'health' || link.kind === 'cal') {
@@ -60,7 +71,7 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
       chapel.setMinutes(day, link.what, cur + link.mins);
       setMsg({ big: `+${fmtMins(link.mins)} in the Chapel`, small: link.what === 'prayer' ? 'Prayer, kept apart from the writing.' : 'Scripture, kept apart from the writing.' });
     }
-  }, [link, ledger, chapel, feeds, forge]);
+  }, [link, ledger, chapel, feeds, forge, ideas]);
 
   useEffect(() => {
     if (!msg || msg.bad) return;
