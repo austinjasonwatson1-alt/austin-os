@@ -17,9 +17,11 @@ import { useManuscripts } from '../manuscripts/store';
 import { GOALS, type Ambient, type Session } from './types';
 import '../../styles/timer.css';
 
-const AMBIENTS: { k: Ambient; label: string }[] = [
-  { k: 'off', label: 'Silence' }, { k: 'rain', label: 'Rain' }, { k: 'fire', label: 'Fire' }, { k: 'wind', label: 'Wind' },
+/** 'off' means no sound of its own: the soundscape plays (if it's on), otherwise silence. */
+const AMBIENT_LIST: { k: Ambient; label: string }[] = [
+  { k: 'off', label: 'Silence' }, { k: 'calm', label: 'Calm' }, { k: 'rain', label: 'Rain' }, { k: 'fire', label: 'Fire' }, { k: 'wind', label: 'Wind' },
 ];
+const ambients = (soundscape: boolean) => AMBIENT_LIST.map((a) => (a.k === 'off' && soundscape ? { ...a, label: 'Soundscape' } : a));
 
 /** Re-render every second while something is running. */
 function useTick(on: boolean) {
@@ -34,6 +36,7 @@ function useTick(on: boolean) {
 
 /** Lamp mode: everything else goes dark; just the lamp, the clock, and the work. */
 export default function TimerPage() {
+  const soundscapeOn = useSky((st) => Boolean(st.prefs.roomSound));
   const t = useTimer();
   const ledger = useLedger();
   const lounge = useLounge();
@@ -185,7 +188,7 @@ export default function TimerPage() {
       {run && <DogsAtFeet minutes={runMins} />}
       <footer className="lm-foot">
         <div className="lm-pick" role="radiogroup" aria-label="Ambient sound">
-          {AMBIENTS.map((a) => (
+          {ambients(soundscapeOn).map((a) => (
             <button key={a.k} role="radio" aria-checked={t.ambient === a.k} className="lm-chip sm" onClick={() => t.setAmbient(a.k)}>{a.label}</button>
           ))}
         </div>

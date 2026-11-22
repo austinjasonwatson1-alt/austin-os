@@ -14,8 +14,10 @@ const WX_EVERY_MS = 30 * 60_000;
 export interface Prefs {
   /** A soft bell on an elite day and at the end of a lamp-mode goal. */
   chime: boolean;
-  /** Each room plays its own quiet sound while you're in it. */
+  /** The soundscape: the weather and the time outside, and each room's own sound, while you're in it. */
   roomSound?: boolean;
+  /** Soundscape volume, 0–1. */
+  volume?: number;
   /** System notifications for the streak, the candle, the review, follow-ups and deadlines. */
   reminders?: boolean;
 }
@@ -30,6 +32,7 @@ interface SkyState {
   load: () => Promise<void>;
   setChime: (on: boolean) => void;
   setRoomSound: (on: boolean) => void;
+  setVolume: (v: number) => void;
   setReminders: (on: boolean) => void;
   /** Ask for location (must run from a click), then fetch the weather. */
   enableWeather: () => Promise<void>;
@@ -56,6 +59,12 @@ export const useSky = create<SkyState>((set, get) => ({
       clearInterval(timer);
       timer = setInterval(() => void get().refreshWeather(), WX_EVERY_MS);
     }
+  },
+
+  setVolume(volume) {
+    const prefs = { ...get().prefs, volume };
+    set({ prefs });
+    void saveWithSnapshot(PREFS, prefs);
   },
 
   setChime(chime) {

@@ -26,7 +26,7 @@ export interface Session {
   chapter?: ChapterRef;
 }
 
-export type Ambient = 'off' | 'rain' | 'fire' | 'wind';
+export type Ambient = 'off' | 'rain' | 'fire' | 'wind' | 'calm';
 
 export interface TimerData {
   running: Running | null;

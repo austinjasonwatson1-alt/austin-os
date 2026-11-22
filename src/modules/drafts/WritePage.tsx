@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { chime, setAmbient } from '../../core/ambient';
+import { useSky } from '../../core/skyStore';
 import { todayISO } from '../../core/dates';
 import { embers } from '../../shell/fx';
 import { usePub } from '../pub/store';
@@ -16,7 +17,11 @@ import { SPRINT_LENGTHS, type Sprint } from './types';
 import { useDrafts } from './store';
 import '../../styles/write.css';
 
-const AMBIENTS: { k: Ambient; label: string }[] = [{ k: 'off', label: 'Silence' }, { k: 'rain', label: 'Rain' }, { k: 'fire', label: 'Fire' }, { k: 'wind', label: 'Wind' }];
+/** 'off' means no sound of its own: the soundscape plays (if it's on), otherwise silence. */
+const AMBIENT_LIST: { k: Ambient; label: string }[] = [
+  { k: 'off', label: 'Silence' }, { k: 'calm', label: 'Calm' }, { k: 'rain', label: 'Rain' }, { k: 'fire', label: 'Fire' }, { k: 'wind', label: 'Wind' },
+];
+const ambients = (soundscape: boolean) => AMBIENT_LIST.map((a) => (a.k === 'off' && soundscape ? { ...a, label: 'Soundscape' } : a));
 
 /**
  * Writing inside the cabin: the chapter on the page, everything else dark. The first keystroke
@@ -24,6 +29,7 @@ const AMBIENTS: { k: Ambient; label: string }[] = [{ k: 'off', label: 'Silence' 
  * on the board keeps up as you type, and versions are kept as you go.
  */
 export default function WritePage() {
+  const soundscapeOn = useSky((st) => Boolean(st.prefs.roomSound));
   const route = useRoute();
   const [, , , msId, chId] = route.split('/');
   const mss = useManuscripts();
@@ -165,7 +171,7 @@ export default function WritePage() {
             </>
           ) : <span className="w-clock mono faint">the lamp lights when you type</span>}
           <select className="w-amb" value={timer.ambient} onChange={(e) => timer.setAmbient(e.target.value as Ambient)} aria-label="Ambient sound">
-            {AMBIENTS.map((a) => <option key={a.k} value={a.k}>{a.label}</option>)}
+            {ambients(soundscapeOn).map((a) => <option key={a.k} value={a.k}>{a.label}</option>)}
           </select>
           {sprint ? (
             <span className="w-sprint-live" style={{ '--sp': 1 - sprintLeft / (sprint.planned * 60_000) } as CSSProperties}>

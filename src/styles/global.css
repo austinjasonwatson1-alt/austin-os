@@ -456,3 +456,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .room-sound.on { color: var(--lamp); border-color: rgba(232, 168, 75, .45); }
 .at-feet { position: fixed; left: 18px; bottom: 6px; z-index: 3; width: 220px; height: auto; pointer-events: none; animation: lm-in 2s ease-out both; }
 @media (max-width: 860px) { .at-feet { width: 150px; } }
+
+/* a quiet text link styled as a button */
+.linkish { border: 0; background: none; padding: 0; color: var(--bone-faint); font-size: 11.5px; text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.linkish:hover { color: var(--lamp); }

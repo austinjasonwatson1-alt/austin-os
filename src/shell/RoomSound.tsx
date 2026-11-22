@@ -1,22 +1,19 @@
-import { useEffect } from 'react';
-import { setAmbient, type AmbientKind } from '../core/ambient';
+import { setSoundscape, unlock, type AmbientKind } from '../core/ambient';
 import { useSky } from '../core/skyStore';
+import { useSoundLabel } from './Soundscape';
 
 /**
- * A room's own sound (fire in the Cabin, an organ hum in the Chapel, a quiet office…), playing
- * while you're in the room if room sounds are on. The speaker button turns them on or off everywhere.
+ * A room's sound button: turns the soundscape on or off, and says what this room sounds like.
+ * (What plays is decided in soundLogic.ts; `kind` is kept so the rooms read the same.)
  */
-export function RoomSound({ kind, label }: { kind: AmbientKind; label: string }) {
+export function RoomSound(props: { kind: AmbientKind; label: string }) {
   const on = useSky((s) => Boolean(s.prefs.roomSound));
-  useEffect(() => {
-    if (!on) return;
-    setAmbient(kind);
-    return () => setAmbient(null);
-  }, [on, kind]);
+  const now = useSoundLabel((s) => s.label);
   return (
-    <button className={on ? 'room-sound on' : 'room-sound'} onClick={() => useSky.getState().setRoomSound(!on)} aria-pressed={on}
-      title={on ? `Room sounds on: ${label}` : `Play this room's sound: ${label}`}>
-      <span aria-hidden>{on ? '\u266a' : '\u266b'}</span> {on ? label : 'Sound off'}
+    <button className={on ? 'room-sound on' : 'room-sound'} aria-pressed={on}
+      onClick={() => { useSky.getState().setRoomSound(!on); if (!on) { setSoundscape(true); unlock(); } }}
+      title={on ? `Sound on: ${now || props.label}` : `Hear this room: ${props.label}`}>
+      <span aria-hidden>{on ? '\u266a' : '\u266b'}</span> {on ? now || props.label : 'Sound off'}
     </button>
   );
 }

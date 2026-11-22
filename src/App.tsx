@@ -23,6 +23,7 @@ import { Sky } from './shell/Sky';
 import { Celebrations } from './shell/Celebrations';
 import { CommandPalette } from './shell/CommandPalette';
 import { Notifier } from './shell/Notifier';
+import { Soundscape } from './shell/Soundscape';
 import { DeepLinkPage } from './shell/DeepLinkPage';
 import { parseDeepLink } from './shell/deepLink';
 import { useCloud } from './shell/cloud';
@@ -97,6 +98,7 @@ export default function App() {
       <Celebrations />
       <CommandPalette />
       <Notifier />
+      <Soundscape />
       <div className="app">
         <Sidebar />
         <main className="main">

@@ -116,8 +116,6 @@
 .cover-hits img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cover-more { display: flex; gap: 10px; flex-wrap: wrap; }
 .cover-more input { width: 100%; font-size: 12px; }
-.linkish { border: 0; background: none; padding: 0; color: var(--bone-faint); font-size: 11.5px; text-decoration: underline; text-underline-offset: 3px; }
-.linkish:hover { color: var(--lamp); }
 
 /* the wall of read books */
 .read-wall { display: grid; gap: 22px; }

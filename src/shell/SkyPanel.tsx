@@ -30,7 +30,7 @@ export function SkyPanel() {
         <label className="switch">
           <input type="checkbox" checked={Boolean(s.prefs.roomSound)} onChange={(e) => s.setRoomSound(e.target.checked)} />
           <span className="switch-ui" aria-hidden />
-          <span><b>Room sounds</b><small>Each building plays its own quiet sound while you're in it: the cabin fire, an organ hum in the Chapel, wind at the Observatory.</small></span>
+          <span><b>Soundscape</b><small>Calm sound wherever you are: rain when it's really raining (with Real weather on), birdsong by day and crickets at night on the homestead, the fire in the cabin, soft keys for writing, the organ in the Chapel.</small></span>
         </label>
         <label className="switch">
           <input type="checkbox" checked={s.weatherOn} onChange={(e) => void (e.target.checked ? s.enableWeather() : s.disableWeather())} />
