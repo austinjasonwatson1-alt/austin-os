@@ -7,6 +7,7 @@ import { useCloud } from './cloud';
 import { logLink } from './deepLink';
 import { rise } from './lamp';
 import { SkyPanel } from './SkyPanel';
+import { FeedsSettings } from '../modules/feeds/FeedsUI';
 import { useKeeper } from '../modules/keeper/store';
 import type { Allow } from '../modules/keeper/logic';
 import '../styles/cabin.css';
@@ -28,6 +29,7 @@ export default function SettingsPage() {
         <QuickLinks />
         <CloudSync />
         <KeeperSettings />
+        <FeedsSettings />
       </div>
     </div>
   );
@@ -154,6 +156,7 @@ function CloudSync() {
 const ALLOW_LABEL: Record<keyof Allow, string> = {
   ledger: 'The Ledger (minutes, streak, day notes)', manuscripts: 'Manuscripts (titles, chapters, word counts)', chapterText: 'Chapter text (only the one you ask about)',
   reviews: 'Weekly reviews', shelf: 'The Shelf (books and craft notes)', publishing: 'Queries, contests and editorial notes', chapel: 'The Chapel (minutes only, never prayer text)',
+  life: 'The rest of life (work, study, training, dog walks, family time, steps, sleep: minutes only)', calendar: 'Today\u2019s calendar', money: 'Money (monthly totals by category, never single purchases)',
 };
 
 function KeeperSettings() {
@@ -178,7 +181,7 @@ function KeeperSettings() {
       <div className="sky-toggles">
         {(Object.keys(ALLOW_LABEL) as (keyof Allow)[]).map((a) => (
           <label key={a} className="switch">
-            <input type="checkbox" checked={k.allow[a]} onChange={(e) => void k.setAllow({ ...k.allow, [a]: e.target.checked })} />
+            <input type="checkbox" checked={Boolean(k.allow[a])} onChange={(e) => void k.setAllow({ ...k.allow, [a]: e.target.checked })} />
             <span className="switch-ui" aria-hidden />
             <span><b>{ALLOW_LABEL[a]}</b></span>
           </label>

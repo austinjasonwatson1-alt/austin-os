@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { rise } from '../../shell/lamp';
 import { go } from '../../shell/router';
 import { useDrafts } from '../drafts/store';
@@ -11,6 +11,7 @@ import '../../styles/keeper.css';
 interface Turn { who: 'you' | 'keeper'; text: string }
 
 const PRESETS: { kind: Ask; label: string; you: string }[] = [
+  { kind: 'letter', label: 'This week’s letter', you: 'Write me this week’s letter.' },
   { kind: 'morning', label: 'Today’s note', you: 'Where do I stand today?' },
   { kind: 'week', label: 'Look at my weeks', you: 'What patterns do you see in my weeks?' },
   { kind: 'craft', label: 'Craft help on a chapter', you: '' },
@@ -52,7 +53,7 @@ export default function KeeperPage() {
         <div>
           <div className="page-eyebrow">The Keeper</div>
           <h1 className="hero-title">The <em>Keeper.</em></h1>
-          <p className="hero-line">A mentor who lives in the cabin and has read your whole ledger: your days, your chapters, your weeks, your shelf. Ask anything about the work.</p>
+          <p className="hero-line">A mentor who lives in the cabin and has read the whole homestead: the book and the ledger, and the rest of the life around it. Ask about the work, the week, or anything at all. Tap the microphone to talk.</p>
         </div>
       </section>
 
@@ -101,6 +102,7 @@ export default function KeeperPage() {
 
           <form className="keeper-ask" onSubmit={(e) => { e.preventDefault(); if (q.trim()) { const v = q; setQ(''); void run('free', v, { question: v }); } }}>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask the Keeper…" aria-label="Ask the Keeper" disabled={busy} />
+            <Mic onText={(t) => setQ((cur) => (cur ? `${cur} ${t}` : t))} disabled={busy} />
             <button className="btn primary" disabled={!q.trim() || busy}>Ask</button>
           </form>
           <p className="mono faint keeper-foot">Reads: {Object.entries(k.allow).filter(([, v]) => v).map(([n]) => n).join(', ') || 'nothing'} · change in Settings</p>
@@ -108,4 +110,22 @@ export default function KeeperPage() {
       )}
     </div>
   );
+}
+
+/** Talk instead of type: the browser's own speech recognition (Safari and Chrome), nothing extra sent anywhere by us. */
+type Rec = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onend: () => void; onerror: () => void };
+function Mic({ onText, disabled }: { onText: (t: string) => void; disabled?: boolean }) {
+  const W = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
+  const SR = W.SpeechRecognition ?? W.webkitSpeechRecognition;
+  const [on, setOn] = useState(false);
+  const rec = useRef<Rec | null>(null);
+  if (!SR) return null;
+  const toggle = () => {
+    if (on) { rec.current?.stop(); return; }
+    const r = new SR(); r.lang = navigator.language || 'en-US'; r.interimResults = false; r.continuous = false;
+    r.onresult = (e) => { const t = Array.from(e.results).map((x) => x[0].transcript).join(' ').trim(); if (t) onText(t); };
+    r.onend = () => setOn(false); r.onerror = () => setOn(false);
+    rec.current = r; setOn(true); r.start();
+  };
+  return <button type="button" className={on ? 'keeper-mic on' : 'keeper-mic'} onClick={toggle} disabled={disabled} aria-label={on ? 'Stop listening' : 'Speak your question'} aria-pressed={on}><i aria-hidden /></button>;
 }

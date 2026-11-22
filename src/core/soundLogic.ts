@@ -47,11 +47,12 @@ export function sceneFor(route: string, x: SoundWorld): Scene {
   if (r === '/cabin/lounge') return { mix: { fire: 0.9, calm: 0.25, ...roof }, label: raining ? 'The lounge fire, rain on the windows' : 'The lounge fire' };
   if (r === '/cabin' || r.startsWith('/cabin/')) return { mix: { fire: 0.8, ...roof }, label: raining ? 'The cabin fire, rain on the roof' : 'The cabin fire' };
   if (r === '/chapel') return { mix: { organ: 0.8, hush: 0.2, ...(raining ? { rain: 0.3 } : {}) }, label: 'The chapel at rest' };
-  if (r === '/office' || r === '/bank') return { mix: { room: 0.8, ...roof }, label: r === '/office' ? 'A quiet office' : 'A quiet counting room' };
+  if (r === '/office' || r === '/bank' || r === '/money') return { mix: { room: 0.8, ...roof }, label: r === '/office' ? 'A quiet office' : 'A quiet counting room' };
   if (r === '/observatory') return { mix: { wind: 0.6, ...(x.phase === 'night' && x.season !== 'winter' ? { crickets: 0.4 } : {}) }, label: 'Wind on the dome' };
+  if (r === '/kennel') return { mix: { ...outdoors(x).mix, fire: 0.45, ...roof }, label: 'The kennel porch' };
   if (r === '/forge') return { mix: { fire: 0.9, wind: 0.2 }, label: 'The forge fire' };
   if (r === '/hearth') return { mix: { fire: 0.7, chimes: 0.4, ...roof }, label: 'The hearth, and chimes on the porch' };
   if (r === '/keeper') return { mix: { fire: 0.5, calm: 0.45, ...roof }, label: 'By the fire with the Keeper' };
-  if (['/records', '/library', '/year', '/film', '/review', '/settings'].includes(r)) return { mix: { calm: 0.65, fire: 0.2, ...roof }, label: 'A calm room' };
+  if (['/records', '/library', '/year', '/film', '/review', '/settings', '/memories', '/life', '/goals'].includes(r)) return { mix: { calm: 0.65, fire: 0.2, ...roof }, label: 'A calm room' };
   return outdoors(x);
 }

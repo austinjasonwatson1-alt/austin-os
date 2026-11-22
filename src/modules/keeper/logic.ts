@@ -23,9 +23,15 @@ export interface Allow {
   shelf: boolean;
   publishing: boolean;
   chapel: boolean;
+  /** Time in the other buildings (work, learning, body, family), steps, sleep and dog walks. Minutes only. */
+  life?: boolean;
+  /** Today's calendar events. */
+  calendar?: boolean;
+  /** Household money: monthly totals by category only, never single transactions. */
+  money?: boolean;
 }
 
-export const DEFAULT_ALLOW: Allow = { ledger: true, manuscripts: true, chapterText: false, reviews: true, shelf: true, publishing: true, chapel: false };
+export const DEFAULT_ALLOW: Allow = { ledger: true, manuscripts: true, chapterText: false, reviews: true, shelf: true, publishing: true, chapel: false, life: true, calendar: true, money: false };
 
 export interface KeeperData {
   today: string;
@@ -35,6 +41,11 @@ export interface KeeperData {
   books: Book[];
   pub: PubData;
   chapel: ChapelData;
+  /** The rest of life: minutes per day per building, plus walks, steps and sleep. */
+  life?: { work: Record<string, number>; learning: Record<string, number>; body: Record<string, number>; family: Record<string, number>; walks: Record<string, number>; steps: Record<string, number>; sleep: Record<string, number> };
+  events?: { day: string; start?: string; end?: string; title: string; allDay?: boolean }[];
+  /** This month and last, by category, in dollars. */
+  money?: { month: string; income: number; spent: number; byCategory: { name: string; dollars: number }[] }[];
 }
 
 export function briefing(d: KeeperData, allow: Allow): string {
@@ -75,12 +86,25 @@ export function briefing(d: KeeperData, allow: Allow): string {
     const last7 = Array.from({ length: 7 }, (_, i) => addDays(d.today, -6 + i));
     out.push(`CHAPEL (kept apart from writing): ${last7.map((k) => chapelMinutes(d.chapel.days[k])).join(', ')} minutes over the last 7 days; ${d.chapel.prayers.filter((p) => !p.answeredOn).length} prayers carried.`);
   }
+  if (allow.life && d.life) {
+    const last = Array.from({ length: 14 }, (_, i) => addDays(d.today, -13 + i));
+    const row = (name: string, m: Record<string, number>, unit = 'm') => { const v = last.map((k) => m[k] ?? 0); return v.some(Boolean) ? `${name}: ${v.map((x, i) => `${last[i].slice(5)} ${x}${unit}`).join(', ')}` : ''; };
+    const rows = [row('Work (the Office)', d.life.work), row('Learning/AI study (the Observatory)', d.life.learning), row('Body/training (the Forge)', d.life.body), row('Dog walks with Cooper and Shadow', d.life.walks), row('Family time (the Hearth)', d.life.family), row('Steps', d.life.steps, ''), row('Sleep', d.life.sleep, 'h')].filter(Boolean);
+    if (rows.length) out.push(`THE REST OF LIFE, last 14 days (none of it counts as writing):\n${rows.join('\n')}`);
+  }
+  if (allow.calendar && d.events) {
+    const today = d.events.filter((e) => e.day === d.today);
+    out.push(today.length ? `TODAY'S CALENDAR: ${today.map((e) => `${e.allDay ? 'all day' : `${e.start}${e.end ? `–${e.end}` : ''}`} ${e.title}`).join('; ')}.` : "TODAY'S CALENDAR: nothing scheduled.");
+  }
+  if (allow.money && d.money?.length) {
+    for (const m of d.money) out.push(`MONEY ${m.month}: in $${Math.round(m.income)}, out $${Math.round(m.spent)}; by category: ${m.byCategory.map((c) => `${c.name} $${Math.round(c.dollars)}`).join(', ')}.`);
+  }
   return out.join('\n');
 }
 
-export const KEEPER_SYSTEM = `You are the Keeper of Austin's homestead: a warm, plain-spoken writing mentor who lives in the cabin and has read his whole ledger. Austin is writing a debut domestic thriller and querying agents; he also keeps a faith life and a day job. Speak to him directly, like a trusted mentor, not a coach or an app. Be specific to his actual data: name chapters, days, numbers. Be honest when the numbers are thin, never guilt-trip, and never invent data you weren't given. Keep it short unless asked for more. No headings or bullet lists unless asked; write in plain paragraphs.`;
+export const KEEPER_SYSTEM = `You are the Keeper of Austin's homestead: a warm, plain-spoken mentor who lives in the cabin and has read his whole ledger. Austin is writing a debut domestic thriller and querying agents; he also keeps a faith life, a PM day job, AI study, training, two dogs (Cooper, a black lab with big hound ears, and Shadow, a smaller lab-terrier mix) and the people at his hearth. The writing is the center, but you care about the whole life and how the parts feed each other. Speak to him directly, like a trusted mentor, not a coach or an app. Be specific to his actual data: name chapters, days, numbers. Be honest when the numbers are thin, never guilt-trip, and never invent data you weren't given. Keep it short unless asked for more. No headings or bullet lists unless asked; write in plain paragraphs.`;
 
-export type Ask = 'morning' | 'week' | 'craft' | 'query' | 'free';
+export type Ask = 'morning' | 'week' | 'craft' | 'query' | 'free' | 'letter';
 
 /** The instruction for each kind of request. */
 export function askPrompt(kind: Ask, extra: { chapterTitle?: string; chapterText?: string; query?: string; question?: string }): string {
@@ -89,6 +113,7 @@ export function askPrompt(kind: Ask, extra: { chapterTitle?: string; chapterText
     case 'week': return 'Look across the last few weeks: what patterns do you see in when and how he writes best, what keeps getting in the way, and one concrete intention for next week. Under 150 words.';
     case 'craft': return `Give craft help on the chapter "${extra.chapterTitle ?? ''}". ${extra.chapterText ? `Here is the chapter text:\n\n${extra.chapterText}\n\n` : 'You have only its title, status and word count, not its text. '}Draw on the craft notes from books on his shelf where they genuinely apply. Three specific suggestions at most.`;
     case 'query': return `Critique this query letter for a debut domestic thriller, as an experienced agent would read it: hook, stakes, voice, comps, length, and what to cut. Then offer a tightened opening paragraph.\n\n${extra.query ?? ''}`;
+    case 'letter': return 'Write this week\'s letter from the Keeper about the whole life, not just the writing: how the week went across the book, faith, work, learning, the body, the dogs and the people he loves; what one part gave to another; what was left out in the cold; and one gentle, concrete invitation for the week ahead. Warm, honest, specific to the numbers, under 220 words, signed "— the Keeper".';
     default: return extra.question ?? '';
   }
 }

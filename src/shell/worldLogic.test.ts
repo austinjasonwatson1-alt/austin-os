@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anniversary, bedtime, daylight, greyness, growth, tricks , freshFinish , holiday } from './worldLogic';
+import { anniversary, bedtime, daylight, greyness, growth, tricks , freshFinish , holiday , lifeGrowth } from './worldLogic';
 
 describe('the living homestead', () => {
   it('grows with the hours and the streak', () => {
@@ -40,5 +40,13 @@ describe('holiday', () => {
     expect(holiday(new Date(2026, 9, 31))).toBe('halloween');
     expect(holiday(new Date(2026, 10, 1))).toBeNull();
     expect(holiday(new Date(2026, 6, 4))).toBeNull();
+  });
+});
+
+describe('lifeGrowth', () => {
+  it('raises buildings from the rest of life', () => {
+    expect(lifeGrowth({ bodyDays: 0, hearthMins: 0, chapelDays: 0, walks: 0 })).toEqual({ doghouse: false, greenhouse: false, guesthouse: false, bell: false });
+    expect(lifeGrowth({ bodyDays: 30, hearthMins: 1200, chapelDays: 30, walks: 1 })).toEqual({ doghouse: true, greenhouse: true, guesthouse: true, bell: true });
+    expect(lifeGrowth({ bodyDays: 29, hearthMins: 1199, chapelDays: 29, walks: 0 }).greenhouse).toBe(false);
   });
 });

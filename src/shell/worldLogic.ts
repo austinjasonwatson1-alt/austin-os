@@ -76,3 +76,19 @@ export function holiday(d: Date): Holiday {
   if (m === 9 && day >= 24) return 'halloween';
   return null;
 }
+
+/** Buildings the rest of life raises on the homestead (writing has its own: garden, lighthouse, publishing house). */
+export interface LifeGrowth {
+  /** The dogs have a house once their walks are being kept. */
+  doghouse: boolean;
+  /** A greenhouse by the forge after 30 days of looking after the body. */
+  greenhouse: boolean;
+  /** A guesthouse by the hearth after 20 hours of time together. */
+  guesthouse: boolean;
+  /** A bell in the chapel steeple after 30 days with God. */
+  bell: boolean;
+}
+
+export function lifeGrowth(x: { bodyDays: number; hearthMins: number; chapelDays: number; walks: number }): LifeGrowth {
+  return { doghouse: x.walks > 0, greenhouse: x.bodyDays >= 30, guesthouse: x.hearthMins >= 1200, bell: x.chapelDays >= 30 };
+}

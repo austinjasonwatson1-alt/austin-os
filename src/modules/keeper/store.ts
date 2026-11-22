@@ -13,7 +13,14 @@ import { useManuscripts } from '../manuscripts/store';
 import { usePub } from '../pub/store';
 import { useReview } from '../review/store';
 import { useShelf } from '../shelf/store';
-import { askPrompt, briefing, DEFAULT_ALLOW, KEEPER_SYSTEM, type Allow, type Ask } from './logic';
+import { askPrompt, briefing, DEFAULT_ALLOW, KEEPER_SYSTEM, type Allow, type Ask, type KeeperData } from './logic';
+import { AREA_STORES } from '../areas/store';
+import { areaMinutes } from '../areas/logic';
+import { useFeeds } from '../feeds/store';
+import { useKennel } from '../kennel/store';
+import { kennelWalkMinutes } from '../kennel/logic';
+import { useMoney } from '../money/store';
+import { moneyBrief } from '../money/logic';
 
 const KEY = SYS_PREFIX + 'keeper';
 const NOTE = SYS_PREFIX + 'keeper.note';
@@ -76,10 +83,12 @@ export const useKeeper = create<KeeperState>((set, get) => ({
     if (!apiKey) throw new Error('The Keeper is off. Add an Anthropic API key in Settings.');
     await Promise.all([useLedger.getState().load(), useManuscripts.getState().load(), useReview.getState().load(), useShelf.getState().load(), usePub.getState().load(), useChapel.getState().load()]);
     const l = useLedger.getState();
+    const allow = get().allow;
     const brief = briefing({
       today: todayISO(), days: l.days, manuscripts: useManuscripts.getState().manuscripts, reviews: useReview.getState().reviews,
       books: useShelf.getState().books, pub: usePub.getState(), chapel: useChapel.getState(),
-    }, get().allow);
+      ...(await lifeContext(allow)),
+    }, allow);
     // The SDK is only loaded when the Keeper is actually used.
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
     const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
@@ -118,3 +127,30 @@ export const useKeeper = create<KeeperState>((set, get) => ({
     } catch { /* error is in state */ }
   },
 }));
+
+/** The rest of life for the briefing, loaded only for what the Keeper is allowed to read. */
+async function lifeContext(allow: Allow): Promise<Partial<KeeperData>> {
+  const out: Partial<KeeperData> = {};
+  if (allow.life || allow.calendar) await useFeeds.getState().load();
+  if (allow.life) {
+    const a = AREA_STORES;
+    await Promise.all([a.office.getState().load(), a.observatory.getState().load(), a.forge.getState().load(), a.hearth.getState().load(), useKennel.getState().load()]);
+    const per = (days: Record<string, Record<string, number>>) => Object.fromEntries(Object.entries(days).map(([k, v]) => [k, areaMinutes(v)]));
+    const k = useKennel.getState(); const f = useFeeds.getState();
+    out.life = {
+      work: per(a.office.getState().days), learning: per(a.observatory.getState().days), body: per(a.forge.getState().days), family: per(a.hearth.getState().days),
+      walks: Object.fromEntries(k.walks.map((w) => [w.date, kennelWalkMinutes(k, w.date)])),
+      steps: Object.fromEntries(Object.entries(f.days).filter(([, v]) => v.steps).map(([d, v]) => [d, v.steps!])),
+      sleep: Object.fromEntries(Object.entries(f.days).filter(([, v]) => v.sleep).map(([d, v]) => [d, v.sleep!])),
+    };
+  }
+  if (allow.calendar) out.events = useFeeds.getState().events;
+  if (allow.money) {
+    await useMoney.getState().load();
+    const txns = useMoney.getState().txns; const today = todayISO();
+    const d = new Date(`${today}T12:00:00`); d.setMonth(d.getMonth() - 1);
+    const months = [today.slice(0, 7), `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`];
+    out.money = months.map((ym) => moneyBrief(txns, ym));
+  }
+  return out;
+}

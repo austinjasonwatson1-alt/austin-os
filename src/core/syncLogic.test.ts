@@ -95,3 +95,41 @@ describe('sprint sync', () => {
     expect(out['drafts.v1'].sprints.map((x) => x.id).sort()).toEqual(['a', 'b']);
   });
 });
+
+describe('kennel sync', () => {
+  it('keeps walks and care from both devices', () => {
+    const out = syncMerge({ 'kennel.v1': { walks: [{ id: 'a' }], care: [], weights: [], notes: [] } }, { 'kennel.v1': { walks: [{ id: 'b' }], care: [{ id: 'c' }] } }) as Record<string, { walks: { id: string }[]; care: { id: string }[] }>;
+    expect(out['kennel.v1'].walks.map((x) => x.id).sort()).toEqual(['a', 'b']);
+    expect(out['kennel.v1'].care.map((x) => x.id)).toEqual(['c']);
+  });
+});
+
+describe('money sync', () => {
+  it('keeps transactions and rules from both devices, once each', () => {
+    const out = syncMerge({ 'money.v1': { txns: [{ id: 't-1' }, { id: 't-2' }], rules: [] } }, { 'money.v1': { txns: [{ id: 't-2' }, { id: 't-3' }], rules: [{ id: 'r' }] } }) as Record<string, { txns: { id: string }[]; rules: { id: string }[] }>;
+    expect(out['money.v1'].txns.map((x) => x.id).sort()).toEqual(['t-1', 't-2', 't-3']);
+    expect(out['money.v1'].rules).toHaveLength(1);
+  });
+});
+
+describe('memories sync', () => {
+  it('merges photos and letters, and keeps a deleted photo deleted', () => {
+    const out = syncMerge(
+      { 'memories.v1': { items: [{ id: 'm-1' }], capsules: [{ id: 'c-1', openedOn: undefined }] }, 'sync.deleted': { 'memories.v1': { 'm-2': '2026-11-20' } } },
+      { 'memories.v1': { items: [{ id: 'm-2' }, { id: 'm-3' }], capsules: [{ id: 'c-1', openedOn: '2026-11-21' }] }, 'memories.photo.m-2': 'data:old', 'memories.photo.m-3': 'data:new' },
+    ) as Record<string, unknown>;
+    const m = out['memories.v1'] as { items: { id: string }[]; capsules: { openedOn?: string }[] };
+    expect(m.items.map((x) => x.id).sort()).toEqual(['m-1', 'm-3']);
+    expect(m.capsules[0].openedOn).toBe('2026-11-21');
+    expect(out['memories.photo.m-2']).toBeUndefined();
+    expect(out['memories.photo.m-3']).toBe('data:new');
+  });
+});
+
+describe('goals sync', () => {
+  it('keeps goals and milestones from both devices', () => {
+    const out = syncMerge({ 'goals.v1': { goals: [{ id: 'g-1' }], milestones: [] } }, { 'goals.v1': { goals: [{ id: 'g-2' }], milestones: [{ id: 'ms-1' }] } }) as Record<string, { goals: unknown[]; milestones: unknown[] }>;
+    expect(out['goals.v1'].goals).toHaveLength(2);
+    expect(out['goals.v1'].milestones).toHaveLength(1);
+  });
+});

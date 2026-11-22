@@ -26,6 +26,7 @@ import { Notifier } from './shell/Notifier';
 import { Soundscape } from './shell/Soundscape';
 import { DeepLinkPage } from './shell/DeepLinkPage';
 import { parseDeepLink } from './shell/deepLink';
+import { todayISO } from './core/dates';
 import { useCloud } from './shell/cloud';
 import { useSky } from './core/skyStore';
 import { Soon } from './shell/Soon';
@@ -36,11 +37,16 @@ const WritePage = lazy(() => import('./modules/drafts/WritePage'));
 const LibraryPage = lazy(() => import('./modules/review/LibraryPage'));
 const HallPage = lazy(() => import('./modules/records/HallPage'));
 const FilmPage = lazy(() => import('./modules/film/FilmPage'));
+const GoalsPage = lazy(() => import('./modules/goals/GoalsPage'));
+const MemoriesPage = lazy(() => import('./modules/memories/MemoriesPage'));
+const MoneyPage = lazy(() => import('./modules/money/MoneyPage'));
+const KennelPage = lazy(() => import('./modules/kennel/KennelPage'));
+const CompassPage = lazy(() => import('./modules/life/Compass'));
 const SettingsPage = lazy(() => import('./shell/SettingsPage'));
 const KeeperPage = lazy(() => import('./modules/keeper/KeeperPage'));
 
 function Screen({ route }: { route: string }) {
-  const link = parseDeepLink(route);
+  const link = parseDeepLink(route, todayISO());
   if (link) return <DeepLinkPage link={link} />;
   if (route === '/settings') return <SettingsPage />;
   if (route === '/keeper') return <KeeperPage />;
@@ -51,6 +57,11 @@ function Screen({ route }: { route: string }) {
   if (route === '/library') return <LibraryPage />;
   if (route === '/records') return <HallPage />;
   if (route === '/film') return <FilmPage />;
+  if (route === '/goals') return <GoalsPage />;
+  if (route === '/memories') return <MemoriesPage />;
+  if (route === '/money') return <MoneyPage />;
+  if (route === '/kennel') return <KennelPage />;
+  if (route === '/life') return <CompassPage />;
   if (route.startsWith('/cabin/write/')) return <WritePage />;
   const area = areaByPath(route);
   if (area && !area.live) return <AreaSoon a={area} />;

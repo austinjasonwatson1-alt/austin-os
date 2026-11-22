@@ -1,0 +1,28 @@
+/* ================= Health & calendar ================= */
+.today-cal { display: grid; gap: 10px; }
+.tc-empty { margin: 0; font-size: 13.5px; }
+.tc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tc-list li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; padding: 6px 8px; border-radius: 8px; font-size: 14px; }
+.tc-list li .mono { font-size: 11px; color: var(--bone-faint); padding-top: 2px; }
+.tc-list li.past { opacity: .45; }
+.tc-list li.now { background: rgba(232, 168, 75, .1); box-shadow: inset 2px 0 0 var(--lamp); }
+.tc-window { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; text-align: left; color: inherit; font-size: 14px;
+  border: 1px solid rgba(232, 168, 75, .4); background: radial-gradient(80% 140% at 0% 50%, rgba(232, 168, 75, .14), transparent 60%); }
+.tc-window b { font-family: var(--display); font-size: 17px; }
+.tc-lamp { flex: none; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle, #fff1c8, #e8a84b 60%, transparent 70%); box-shadow: 0 0 16px #e8a84b; }
+.health-panel { margin-bottom: 16px; }
+.hp-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: end; }
+.hp-l { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-faint); }
+.hp-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 96px; margin-top: 8px; align-items: end; }
+.hp-bars div { display: grid; grid-template-rows: 1fr auto; height: 100%; gap: 4px; }
+.hp-bars i { align-self: end; min-height: 3px; border-radius: 4px 4px 2px 2px; background: rgba(224, 122, 63, .45); }
+.hp-bars i.met { background: linear-gradient(180deg, #ffb27a, #e07a3f); box-shadow: 0 0 10px rgba(224, 122, 63, .4); }
+.hp-bars .mono { font-size: 9px; text-align: center; color: var(--bone-faint); }
+.hp-nums { display: grid; gap: 10px; }
+.hp-nums div { display: grid; } .hp-nums b { font-family: var(--display); font-size: 28px; line-height: 1; } .hp-nums .mono { font-size: 9.5px; color: var(--bone-faint); letter-spacing: .1em; text-transform: uppercase; }
+.fs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 12px; }
+.fs-h { margin: 0 0 4px; font-family: var(--display); font-size: 17px; }
+.fs-code { display: block; margin: 8px 0; padding: 10px; border-radius: 10px; border: 1px solid var(--line-strong); background: rgba(5, 7, 12, .7); font-size: 11px; word-break: break-all; color: var(--bone-dim); }
+.fs-code i { color: var(--lamp); font-style: normal; border: 1px dashed rgba(232, 168, 75, .5); border-radius: 4px; padding: 0 3px; }
+.fs-row { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 860px) { .fs-grid, .hp-body { grid-template-columns: minmax(0, 1fr); } }

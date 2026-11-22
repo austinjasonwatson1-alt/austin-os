@@ -285,3 +285,20 @@
   border: 1px solid rgba(232, 168, 75, .45); background: radial-gradient(80% 140% at 0% 50%, rgba(232, 168, 75, .16), transparent 60%), rgba(12, 14, 22, .8); }
 .film-nudge b { font-family: var(--display); font-size: 19px; }
 .fn-play { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #3a2606; background: radial-gradient(circle at 35% 30%, #fff1c8, #e8a84b 60%, #a8721f); box-shadow: 0 0 24px rgba(232, 168, 75, .5); }
+
+/* buildings left alone */
+.hs-b.dust-1 > *:not(.hs-tag) { filter: saturate(.55) brightness(.82); }
+.hs-b.dust-2 > *:not(.hs-tag):not(.hs-cobweb) { filter: saturate(.2) brightness(.62); }
+.hs-cobweb path { fill: none; stroke: rgba(225, 230, 240, .55); stroke-width: .8; }
+
+/* buildings the rest of life raises */
+.hs-greenhouse, .hs-guest, .hs-doghouse { cursor: pointer; animation: raise .9s cubic-bezier(.2, 1.2, .4, 1) both; transform-box: fill-box; }
+@keyframes raise { from { opacity: 0; } }
+.gh-glass { fill: rgba(140, 220, 190, .16); stroke: rgba(170, 235, 210, .55); stroke-width: 1.4; }
+.gh-frame { fill: none; stroke: rgba(200, 240, 225, .5); stroke-width: 1.2; }
+.gh-leaf { fill: #4FBF87; opacity: .85; }
+.dh-door { fill: #05070c; }
+.dh-sign { fill: #c9963f; } .dh-name { fill: #2a1a06; font-family: var(--mono); font-size: 5px; font-weight: 700; }
+.hs-bell path, .hs-bell circle { fill: #e8c25a; filter: drop-shadow(0 0 3px rgba(255, 210, 122, .8)); }
+.hs-greenhouse:focus-visible, .hs-guest:focus-visible, .hs-doghouse:focus-visible { outline: 2px solid var(--lamp); }
+@media (prefers-reduced-motion: reduce) { .hs-greenhouse, .hs-guest, .hs-doghouse { animation: none; } }

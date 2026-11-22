@@ -23,12 +23,24 @@ import { useDrafts } from '../modules/drafts/store';
 import { describePub } from '../modules/pub/logic';
 import { usePub } from '../modules/pub/store';
 import { useTimer } from '../modules/timer/store';
+import { describeLife } from '../modules/life/logic';
+import { useLife } from '../modules/life/store';
+import { describeKennel } from '../modules/kennel/logic';
+import { useKennel } from '../modules/kennel/store';
+import { describeBody } from '../modules/feeds/logic';
+import { useFeeds } from '../modules/feeds/store';
+import { describeMoney } from '../modules/money/logic';
+import { useMoney } from '../modules/money/store';
+import { describeMemories } from '../modules/memories/logic';
+import { useMemories } from '../modules/memories/store';
+import { describeGoals } from '../modules/goals/logic';
+import { useGoals } from '../modules/goals/store';
 
 /** Every module's stored key → how to describe it. Add new modules here. */
-export const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge, 'timer.v1': describeTimer, 'shelf.v1': describeShelf, 'manuscripts.v1': describeManuscripts, 'chapel.v1': describeChapel, 'review.v1': describeReview, 'area.office': describeArea('The Office'), 'area.observatory': describeArea('The Observatory'), 'drafts.v1': describeDrafts, 'pub.v1': describePub, 'area.forge': describeArea('The Forge'), 'area.bank': describeArea('The Ledger House'), 'area.hearth': describeArea('The Hearth') };
+export const DESCRIBERS: Record<string, Describer> = { 'ledger.v3': describeLedger, 'lounge.v1': describeLounge, 'timer.v1': describeTimer, 'shelf.v1': describeShelf, 'manuscripts.v1': describeManuscripts, 'chapel.v1': describeChapel, 'review.v1': describeReview, 'area.office': describeArea('The Office'), 'area.observatory': describeArea('The Observatory'), 'drafts.v1': describeDrafts, 'pub.v1': describePub, 'area.forge': describeArea('The Forge'), 'area.bank': describeArea('The Ledger House'), 'area.hearth': describeArea('The Hearth'), 'life.v1': describeLife, 'kennel.v1': describeKennel, 'body.v1': describeBody, 'money.v1': describeMoney, 'memories.v1': describeMemories, 'goals.v1': describeGoals };
 
 /** After a restore, every store re-reads what it holds. Add new modules here. */
-export const reloadStores = () => Promise.all([useLedger.getState().load(true), useLounge.getState().load(true), useTimer.getState().load(true), useShelf.getState().load(true), useManuscripts.getState().load(true), useChapel.getState().load(true), useReview.getState().load(true), AREA_STORES.office.getState().load(true), AREA_STORES.observatory.getState().load(true), useDrafts.getState().load(true), usePub.getState().load(true), AREA_STORES.forge.getState().load(true), AREA_STORES.bank.getState().load(true), AREA_STORES.hearth.getState().load(true)]);
+export const reloadStores = () => Promise.all([useLedger.getState().load(true), useLounge.getState().load(true), useTimer.getState().load(true), useShelf.getState().load(true), useManuscripts.getState().load(true), useChapel.getState().load(true), useReview.getState().load(true), AREA_STORES.office.getState().load(true), AREA_STORES.observatory.getState().load(true), useDrafts.getState().load(true), usePub.getState().load(true), AREA_STORES.forge.getState().load(true), AREA_STORES.bank.getState().load(true), AREA_STORES.hearth.getState().load(true), useLife.getState().load(true), useKennel.getState().load(true), useFeeds.getState().load(true), useMoney.getState().load(true), useMemories.getState().load(true), useGoals.getState().load(true)]);
 
 const TAG: Record<Change, { text: string; cls: string }> = {
   new: { text: 'Brings back', cls: 'back' },

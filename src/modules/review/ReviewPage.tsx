@@ -11,6 +11,11 @@ import { useShelf } from '../shelf/store';
 import { reviewWeek, vsLast, weekSummary } from './logic';
 import { useReview } from './store';
 import { useKeeper } from '../keeper/store';
+import { useLifeInput } from '../life/useLifeInput';
+import { useLife } from '../life/store';
+import { balanceScore, balanceWeek, insights, LIFE_AREAS } from '../life/logic';
+import { BalanceWheel } from '../life/Wheel';
+import { useDrafts } from '../drafts/store';
 import '../../styles/cabin.css';
 import '../../styles/ledger.css';
 import '../../styles/review.css';
@@ -108,6 +113,8 @@ export default function ReviewPage() {
         <Tile glyph="◉" label="Best day" value={s.best ? fmtMins(s.best.mins) : '—'} sub={s.best ? dayName(s.best.date) : 'nothing yet'} to="/cabin/ledger" />
       </div>
 
+      <WholeLife monday={monday} today={today} />
+
       <section className="journal rise" style={rise(3)} ref={sealRef}>
         {last?.intention && (
           <div className="last-int">
@@ -189,5 +196,32 @@ function KeeperWeek() {
         </button>
       )}
     </div>
+  );
+}
+
+/** The week across the whole homestead, not just the book. */
+function WholeLife({ monday, today }: { monday: string; today: string }) {
+  const { ready, input } = useLifeInput();
+  const targets = useLife((st) => st.targets);
+  const sprints = useDrafts((st) => st.sprints);
+  const now = useMemo(() => balanceWeek(input, monday, targets, today), [input, monday, targets, today]);
+  const prev = useMemo(() => balanceWeek(input, addDays(monday, -7), targets), [input, monday, targets]);
+  const top = useMemo(() => insights(input, today, 120, sprints ?? [])[0], [input, today, sprints]);
+  if (!ready) return null;
+  const fm = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`);
+  return (
+    <section className="panel wl rise" style={rise(3)}>
+      <div className="panel-h"><p className="panel-t">Across the homestead</p><button className="linkish" onClick={() => go('/life')}>Open the Compass →</button></div>
+      <div className="wl-body">
+        <BalanceWheel now={now} prev={prev} size={210} />
+        <div className="wl-list">
+          <p className="wl-score"><b>{balanceScore(now)}</b> balance this week</p>
+          <ul>
+            {now.map((sp) => { const a = LIFE_AREAS.find((l) => l.id === sp.area)!; return <li key={sp.area}><span style={{ color: a.color }}>{a.glyph}</span> {a.name}<span className="mono faint">{fm(sp.mins)}</span></li>; })}
+          </ul>
+          {top && <p className="wl-ins"><span className="mono">The Compass noticed</span>{top.title}</p>}
+        </div>
+      </div>
+    </section>
   );
 }

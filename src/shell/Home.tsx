@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { anniversary, bedtime, freshFinish, greyness, growth, holiday, type Holiday } from './worldLogic';
+import { anniversary, bedtime, freshFinish, greyness, growth, holiday, lifeGrowth, type Holiday } from './worldLogic';
 import { useShelf } from '../modules/shelf/store';
 import { season, skyPhase, type Phase, type Season } from '../core/skyLogic';
 import { usePub } from '../modules/pub/store';
@@ -23,6 +23,12 @@ import { CountUp, tilt } from './fx';
 import { AutoBackupPanel } from './AutoBackup';
 import { Homestead, type World } from './Homestead';
 import { KeeperNote } from '../modules/keeper/KeeperNote';
+import { HomeCompass } from '../modules/life/HomeCompass';
+import { TodayCal } from '../modules/feeds/FeedsUI';
+import { SeasonStrip } from '../modules/goals/SeasonStrip';
+import { CapsuleReady, OnThisDay } from '../modules/memories/widgets';
+import { lastTended, neglectLevel, LIFE_AREAS } from '../modules/life/logic';
+import { useLifeInput } from '../modules/life/useLifeInput';
 import { SkyPanel } from './SkyPanel';
 import { GRADE_VAR, greeting, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
 import { go } from './router';
@@ -50,6 +56,21 @@ export default function Home() {
     // ?season=winter / ?holiday=christmas preview any look.
     season: (new URLSearchParams(window.location.search).get('season') as Season | null) ?? season(now),
     holiday: new URLSearchParams(window.location.search).has('holiday') ? (new URLSearchParams(window.location.search).get('holiday') as Holiday) : holiday(now) };
+  // Buildings left alone gather dust: by how long since each part of life got any time.
+  const life = useLifeInput();
+  const dust = useMemo(() => {
+    const t = lastTended(life.input, today);
+    const place = { writing: 'cabin', faith: 'chapel', work: 'office', learning: 'observatory', body: 'forge', family: 'hearth' } as const;
+    return Object.fromEntries(LIFE_AREAS.map((a) => [place[a.id], neglectLevel(t[a.id], t[a.id] !== null)]));
+  }, [life.input, today]);
+  world.dust = dust;
+  world.life = useMemo(() => {
+    const x = life.input; const keys = (o: Record<string, unknown>) => Object.keys(o);
+    const bodyDays = new Set([...keys(x.forge).filter((k) => areaMinutes(x.forge[k]) > 0), ...keys(x.walks ?? {}).filter((k) => (x.walks?.[k] ?? 0) > 0)]).size;
+    const hearthMins = keys(x.hearth).reduce((n, k) => n + areaMinutes(x.hearth[k]), 0);
+    const chapelDays = keys(x.chapel).filter((k) => chapelMinutes(x.chapel[k]) > 0).length;
+    return lifeGrowth({ bodyDays, hearthMins, chapelDays, walks: keys(x.walks ?? {}).length });
+  }, [life.input]);
   const years = anniversary(firstDay, today);
   // On the anniversary, the sky replays its best: a shooting star once per day.
   useEffect(() => {
@@ -197,6 +218,18 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {life.ready && (
+        <div className="home-life rise" style={rise(5)}>
+          <div className="hl-col">
+            <HomeCompass input={life.input} />
+            <SeasonStrip />
+          </div>
+          <TodayCal />
+          <OnThisDay to="/memories" />
+          <CapsuleReady to="/memories" />
+        </div>
+      )}
 
       <div className="home-lower rise" style={rise(6)}>
         <AutoBackupPanel />

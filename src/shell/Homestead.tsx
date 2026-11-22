@@ -1,7 +1,7 @@
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import { AREAS, type AreaId } from '../modules/registry';
 import { go } from './router';
-import { daylight, type Growth, type Holiday } from './worldLogic';
+import { daylight, type Growth, type Holiday, type LifeGrowth } from './worldLogic';
 import type { Phase, Season } from '../core/skyLogic';
 import { Dog, Patrol } from './Dogs';
 import type { DogPose } from '../modules/lounge/logic';
@@ -12,7 +12,7 @@ import type { DogPose } from '../modules/lounge/logic';
  * `heat` (0–1) is how much of today's writing is done; the cabin windows burn with it.
  */
 /** What the scene needs to know about the life around it. */
-export interface World { growth: Growth; phase: Phase; sleeping: boolean; grey: number; season?: Season; holiday?: Holiday; /** A book just finished: the dogs make a fuss about it. */ newBook?: string | null }
+export interface World { growth: Growth; phase: Phase; sleeping: boolean; grey: number; season?: Season; holiday?: Holiday; /** Buildings left alone gather dust (1) and cobwebs (2). */ dust?: Partial<Record<AreaId, 0 | 1 | 2>>; life?: LifeGrowth; /** A book just finished: the dogs make a fuss about it. */ newBook?: string | null }
 
 export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, forgeHeat = 0, hearthHeat = 0, world, pose, children }: { heat: number; chapelHeat?: number; officeHeat?: number; obsHeat?: number; forgeHeat?: number; hearthHeat?: number; world?: World; pose: DogPose; children?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -119,8 +119,26 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
 
         {/* the newer buildings, smaller, up on the far ridge */}
         <g className="hs-layer" data-depth="2">
+          {world?.life?.greenhouse && (
+            <g transform="translate(700 262) scale(.58)" className="hs-greenhouse" role="link" tabIndex={0} aria-label="The greenhouse: 30 days of looking after the body" onClick={() => go('/forge')}>
+              <title>The greenhouse · raised by 30 days of looking after the body</title>
+              <circle cx="0" cy="-26" r="54" fill="url(#hs-glow)" className="hs-cabin-glow" />
+              <path d="M-46 0 V-34 A46 30 0 0 1 46 -34 V0 Z" className="gh-glass" />
+              <path d="M-46 -34 A46 30 0 0 1 46 -34 M-23 0 V-58 M0 0 V-64 M23 0 V-58 M-46 -18 H46" className="gh-frame" />
+              {[-30, -12, 8, 28].map((x, i) => <circle key={x} cx={x} cy={-8 - (i % 2) * 6} r="5" className="gh-leaf" />)}
+            </g>
+          )}
+          {world?.life?.guesthouse && (
+            <g transform="translate(968 258) scale(.5)" className="hs-guest" role="link" tabIndex={0} aria-label="The guesthouse: 20 hours of time together" onClick={() => go('/hearth')}>
+              <title>The guesthouse · raised by 20 hours at the hearth</title>
+              <circle cx="0" cy="-30" r="56" fill="url(#hs-glow)" className="hs-cabin-glow" />
+              <path d="M-40 0 V-40 L0 -66 L40 -40 V0 Z" className="hs-wall" />
+              <rect x="-26" y="-32" width="18" height="16" className="hs-win" /><rect x="8" y="-32" width="18" height="16" className="hs-win" />
+              <rect x="-7" y="-22" width="14" height="22" className="hs-door" />
+            </g>
+          )}
           <g transform="translate(330 262) scale(.62)">
-            <Building area={area('forge')} x={0} y={0} heat={forgeHeat}>
+            <Building dust={world?.dust?.forge} area={area('forge')} x={0} y={0} heat={forgeHeat}>
               <circle cx="0" cy="-30" r="60" fill="url(#hs-glow)" className="hs-cabin-glow" />
               <path d="M-46 0 V-50 L0 -78 L46 -50 V0 Z" className="hs-wall" />
               <rect x="-16" y="-34" width="32" height="34" className="hs-win" />
@@ -128,7 +146,7 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
             </Building>
           </g>
           <g transform="translate(882 262) scale(.62)">
-            <Building area={area('hearth')} x={0} y={0} heat={hearthHeat}>
+            <Building dust={world?.dust?.hearth} area={area('hearth')} x={0} y={0} heat={hearthHeat}>
               <circle cx="0" cy="-34" r="60" fill="url(#hs-glow)" className="hs-cabin-glow" />
               <path d="M-50 0 V-48 L0 -84 L50 -48 V0 Z" className="hs-wall" />
               <rect x="-36" y="-40" width="22" height="20" className="hs-win" />
@@ -147,7 +165,7 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
 
         {/* buildings */}
         <g className="hs-layer" data-depth="3">
-          <Building area={area('observatory')} x={150} y={272} heat={obsHeat}>
+          <Building dust={world?.dust?.observatory} area={area('observatory')} x={150} y={272} heat={obsHeat}>
             <circle cx="0" cy="-40" r="70" fill="url(#hs-glow)" className="hs-cabin-glow" />
             <rect x="-38" y="-46" width="76" height="46" className="hs-wall" />
             <path d="M-44 -46 A44 44 0 0 1 44 -46 Z" className="hs-wall hs-dome" />
@@ -156,7 +174,7 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
             <rect x="-10" y="-30" width="20" height="30" className="hs-door" />
           </Building>
 
-          <Building area={area('cabin')} x={470} y={300}>
+          <Building dust={world?.dust?.cabin} area={area('cabin')} x={470} y={300}>
             <circle cx="0" cy="-60" r="110" fill="url(#hs-glow)" className="hs-cabin-glow" />
             <rect x="34" y="-128" width="18" height="40" className="hs-wall hs-stone" />
             <path d="M-96 -76 L0 -142 L96 -76 L88 -76 L0 -134 L-88 -76 Z" className="hs-wall hs-roof" />
@@ -203,7 +221,7 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
             </g>
           </Building>
 
-          <Building area={area('chapel')} x={790} y={292} heat={chapelHeat}>
+          <Building dust={world?.dust?.chapel} area={area('chapel')} x={790} y={292} heat={chapelHeat}>
             <circle cx="0" cy="-60" r="80" fill="url(#hs-glow)" className="hs-cabin-glow" />
             <rect x="-40" y="-70" width="80" height="70" className="hs-wall" />
             <path d="M-48 -68 L0 -104 L48 -68 Z" className="hs-wall hs-roof" />
@@ -212,9 +230,10 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
             <path d="M0 -196 V-172 M-8 -188 H8" className="hs-cross" />
             <path d="M-12 0 V-30 A12 12 0 0 1 12 -30 V0 Z" className="hs-door" />
             <path d="M-6 -126 V-138 A6 6 0 0 1 6 -138 V-126 Z" className="hs-win" />
+            {world?.life?.bell && <g className="hs-bell" transform="translate(0 -136)"><title>The bell · rung by 30 days in the Chapel</title><path d="M-5 6 Q-5 -4 0 -5 Q5 -4 5 6 Z" /><circle cy="7.5" r="1.4" /></g>}
           </Building>
 
-          <Building area={area('office')} x={1050} y={282} heat={officeHeat}>
+          <Building dust={world?.dust?.office} area={area('office')} x={1050} y={282} heat={officeHeat}>
             <circle cx="0" cy="-60" r="90" fill="url(#hs-glow)" className="hs-cabin-glow" />
             <rect x="-58" y="-112" width="116" height="112" className="hs-wall" />
             <path d="M-66 -110 H66 L56 -126 H-56 Z" className="hs-wall hs-roof" />
@@ -222,6 +241,15 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
             <rect x="34" y="-36" width="16" height="36" className="hs-door" />
           </Building>
 
+          {world?.life?.doghouse && (
+            <g transform="translate(676 308) scale(.7)" className="hs-doghouse" role="link" tabIndex={0} aria-label="The doghouse: Cooper and Shadow's kennel" onClick={() => go('/kennel')}>
+              <title>The kennel · Cooper and Shadow</title>
+              <path d="M-22 0 V-22 L0 -40 L22 -22 V0 Z" className="hs-wall" />
+              <path d="M-26 -20 L0 -44 L26 -20" className="hs-wall hs-roof" fill="none" />
+              <path d="M-8 0 V-10 A8 8 0 0 1 8 -10 V0 Z" className="dh-door" />
+              <rect x="-11" y="-32" width="22" height="7" rx="2" className="dh-sign" /><text y="-26.6" textAnchor="middle" className="dh-name">C · S</text>
+            </g>
+          )}
           <Pines />
           {world && <Garden g={world.growth} />}
           {world?.season && <SeasonDress season={world.season} holiday={world.holiday ?? null} />}
@@ -260,13 +288,13 @@ export function Homestead({ heat, chapelHeat = 0, officeHeat = 0, obsHeat = 0, f
   );
 }
 
-function Building({ area, x, y, heat, children }: { area: (typeof AREAS)[number]; x: number; y: number; heat?: number; children: ReactNode }) {
+function Building({ area, x, y, heat, dust = 0, children }: { area: (typeof AREAS)[number]; x: number; y: number; heat?: number; dust?: 0 | 1 | 2; children: ReactNode }) {
   const open = () => go(area.path);
   const key = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
   return (
     <g
-      className={area.live ? 'hs-b live' : 'hs-b plan'} transform={`translate(${x} ${y})`} style={heat === undefined ? undefined : ({ '--heat': heat } as CSSProperties)}
-      role="link" tabIndex={0} aria-label={`${area.name}${area.live ? '' : ' (being built)'}`} onClick={open} onKeyDown={key}
+      className={`${area.live ? 'hs-b live' : 'hs-b plan'}${dust ? ` dust-${dust}` : ''}`} transform={`translate(${x} ${y})`} style={heat === undefined ? undefined : ({ '--heat': heat } as CSSProperties)}
+      role="link" tabIndex={0} aria-label={`${area.name}${area.live ? '' : ' (being built)'}${dust === 2 ? ' (untended for a while)' : ''}`} onClick={open} onKeyDown={key}
     >
       {!area.live && <rect x="-70" y="-200" width="140" height="200" fill="url(#hs-grid)" className="hs-blue" />}
       {!area.live && (
@@ -276,6 +304,12 @@ function Building({ area, x, y, heat, children }: { area: (typeof AREAS)[number]
         </g>
       )}
       {children}
+      {dust === 2 && (
+        <g className="hs-cobweb" transform="translate(-46 -70)" aria-hidden>
+          <path d="M0 0 L22 0 M0 0 L0 22 M0 0 L18 14 M0 0 L9 19 M0 0 L19 7" />
+          <path d="M6 0 Q5 5 0 6 M12 0 Q11 9 0 12 M18 0 Q16 13 0 18" />
+        </g>
+      )}
       <g className="hs-tag" transform="translate(0 -214)">
         <rect x={-area.name.length * 4.4 - 14} y="-15" width={area.name.length * 8.8 + 28} height="26" rx="13" />
         <text textAnchor="middle" y="3">{area.name}</text>

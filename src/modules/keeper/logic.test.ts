@@ -30,3 +30,22 @@ describe('the Keeper briefing', () => {
     expect(askPrompt('craft', { chapterTitle: 'The party', chapterText: 'She smiled.' })).toContain('She smiled.');
   });
 });
+
+describe('the whole life in the briefing', () => {
+  it('reads the rest of life, the calendar and money only when allowed', async () => {
+    const { briefing: b, DEFAULT_ALLOW: A } = await import('./logic');
+    const d = {
+      today: '2026-11-22', days: {}, manuscripts: [], reviews: {}, books: [], pub: { queries: [], contests: [], feedback: [], outreach: [] }, chapel: { days: {}, prayers: [], verses: [] },
+      life: { work: { '2026-11-21': 300 }, learning: {}, body: {}, family: { '2026-11-22': 90 }, walks: { '2026-11-22': 40 }, steps: { '2026-11-22': 9000 }, sleep: {} },
+      events: [{ day: '2026-11-22', start: '09:00', end: '10:00', title: 'Standup' }],
+      money: [{ month: '2026-11', income: 5000, spent: 3200, byCategory: [{ name: 'Groceries', dollars: 600 }] }],
+    } as unknown as Parameters<typeof b>[0];
+    const on = b(d, A);
+    expect(on).toMatch(/Work \(the Office\): .*11-21 300m/);
+    expect(on).toMatch(/Dog walks with Cooper and Shadow: .*11-22 40m/);
+    expect(on).toMatch(/TODAY'S CALENDAR: 09:00–10:00 Standup/);
+    expect(on).not.toMatch(/MONEY/);
+    expect(b(d, { ...A, money: true })).toMatch(/MONEY 2026-11: in \$5000, out \$3200; by category: Groceries \$600/);
+    expect(b(d, { ...A, life: false, calendar: false })).not.toMatch(/REST OF LIFE|CALENDAR/);
+  });
+});

@@ -123,3 +123,12 @@
 .keeper-week { justify-self: start; max-width: 720px; }
 .keeper-week-t { margin: 0; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(232, 168, 75, .3); font-family: var(--serif); font-size: 15px; line-height: 1.6; white-space: pre-wrap; }
 .keeper-week-t .mono { display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--lamp); margin-bottom: 4px; font-family: var(--mono); }
+
+.wl { margin-bottom: 18px; }
+.wl-body { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; }
+.wl-score { margin: 0 0 8px; color: var(--bone-dim); font-size: 13px; } .wl-score b { font-family: var(--display); font-size: 30px; color: var(--lamp); margin-right: 6px; }
+.wl-list ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; font-size: 13.5px; }
+.wl-list li { display: flex; gap: 6px; align-items: baseline; } .wl-list li .mono { margin-left: auto; font-size: 11px; }
+.wl-ins { margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(232, 168, 75, .3); font-family: var(--display); font-size: 16px; }
+.wl-ins .mono { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--lamp); margin-bottom: 3px; }
+@media (max-width: 700px) { .wl-body { grid-template-columns: minmax(0, 1fr); justify-items: center; } .wl-list { width: 100%; } }

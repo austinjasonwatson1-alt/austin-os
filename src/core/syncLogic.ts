@@ -102,6 +102,12 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
     }
     return { ...l, drafts, versions, ...(l.sprints || r.sprints ? { sprints: unionById(arr<WithId>(l.sprints), arr<WithId>(r.sprints)) } : {}) };
   },
+  'life.v1': (l, r) => ({ ...r, ...l, targets: { ...(isObj(r.targets) ? r.targets : {}), ...(isObj(l.targets) ? l.targets : {}) } }),
+  'kennel.v1': (l, r) => ({ ...l, walks: unionById(arr<WithId>(l.walks), arr<WithId>(r.walks)), care: unionById(arr<WithId>(l.care), arr<WithId>(r.care)), weights: unionById(arr<WithId>(l.weights), arr<WithId>(r.weights)), notes: unionById(arr<WithId>(l.notes), arr<WithId>(r.notes)) }),
+  'body.v1': (l, r) => { const days: Obj = { ...(isObj(r.days) ? r.days : {}) }; for (const [k, v] of Object.entries(isObj(l.days) ? l.days : {})) days[k] = { ...(isObj(days[k]) ? (days[k] as Obj) : {}), ...(v as Obj) }; return { ...l, days }; },
+  'money.v1': (l, r) => ({ ...l, txns: unionById(arr<WithId>(l.txns), arr<WithId>(r.txns)), rules: unionById(arr<WithId>(l.rules), arr<WithId>(r.rules)) }),
+  'memories.v1': (l, r) => ({ ...l, items: unionById(arr<WithId>(l.items), arr<WithId>(r.items)), capsules: unionById(arr<WithId>(l.capsules), arr<WithId>(r.capsules), (a, b) => (a.openedOn || !b.openedOn ? a : { ...a, openedOn: b.openedOn })) }),
+  'goals.v1': (l, r) => ({ ...l, goals: unionById(arr<WithId>(l.goals), arr<WithId>(r.goals)), milestones: unionById(arr<WithId>(l.milestones), arr<WithId>(r.milestones)) }),
   'review.v1': (l, r) => {
     const reviews: Obj = { ...(isObj(r.reviews) ? r.reviews : {}) };
     for (const [w, v] of Object.entries(isObj(l.reviews) ? l.reviews : {})) reviews[w] = fill(v as Obj, isObj(reviews[w]) ? (reviews[w] as Obj) : {});
@@ -144,6 +150,8 @@ export function syncMerge(local: Record<string, unknown>, remote: Record<string,
   const keys = new Set([...Object.keys(remote), ...Object.keys(tomb)]);
   for (const key of keys) {
     if (SKIP(key)) continue;
+    // A photo whose memory was deleted on either device stays gone (photos live under their own keys).
+    if (key.startsWith('memories.photo.') && tomb['memories.v1']?.[key.slice('memories.photo.'.length)]) continue;
     const rv = remote[key];
     const lv = local[key];
     let next: unknown;

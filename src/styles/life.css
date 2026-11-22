@@ -1,0 +1,47 @@
+/* ================= The Compass ================= */
+.life-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; }
+.life-wheel-wrap { position: relative; display: grid; place-items: center; }
+.life-score { display: grid; justify-items: center; margin-top: -6px; }
+.life-score b { font-family: var(--display); font-size: 40px; line-height: 1; text-shadow: 0 2px 12px rgba(0, 0, 0, .8); }
+.life-score .mono { font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--lamp); }
+.wheel { max-width: 100%; height: auto; overflow: visible; }
+.wheel-ring { fill: none; stroke: rgba(233, 228, 216, .08); }
+.wheel-spoke { stroke: rgba(233, 228, 216, .1); }
+.wheel-prev { fill: none; stroke: rgba(233, 228, 216, .28); stroke-dasharray: 3 4; }
+.wheel-now { stroke: #e8a84b; stroke-width: 1.6; filter: drop-shadow(0 0 10px rgba(232, 168, 75, .45)); animation: wheel-in .9s cubic-bezier(.2, 1.1, .3, 1) both; transform-origin: 160px 160px; }
+@keyframes wheel-in { from { transform: scale(.2); opacity: 0; } }
+.wheel-pt circle { fill: var(--c); stroke: #0b0d14; stroke-width: 1.5; }
+.wheel-pt[role='link'] { cursor: pointer; }
+.wheel-glyph { fill: var(--c); font-size: 13px; }
+.wheel-lbl { fill: var(--bone-dim); font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; }
+.wheel-pt:hover .wheel-lbl { fill: var(--bone); }
+.la-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.la { display: grid; gap: 6px; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: linear-gradient(160deg, color-mix(in srgb, var(--c) 8%, transparent), transparent 60%); }
+.la-h { display: flex; align-items: baseline; gap: 8px; border: 0; background: none; padding: 0; color: inherit; text-align: left; }
+.la-h b { font-family: var(--display); font-size: 18px; }
+.la-h .mono { font-size: 10px; margin-left: auto; }
+.la-g { color: var(--c); }
+.la-bar { height: 7px; border-radius: 4px; background: rgba(233, 228, 216, .07); overflow: hidden; }
+.la-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 60%, #000), var(--c)); transition: width .6s; }
+.la-n { font-size: 11.5px; } .la-n .up { color: var(--good, #4FBF87); } .la-n .down { color: var(--bad, #e5534b); }
+.la-target { display: flex; align-items: center; gap: 6px; }
+.la-target .mono { font-size: 10px; color: var(--bone-faint); text-transform: uppercase; letter-spacing: .1em; }
+.la-target input { width: 56px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--line-strong); background: rgba(5, 7, 12, .55); color: var(--bone); font-family: var(--mono); }
+.life-nudge { margin: 14px 0 0; font-size: 14px; color: var(--bone-dim); }
+.insights { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.insight { display: flex; gap: 14px; padding: 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+  background: radial-gradient(100% 120% at 0% 0%, color-mix(in srgb, var(--c) 12%, transparent), transparent 60%), rgba(12, 14, 22, .6); }
+.ins-g { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); }
+.ins-t { margin: 0; font-family: var(--display); font-size: 19px; line-height: 1.3; }
+.ins-e { margin: 6px 0 0; font-size: 11px; color: var(--bone-faint); line-height: 1.5; }
+/* the little compass card on Home and in the review */
+.compass-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; width: 100%; text-align: left; color: inherit; }
+.compass-card .wheel { width: 150px; height: 150px; }
+.compass-card .wheel-lbl { display: none; }
+@media (max-width: 860px) { .life-hero { grid-template-columns: minmax(0, 1fr); } .life-wheel-wrap .wheel { width: min(320px, 100%); height: auto; } }
+@media (prefers-reduced-motion: reduce) { .wheel-now { animation: none; } }
+.compass-card > span { display: grid; gap: 4px; }
+.cc-score { font-size: 13px; color: var(--bone-dim); } .cc-score b { font-family: var(--display); font-size: 34px; color: var(--lamp); margin-right: 6px; }
+.cc-line { font-size: 13.5px; }
+.home-life { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 16px; }
+.hl-col { display: grid; gap: 12px; align-content: start; }

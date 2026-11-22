@@ -16,3 +16,11 @@ describe('deep links', () => {
     expect(logLink('https://x.io/austin-os/#/home', 30, 'writing')).toBe('https://x.io/austin-os/#/log?m=30&c=writing');
   });
 });
+
+describe('health and calendar links', () => {
+  it('parses them', () => {
+    expect(parseDeepLink('/health?steps=9000&workout=30', '2026-11-22')).toEqual({ kind: 'health', h: { day: '2026-11-22', steps: 9000, sleep: undefined, workout: 30, wkind: 'cardio' } });
+    expect(parseDeepLink('/health', '2026-11-22')!.kind).toBe('bad');
+    expect(parseDeepLink('/cal?e=' + encodeURIComponent('09:00-10:00 Standup\nall-day Trip'), '2026-11-22')).toEqual({ kind: 'cal', day: '2026-11-22', events: [{ day: '2026-11-22', start: '09:00', end: '10:00', title: 'Standup' }, { day: '2026-11-22', title: 'Trip', allDay: true }] });
+  });
+});

@@ -3,6 +3,8 @@ import { mondayOf, parseISO, todayISO } from '../../core/dates';
 import { CountUp, embers } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { RoomSound } from '../../shell/RoomSound';
+import { HealthPanel } from '../feeds/FeedsUI';
+import { MoneyPanel } from '../money/MoneyPage';
 import { fmtMins } from '../ledger/logic';
 import { areaMinutes, areaStreak, areaWeek, daysTo, money, moneyYear, nextOccurrence } from './logic';
 import { AREA_STORES } from './store';
@@ -77,6 +79,8 @@ export function AreaPage({ config }: { config: AreaConfig }) {
         </div>
       </section>}
 
+      {config.id === 'forge' && <HealthPanel />}
+      {config.id === 'bank' && <MoneyPanel startIndex={2} />}
       <div className="area-lists">
         {config.lists.map((l, i) => <ListPanel key={l.id} list={l} items={a.items.filter((x) => x.list === l.id)} config={config} delay={2 + i} />)}
       </div>

@@ -3,19 +3,33 @@
  *   #/log?m=30&c=writing       log 30 minutes of writing today
  *   #/log?m=15&c=prayer        15 minutes in the Chapel (prayer or scripture)
  *   #/lamp                     start a lamp-mode session
+ *   #/health?steps=8412&sleep=7.4&workout=35&kind=cardio   Apple Health, nightly
+ *   #/cal?d=2026-11-23&e=09:00-10:00 Standup%0A…            today's calendar
  * Pure parsing only.
  */
 import { CATS, type CatKey } from '../modules/ledger/types';
+import { parseHealth, parseShortcutEvents, type CalEvent, type HealthLink } from '../modules/feeds/logic';
 
 export type DeepLink =
   | { kind: 'log'; mins: number; cat: CatKey }
   | { kind: 'chapel'; mins: number; what: 'prayer' | 'scripture' }
   | { kind: 'lamp' }
+  | { kind: 'health'; h: HealthLink }
+  | { kind: 'cal'; day: string; events: CalEvent[] }
   | { kind: 'bad'; reason: string };
 
-export function parseDeepLink(route: string): DeepLink | null {
+export function parseDeepLink(route: string, today = ''): DeepLink | null {
   const [path, query = ''] = route.split('?');
   if (path === '/lamp') return { kind: 'lamp' };
+  if (path === '/health') {
+    const h = parseHealth(query, today);
+    return h ? { kind: 'health', h } : { kind: 'bad', reason: 'The link needs steps, sleep or workout, like steps=8000.' };
+  }
+  if (path === '/cal') {
+    const q = new URLSearchParams(query);
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(q.get('d') ?? '') ? q.get('d')! : today;
+    return { kind: 'cal', day, events: parseShortcutEvents(q.get('e') ?? '', day) };
+  }
   if (path !== '/log') return null;
   const q = new URLSearchParams(query);
   const mins = Math.round(Number(q.get('m') ?? q.get('min') ?? q.get('minutes')));
@@ -29,3 +43,7 @@ export function parseDeepLink(route: string): DeepLink | null {
 
 /** The link for a quick-log shortcut, to copy into the Shortcuts app. */
 export const logLink = (base: string, mins: number, cat: string) => `${base.replace(/#.*$/, '')}#/log?m=${mins}&c=${cat}`;
+
+/** The nightly Apple Health link, with the Shortcut's variables written in brackets. */
+export const healthLink = (base: string) => `${base.replace(/#.*$/, '')}#/health?steps=[Steps]&sleep=[Sleep]&workout=[Workout minutes]`;
+export const calLink = (base: string) => `${base.replace(/#.*$/, '')}#/cal?e=[Events]`;

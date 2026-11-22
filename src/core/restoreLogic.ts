@@ -66,6 +66,14 @@ export function planRestore(
     if (change === 'less') shrinks.push(d.name);
     items.push({ key, name: d.name, now: cur === undefined ? null : d.detail(cur), file: d.detail(value), change });
   }
+  // Photos each live under their own key: show them as one line, not one per photo.
+  const photos = items.filter((i) => i.key.startsWith('memories.photo.'));
+  if (photos.length > 1) {
+    const newOnes = photos.filter((i) => i.change === 'new').length;
+    const rest = items.filter((i) => !i.key.startsWith('memories.photo.'));
+    rest.push({ key: 'memories.photo.*', name: 'Memories · the photos', now: `${photos.length - newOnes} here`, file: `${photos.length} photo${photos.length === 1 ? '' : 's'}`, change: newOnes ? 'new' : photos.every((i) => i.change === 'same') ? 'same' : 'different' });
+    items.length = 0; items.push(...rest);
+  }
   if (items.length === 0) return { error: 'That backup is empty — there is nothing in it to restore.' };
   return { exportedAt: typeof p.exportedAt === 'string' ? p.exportedAt : null, items, writes, shrinks };
 }

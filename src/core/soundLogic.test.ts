@@ -25,6 +25,7 @@ describe('soundscape scenes', () => {
     expect(sceneFor('/cabin/write/m/c', day).mix.calm).toBeGreaterThan(0);
     expect(sceneFor('/cabin/timer', day).mix.calm).toBeGreaterThan(0);
     expect(sceneFor('/somewhere-new', day)).toEqual(outdoors(day));
+    expect(sceneFor('/kennel', day).mix.fire).toBeGreaterThan(0);
   });
 
   it('brings the weather indoors as rain on the roof', () => {

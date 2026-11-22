@@ -43,3 +43,13 @@ describe('planRestore', () => {
     expect(planRestore({}, backup({ 'os.backupMeta': {} }), D)).toHaveProperty('error');
   });
 });
+
+describe('photos in a restore', () => {
+  it('are shown as one line', () => {
+    const plan = planRestore({ 'memories.photo.a': 'x' }, { app: 'austin-os', data: { 'memories.photo.a': 'x', 'memories.photo.b': 'y', 'memories.photo.c': 'z' } }, {});
+    if ('error' in plan) throw new Error(plan.error);
+    expect(plan.items).toHaveLength(1);
+    expect(plan.items[0]).toMatchObject({ name: 'Memories · the photos', file: '3 photos', change: 'new' });
+    expect(Object.keys(plan.writes).sort()).toEqual(['memories.photo.b', 'memories.photo.c']);
+  });
+});
