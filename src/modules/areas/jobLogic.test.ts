@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { jobClock, weekMoves } from './jobLogic';
+import { jobClock, movesOn, weekMoves } from './jobLogic';
 
 describe('Job Search HQ', () => {
   it('counts down to March 1', () => {
@@ -12,5 +12,13 @@ describe('Job Search HQ', () => {
     const w = weekMoves({ '2026-11-16': { brief: 1, apply: 1 }, '2026-11-17': { referral: 1 }, '2026-11-18': { referral: 1, brief: 0 }, '2026-11-23': { brief: 1 } }, '2026-11-16', '2026-11-18');
     expect(w.days.map((d) => d.n)).toEqual([2, 1, 1, 0, 0, 0, 0]);
     expect(w.referrals).toBe(2);
+  });
+});
+
+describe('moves on a day', () => {
+  it('counts only the four moves, never old minutes', () => {
+    expect(movesOn({ '2026-11-22': { work: 300, brief: 1, apply: 1 } }, '2026-11-22')).toBe(2);
+    expect(movesOn({ '2026-11-22': { work: 300 } }, '2026-11-22')).toBe(0);
+    expect(movesOn({}, '2026-11-22')).toBe(0);
   });
 });

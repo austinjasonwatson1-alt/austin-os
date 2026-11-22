@@ -28,3 +28,8 @@ export function weekMoves(days: Record<string, Record<string, number>>, monday: 
     referrals: ds.filter((d) => d <= today && (days[d]?.referral ?? 0) > 0).length,
   };
 }
+
+/** How many of the four moves were made on `day` (other keys, like old logged minutes, don't count). */
+export function movesOn(days: Record<string, Record<string, number>>, day: string): number {
+  return MOVES.filter((m) => (days[day]?.[m.k] ?? 0) > 0).length;
+}

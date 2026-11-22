@@ -5,7 +5,7 @@ import { season, skyPhase, type Phase, type Season } from '../core/skyLogic';
 import { usePub } from '../modules/pub/store';
 import { areaHeat, areaMinutes, money, moneyYear } from '../modules/areas/logic';
 import { AREA_STORES } from '../modules/areas/store';
-import { jobClock } from '../modules/areas/jobLogic';
+import { jobClock, movesOn } from '../modules/areas/jobLogic';
 import { AREA_CONFIGS, OBSERVATORY, OFFICE } from '../modules/areas/types';
 import { OWNER } from '../config';
 import { addDays, parseISO, todayISO } from '../core/dates';
@@ -246,7 +246,7 @@ export default function Home() {
 
 /** One line for each building on Home. */
 function blurb(id: string, st: { items: { list: string; amount?: number; date: string; when?: string; stage?: string }[]; days: Record<string, Record<string, number>> }, today: string, todayAmt: number): string {
-  if (id === 'office') { const c = jobClock(today); return `${Math.max(0, c.left)} days to March 1 · ${todayAmt} of 4 moves today`; }
+  if (id === 'office') { const c = jobClock(today); return `${Math.max(0, c.left)} days to March 1 · ${movesOn(st.days, today)} of 4 moves today`; }
   if (id === 'observatory') { const p = st.items.filter((i) => i.list === 'projects'); return p.length ? `${p.length} projects · ${p.filter((i) => i.stage === 'building').length} in the works` : 'Your workbench of builds'; }
   if (id === 'forge') return todayAmt ? `${fmtMins(todayAmt)} of workouts today` : 'Quiet today';
   if (id === 'bank') return `${money(moneyYear(st.items, { out: -1, in: 1 }, Number(today.slice(0, 4))).net)} net this year`;

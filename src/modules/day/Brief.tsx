@@ -2,7 +2,7 @@ import { useEffect, type CSSProperties } from 'react';
 import { CountUp } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { go } from '../../shell/router';
-import { jobClock, MOVES } from '../areas/jobLogic';
+import { jobClock, movesOn } from '../areas/jobLogic';
 import { areaMinutes } from '../areas/logic';
 import { AREA_STORES } from '../areas/store';
 import { chapelMinutes } from '../chapel/logic';
@@ -26,7 +26,7 @@ export function MorningBrief({ today }: { today: string }) {
   const feeds = useFeeds();
   useEffect(() => { void feeds.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const moves = MOVES.filter((m) => (office.days[today]?.[m.k] ?? 0) > 0).length;
+  const moves = movesOn(office.days, today);
   const dl = nextDeadline(ledger.deadlines, today);
   const rows = morningBrief({
     writingMins: dayTotal(ledger.days[today]), writingGood: ledger.thresholds.good,
