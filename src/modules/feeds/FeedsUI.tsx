@@ -82,7 +82,7 @@ export function FeedsSettings() {
   const healthUrl = `${base}#/health?steps=`;
   const calUrl = `${base}#/cal?e=`;
   return (
-    <section className="panel cloud feeds-set">
+    <section id="set-feeds" className="panel cloud feeds-set">
       <div className="panel-h"><p className="panel-t">Apple Health & your calendar</p><span className={`mono ${f.calAt ? 'g-good' : 'faint'}`} style={{ fontSize: 11 }}>{f.calAt ? 'calendar connected' : 'not set up'}</span></div>
       <p className="set-note" style={{ marginTop: 0 }}>Both come in through the Shortcuts app on your iPhone, set to run by themselves. Nothing is shared with anyone; the numbers land in Austin OS on your device.</p>
       <div className="fs-grid">

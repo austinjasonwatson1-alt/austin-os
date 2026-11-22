@@ -7,6 +7,8 @@ import { useCloud } from './cloud';
 import { logLink } from './deepLink';
 import { rise } from './lamp';
 import { SkyPanel } from './SkyPanel';
+import { DataSafety } from './DataSafety';
+import { SetupChecklist } from './SetupChecklist';
 import { FeedsSettings } from '../modules/feeds/FeedsUI';
 import { useKeeper } from '../modules/keeper/store';
 import type { Allow } from '../modules/keeper/logic';
@@ -23,10 +25,12 @@ export default function SettingsPage() {
         <h1 className="hero-title">The <em>workshop.</em></h1>
         <p className="hero-line">How Austin OS reaches you: reminders, quick-log links for Siri and your watch, and sync with your phone.</p>
       </section>
+      <SetupChecklist />
       <div className="set-grid">
         <Reminders />
         <SkyPanel />
         <QuickLinks />
+        <DataSafety />
         <CloudSync />
         <KeeperSettings />
         <FeedsSettings />
@@ -46,7 +50,7 @@ function Reminders() {
     if (p === 'granted') s.setReminders(true);
   };
   return (
-    <section className="panel rise" style={rise(1)}>
+    <section id="set-reminders" className="panel rise" style={rise(1)}>
       <div className="panel-h"><p className="panel-t">Reminders</p></div>
       <label className="switch">
         <input type="checkbox" checked={on} disabled={perm === 'unsupported' || perm === 'denied'} onChange={(e) => (e.target.checked ? void turnOn() : s.setReminders(false))} />
@@ -74,7 +78,7 @@ function QuickLinks() {
   ];
   const copy = async (h: string) => { try { await navigator.clipboard.writeText(h); setCopied(h); setTimeout(() => setCopied(''), 2000); } catch { /* fine */ } };
   return (
-    <section className="panel rise" style={rise(2)}>
+    <section id="set-siri" className="panel rise" style={rise(2)}>
       <div className="panel-h"><p className="panel-t">Quick-log links · Siri &amp; Apple Watch</p></div>
       <p className="set-note" style={{ marginTop: 0 }}>Opening one of these links logs the minutes and heads Home. To say “Hey Siri, log thirty minutes”:</p>
       <ol className="set-steps">
@@ -107,7 +111,7 @@ function CloudSync() {
   const [showSql, setShowSql] = useState(false);
   const ok = /^https:\/\/.+/.test(url.trim()) && anon.trim().length > 20 && pass.length >= 12 && pass === pass2;
   return (
-    <section className="panel cloud rise" style={rise(3)}>
+    <section id="set-cloud" className="panel cloud rise" style={rise(3)}>
       <div className="panel-h"><p className="panel-t">Cloud sync · phone and computers</p><span className={`mono ${c.configured ? 'g-good' : 'faint'}`} style={{ fontSize: 11 }}>{c.configured ? (c.busy ? 'syncing…' : 'on') : 'off'}</span></div>
       {c.configured ? (
         <>
@@ -165,7 +169,7 @@ function KeeperSettings() {
   useEffect(() => { void k.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [key, setKey] = useState('');
   return (
-    <section className="panel cloud rise" style={rise(4)}>
+    <section id="set-keeper" className="panel cloud rise" style={rise(4)}>
       <div className="panel-h"><p className="panel-t">The Keeper · AI mentor</p><span className={`mono ${k.enabled ? 'g-good' : 'faint'}`} style={{ fontSize: 11 }}>{k.enabled ? 'on' : 'off'}</span></div>
       <p className="set-note" style={{ marginTop: 0 }}>
         The Keeper uses Claude through your own Anthropic API key (console.anthropic.com → API keys). The key stays on this device only, never in backups or sync. Each question sends Anthropic a short briefing built only from what you allow below; typical use costs cents a day.

@@ -3,6 +3,7 @@ import { mondayOf, parseISO, todayISO } from '../../core/dates';
 import { CountUp, embers } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { RoomSound } from '../../shell/RoomSound';
+import { go } from '../../shell/router';
 import { HealthPanel } from '../feeds/FeedsUI';
 import { MoneyPanel } from '../money/MoneyPage';
 import { fmtMins } from '../ledger/logic';
@@ -17,6 +18,13 @@ const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const short = (d: string) => parseISO(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
 /** One homestead building with its own time and lists. Used for the Office and the Observatory. */
+/** Rooms that live inside a building. */
+const ALSO: Partial<Record<string, { path: string; glyph: string; name: string }[]>> = {
+  forge: [{ path: '/kennel', glyph: '🐾', name: 'The Kennel · Cooper & Shadow' }],
+  hearth: [{ path: '/memories', glyph: '❀', name: 'Memories & the time capsule' }],
+  bank: [{ path: '/money', glyph: '$', name: 'All of Money' }],
+};
+
 export function AreaPage({ config }: { config: AreaConfig }) {
   const useArea = AREA_STORES[config.id];
   const a = useArea();
@@ -79,6 +87,12 @@ export function AreaPage({ config }: { config: AreaConfig }) {
         </div>
       </section>}
 
+      {ALSO[config.id] && (
+        <nav className="also-here rise" style={rise(1)} aria-label={`Also in ${config.name}`}>
+          <span className="mono">Also here</span>
+          {ALSO[config.id]!.map((r) => <button key={r.path} className="also-room" onClick={() => go(r.path)}><span aria-hidden>{r.glyph}</span>{r.name}<span aria-hidden>→</span></button>)}
+        </nav>
+      )}
       {config.id === 'forge' && <HealthPanel />}
       {config.id === 'bank' && <MoneyPanel startIndex={2} />}
       <div className="area-lists">

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { todayISO } from '../core/dates';
 import { useChapel } from '../modules/chapel/store';
 import { useFeeds } from '../modules/feeds/store';
+import { kvSet, SYS_PREFIX } from '../core/storage';
 import { useIdeas } from '../modules/ideas/store';
 import { parseCapture } from '../modules/ideas/logic';
 import { AREA_STORES } from '../modules/areas/store';
@@ -42,6 +43,7 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
       done.current = true;
       const pc = parseCapture(link.text, 'novel');
       ideas.add(pc);
+      void kvSet(`${SYS_PREFIX}link.idea`, new Date().toISOString());
       setMsg({ big: 'Into the vault.', small: `${pc.title ? `“${pc.title}”: ` : ''}${pc.spark.slice(0, 120)}` });
       return;
     }
@@ -50,6 +52,7 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
       done.current = true;
       if (link.kind === 'health') {
         feeds.applyHealth(link.h);
+        void kvSet(`${SYS_PREFIX}link.health`, new Date().toISOString());
         const bits = [link.h.steps !== undefined ? `${link.h.steps.toLocaleString('en-US')} steps` : '', link.h.sleep !== undefined ? `${link.h.sleep}h of sleep` : '', link.h.workout ? `${link.h.workout}m ${link.h.wkind === 'walk' ? 'walking' : link.h.wkind}` : ''].filter(Boolean);
         setMsg({ big: 'Health, brought in', small: `${bits.join(' · ')} for the Forge.` });
       } else {

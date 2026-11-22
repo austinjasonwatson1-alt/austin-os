@@ -460,3 +460,37 @@ input, textarea, select { font: inherit; color: inherit; }
 /* a quiet text link styled as a button */
 .linkish { border: 0; background: none; padding: 0; color: var(--bone-faint); font-size: 11.5px; text-align: left; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .linkish:hover { color: var(--lamp); }
+
+/* ---------------- the rail: grouped rooms ---------------- */
+.nav-groups { display: grid; gap: 2px; margin-top: 6px; }
+.nav-gh { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 14px 10px 6px; border: 0; background: none; cursor: pointer;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--bone-faint); }
+.nav-gh:hover { color: var(--bone); }
+.nav-group.here .nav-gh { color: var(--lamp); }
+.nav-chev { font-size: 13px; transition: transform .2s; }
+.nav-group.open .nav-chev { transform: rotate(90deg); }
+.nav-gi { display: grid; gap: 1px; animation: nav-open .2s ease-out; }
+@keyframes nav-open { from { opacity: 0; transform: translateY(-4px); } }
+.nav-yours { display: grid; gap: 1px; }
+.nav-all { color: var(--bone-faint); }
+/* the room map */
+.room-map { position: fixed; inset: 0; z-index: 80; display: grid; place-items: start center; padding: 6vh 16px; background: rgba(3, 4, 8, .72); backdrop-filter: blur(8px); animation: nav-open .2s ease-out; overflow-y: auto; }
+.rm-panel { width: min(860px, 100%); padding: 22px; border-radius: 22px; border: 1px solid var(--line-strong); background: var(--panel-solid); box-shadow: 0 40px 90px rgba(0, 0, 0, .6); display: grid; gap: 18px; }
+.rm-h { display: flex; justify-content: space-between; align-items: center; }
+.rm-group h3 { margin: 0 0 8px; font-family: var(--display); font-size: 20px; }
+.rm-top, .rm-rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.rm-room { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(233, 228, 216, .02); color: var(--bone); font-size: 14px; text-align: left; }
+.rm-room span { width: 20px; text-align: center; color: var(--lamp); }
+.rm-room:hover { border-color: rgba(232, 168, 75, .45); background: var(--lamp-soft); }
+.rm-room.on { border-color: rgba(232, 168, 75, .6); background: var(--lamp-soft); }
+.rm-set { justify-self: start; }
+@media (max-width: 860px) {
+  /* on the phone the bar holds the essentials; everything else is one tap away in the map */
+  .nav-groups, .nav-yours .nav-label { display: none; }
+  .nav-yours { display: contents; }
+  .rail > .brand { order: -3; } .rail-search { order: -2; }
+  .nav-all { order: -1; color: var(--lamp); border-color: rgba(232, 168, 75, .4); }
+  .rm-top, .rm-rooms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .room-map { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .nav-gi, .room-map { animation: none; } }

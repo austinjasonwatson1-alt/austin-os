@@ -13,7 +13,7 @@ export function SkyPanel() {
   const s = useSky();
   const p = moonPhase(now);
   return (
-    <section className="panel skypanel">
+    <section id="set-sky" className="panel skypanel">
       <div className="panel-h"><p className="panel-t">Sky &amp; sound</p></div>
       <ul className="sky-facts">
         <li><span>Light</span><b>{PHASE[skyPhase(now)]}</b></li>

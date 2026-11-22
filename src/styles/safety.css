@@ -1,0 +1,44 @@
+/* ================= Data safety ================= */
+.safety.lvl-bad { border-color: rgba(229, 83, 75, .5); }
+.safety.lvl-warn { border-color: rgba(232, 168, 75, .5); }
+.safe-dot { width: 10px; height: 10px; border-radius: 50%; }
+.safe-dot.ok { background: #4FBF87; box-shadow: 0 0 10px #4FBF87; } .safe-dot.warn { background: var(--lamp); box-shadow: 0 0 10px var(--lamp); } .safe-dot.bad { background: #e5534b; box-shadow: 0 0 10px #e5534b; }
+.safe-head { display: flex; gap: 14px; align-items: flex-start; }
+.safe-seal { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 18px; color: #1a140c; }
+.safe-seal.ok { background: radial-gradient(circle at 35% 30%, #c9f5dc, #4FBF87 60%, #2a7a52); }
+.safe-seal.warn { background: radial-gradient(circle at 35% 30%, #fff1c8, #e8a84b 60%, #a8721f); }
+.safe-seal.bad { background: radial-gradient(circle at 35% 30%, #ffb3a8, #e5534b 60%, #8a2c1d); color: #fff; }
+.safe-t { margin: 0; font-family: var(--display); font-size: 20px; }
+.safe-d { margin: 4px 0 0; font-size: 13.5px; color: var(--bone-dim); line-height: 1.5; }
+.safe-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.safe-note { font-size: 11px; margin: 12px 0 0; line-height: 1.5; }
+.safe-bad { margin: 12px 0 0; color: #ff9a8f; font-size: 13.5px; }
+.safe-plan { margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px solid rgba(79, 191, 135, .35); background: rgba(79, 191, 135, .05); }
+.safe-plan .mono { font-size: 11px; margin: 0 0 8px; }
+.safe-plan ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 3px 16px; font-size: 13px; }
+.safe-plan li { display: flex; justify-content: space-between; gap: 8px; } .safe-plan li .mono { font-size: 10.5px; text-align: right; }
+.safety-nudge { display: flex; gap: 12px; align-items: center; width: 100%; margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; text-align: left; color: inherit; font-size: 13.5px; border: 1px solid rgba(232, 168, 75, .45); background: rgba(232, 168, 75, .07); }
+.safety-nudge.bad { border-color: rgba(229, 83, 75, .55); background: rgba(229, 83, 75, .08); }
+.safety-nudge .safe-seal { width: 28px; height: 28px; font-size: 14px; }
+.safety-nudge > span:nth-child(2) { flex: 1; }
+
+/* ---------------- getting set up ---------------- */
+.setup { margin-bottom: 16px; }
+.setup-h { display: flex; gap: 14px; align-items: center; width: 100%; border: 0; background: none; color: inherit; text-align: left; padding: 0; }
+.setup-h > span:nth-child(2) { flex: 1; display: grid; gap: 3px; }
+.setup.panel .nav-chev { transform: rotate(90deg); color: var(--bone-faint); }
+.setup-sub { font-size: 13px; color: var(--bone-dim); }
+.setup-ring { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--lamp) calc(var(--p) * 360deg), rgba(233, 228, 216, .08) 0); -webkit-mask: radial-gradient(circle, transparent 19px, #000 20px); mask: radial-gradient(circle, transparent 19px, #000 20px); position: relative; }
+.setup-ring b { position: absolute; font-family: var(--display); font-size: 20px; -webkit-mask: none; }
+.setup-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+.setup-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.setup-list li.done { opacity: .6; }
+.setup-list b { font-size: 14.5px; font-weight: 600; }
+.setup-why { display: block; font-size: 12.5px; color: var(--bone-dim); margin-top: 2px; line-height: 1.45; }
+.setup-ess { margin-left: 8px; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--lamp); border: 1px solid rgba(232, 168, 75, .45); border-radius: 99px; padding: 1px 7px; }
+.setup-tick { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; border: 1.5px solid rgba(232, 168, 75, .5); color: #1a140c; }
+.setup-list li.done .setup-tick { background: #4FBF87; border-color: #4FBF87; }
+.panel.flash { animation: flash 1.4s ease-out; }
+@keyframes flash { 0%, 40% { box-shadow: 0 0 0 3px rgba(232, 168, 75, .7), 0 0 40px rgba(232, 168, 75, .3); } }
+@media (prefers-reduced-motion: reduce) { .panel.flash { animation: none; outline: 2px solid var(--lamp); } }

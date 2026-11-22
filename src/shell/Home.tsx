@@ -23,6 +23,7 @@ import { CountUp, tilt } from './fx';
 import { AutoBackupPanel } from './AutoBackup';
 import { Homestead, type World } from './Homestead';
 import { KeeperNote } from '../modules/keeper/KeeperNote';
+import { SafetyNudge } from './DataSafety';
 import { HomeCompass } from '../modules/life/HomeCompass';
 import { TodayCal } from '../modules/feeds/FeedsUI';
 import { SeasonStrip } from '../modules/goals/SeasonStrip';
@@ -123,6 +124,7 @@ export default function Home() {
         </button>
       )}
 
+      <SafetyNudge />
       <KeeperNote />
       {(now.getMonth() === 11 && now.getDate() >= 15) || (now.getMonth() === 0 && now.getDate() <= 10) ? (
         <button className="film-nudge rise" style={rise(1)} onClick={() => go('/film')}>
