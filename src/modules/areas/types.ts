@@ -13,6 +13,8 @@ export interface AreaItem {
   done?: boolean;
   /** Dollars, for money lists (whether it's in or out is decided by the list). */
   amount?: number;
+  /** When it was last changed by hand or by an import (ISO time), so sync keeps the newest edit. */
+  edited?: string;
   /** Interview prep steps done (keys of PREP in jobLogic). */
   checks?: string[];
   /** A date it's about (a birthday, a race), for dated lists. */

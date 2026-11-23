@@ -14,13 +14,14 @@ interface PubState extends PubData {
   put: <K extends ListKey>(list: K, item: Omit<Item<K>, 'id'> & { id?: string }) => void;
   remove: (list: ListKey, id: string) => void;
   setRoad: (r: PubData['road']) => void;
+  toggleReady: (msId: string, k: string) => void;
 }
 
 const newId = () => `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
 export const usePub = create<PubState>((set, get) => {
   const persist = () => {
-    if (get().loaded) void saveWithSnapshot(KEY, { queries: get().queries, contests: get().contests, feedback: get().feedback, outreach: get().outreach, road: get().road } satisfies PubData);
+    if (get().loaded) void saveWithSnapshot(KEY, { queries: get().queries, contests: get().contests, feedback: get().feedback, outreach: get().outreach, road: get().road, ready: get().ready } satisfies PubData);
   };
   return {
     ...DEFAULT_PUB,
@@ -42,5 +43,10 @@ export const usePub = create<PubState>((set, get) => {
       persist();
     },
     setRoad(road) { set({ road }); persist(); },
+    toggleReady(msId, k) {
+      const cur = get().ready?.[msId] ?? [];
+      set({ ready: { ...(get().ready ?? {}), [msId]: cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k] } });
+      persist();
+    },
   };
 });

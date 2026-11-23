@@ -60,6 +60,8 @@ export interface PubData {
   outreach: Outreach[];
   /** Milestones only Austin can mark: the deal and the book in the world. */
   road: { signed?: string; published?: string };
+  /** Query-readiness steps Austin ticks himself, per manuscript id (query letter, synopsis, pages). */
+  ready?: Record<string, string[]>;
 }
 
 export const DEFAULT_PUB: PubData = { queries: [], contests: [], feedback: [], outreach: [], road: {} };

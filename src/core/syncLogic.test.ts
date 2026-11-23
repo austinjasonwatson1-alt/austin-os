@@ -165,3 +165,21 @@ describe('edits travel between devices', () => {
     expect(back['kennel.v1'].walks!.find((w) => w.id === 'w')!.minutes).toBe(45);
   });
 });
+
+describe('query-readiness ticks', () => {
+  it('keeps what either device ticked', () => {
+    const out = syncMerge({ 'pub.v1': { queries: [], contests: [], feedback: [], outreach: [], road: {}, ready: { m1: ['letter'] } } }, { 'pub.v1': { ready: { m1: ['synopsis', 'letter'], m2: ['pages'] } } }) as Record<string, { ready: Record<string, string[]> }>;
+    expect(out['pub.v1'].ready.m1.sort()).toEqual(['letter', 'synopsis']);
+    expect(out['pub.v1'].ready.m2).toEqual(['pages']);
+  });
+});
+
+describe('building lists keep the newest edit', () => {
+  it('takes the other device’s newer status for an application', () => {
+    const l = { 'area.office': { days: {}, items: [{ id: 'a', list: 'apps', text: 'Toast — PM', status: 'applied', edited: '2026-11-20T10:00:00Z' }] } };
+    const r = { 'area.office': { days: {}, items: [{ id: 'a', list: 'apps', text: 'Toast — PM', status: 'interview', edited: '2026-11-22T10:00:00Z' }] } };
+    const out = syncMerge(l, r) as Record<string, { items: { status: string }[] }>;
+    expect(out['area.office'].items[0].status).toBe('interview');
+    expect((syncMerge(r, l) as typeof out)['area.office']).toBeUndefined(); // already newest here: nothing to write
+  });
+});

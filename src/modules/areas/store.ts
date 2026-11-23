@@ -40,7 +40,8 @@ function makeStore(key: string): UseBoundStore<StoreApi<AreaState>> {
         persist();
       },
       patchItem(id, p) {
-        set({ items: get().items.map((i) => (i.id === id ? { ...i, ...p } : i)) });
+        const edited = new Date().toISOString();
+        set({ items: get().items.map((i) => (i.id === id ? { ...i, ...p, edited } : i)) });
         persist();
       },
       removeItem(id) {

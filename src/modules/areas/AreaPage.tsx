@@ -7,6 +7,7 @@ import { go } from '../../shell/router';
 import { HealthPanel } from '../feeds/FeedsUI';
 import { AreaArt } from './AreaArt';
 import { JobCountdown, JobHQ } from './JobHQ';
+import { AppsPipeline } from './AppsPipeline';
 import { BodyTally, ProjectsGallery, ProjectsTally } from './Projects';
 import { MoneyPanel } from '../money/MoneyPage';
 import { fmtMins } from '../ledger/logic';
@@ -94,7 +95,7 @@ export function AreaPage({ config }: { config: AreaConfig }) {
           {ALSO[config.id]!.map((r) => <button key={r.path} className="also-room" onClick={() => go(r.path)}><span aria-hidden>{r.glyph}</span>{r.name}<span aria-hidden>→</span></button>)}
         </nav>
       )}
-      {config.id === 'office' && <JobHQ />}
+      {config.id === 'office' && <><JobHQ /><AppsPipeline /></>}
       {config.id === 'observatory' && <ProjectsGallery />}
       {config.id === 'forge' && <HealthPanel />}
       {config.id === 'bank' && <MoneyPanel startIndex={2} />}

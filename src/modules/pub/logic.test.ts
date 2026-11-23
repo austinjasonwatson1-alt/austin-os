@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysOut, describePub, dueSoon, queryStats, road, upcomingContests } from './logic';
+import { daysOut, describePub, dueSoon, queryReadiness, queryStats, road, upcomingContests } from './logic';
 import { DEFAULT_PUB, type Query } from './types';
 
 const Q = (p: Partial<Query>): Query => ({ id: Math.random().toString(), agent: 'A', status: 'queried', ...p });
@@ -36,5 +36,31 @@ describe('road to publication', () => {
 
   it('describes itself', () => {
     expect(describePub.detail({ queries: [1], contests: [], feedback: [1, 2], outreach: [] })).toBe('1 queries · 0 contests · 2 notes · 0 contacts');
+  });
+});
+
+describe('ready to query', () => {
+  const ms = { id: 'm1', title: 'The Life I Deserve', target: 90000, history: {}, chapters: [
+    { id: 'c1', title: 'One', status: 'done', words: 40000 }, { id: 'c2', title: 'Two', status: 'revise', words: 41000 },
+  ] } as never;
+  it('fills itself in from the other rooms, plus three hand-ticked steps', () => {
+    const r = queryReadiness({ queries: [Q({}), Q({ status: 'researching' })], feedback: [
+      { id: 'f1', from: 'Sam', kind: 'beta', date: '2026-10-01', text: 'Slow middle', resolved: true },
+      { id: 'f2', from: 'Agent X', kind: 'agent', date: '2026-10-01', text: 'pass' },
+      { id: 'f3', from: 'Jo', kind: 'critique', date: '2026-10-02', text: 'Love it', ms: 'other-ms' },
+    ], ready: { m1: ['letter'] } }, ms);
+    const got = Object.fromEntries(r.steps.map((s) => [s.k, s.got]));
+    expect(got.draft).toBe(1);
+    expect(got.revised).toBe(0.5);
+    expect(got.readers).toBe(0.5);
+    expect(got.addressed).toBe(1);
+    expect(got.letter).toBe(1);
+    expect(got.synopsis).toBe(0);
+    expect(got.agents).toBeCloseTo(2 / 15);
+    expect(r.steps).toHaveLength(8);
+    expect(r.score).toBeCloseTo((1 + 0.5 + 0.5 + 1 + 1 + 0 + 0 + 2 / 15) / 8);
+  });
+  it('is empty and calm with no manuscript', () => {
+    expect(queryReadiness({ queries: [], feedback: [] }, undefined).score).toBe(0);
   });
 });

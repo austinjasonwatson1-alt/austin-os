@@ -59,6 +59,8 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
     feedback: unionById(arr<WithId>(l.feedback), arr<WithId>(r.feedback)),
     outreach: unionById(arr<WithId>(l.outreach), arr<WithId>(r.outreach)),
     road: fill(isObj(l.road) ? l.road : {}, isObj(r.road) ? r.road : {}),
+    // Query-readiness ticks: what either device ticked stays ticked.
+    ready: Object.fromEntries([...new Set([...Object.keys(obj(l.ready)), ...Object.keys(obj(r.ready))])].map((k) => [k, [...new Set([...arr<string>(obj(l.ready)[k]), ...arr<string>(obj(r.ready)[k])])]])),
   }),
   'shelf.v1': (l, r) => ({
     ...l,
@@ -187,7 +189,7 @@ function mergeArea(l: Obj, r: Obj): Obj {
   }
   const out: Obj = { ...l, days };
   for (const k of Object.keys({ ...l, ...r })) {
-    if (k !== 'days' && (Array.isArray(l[k]) || Array.isArray(r[k]))) out[k] = unionById(arr<WithId>(l[k]), arr<WithId>(r[k]));
+    if (k !== 'days' && (Array.isArray(l[k]) || Array.isArray(r[k]))) out[k] = unionById(arr<WithId>(l[k]), arr<WithId>(r[k]), newerEdit);
   }
   return out;
 }

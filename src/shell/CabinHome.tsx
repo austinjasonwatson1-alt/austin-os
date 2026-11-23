@@ -9,6 +9,7 @@ import { CAT, GRADE_VAR, Lamp, QuickLog, rise, useMinuteClock } from './lamp';
 import { cabinRooms, Room } from './Rooms';
 import { Constellations } from './Constellations';
 import { RoadMap } from '../modules/pub/RoadMap';
+import { QueryReady } from '../modules/pub/QueryReady';
 import { WeekSky } from './WeekSky';
 import { RoomSound } from './RoomSound';
 import { CountUp, tilt } from './fx';
@@ -52,6 +53,7 @@ export default function CabinHome() {
         <Mix today={today} />
       </div>
 
+      <div className="rise" style={rise(6)}><QueryReady /></div>
       <div className="rise" style={rise(6)}><RoadMap /></div>
       <div className="rise" style={rise(6)}><Constellations /></div>
 

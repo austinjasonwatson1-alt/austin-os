@@ -25,6 +25,7 @@ describe('plain-file export', () => {
       'memories.photo.p1': 'data:image/jpeg;base64,AQID',
       'kennel.v1': { walks: [{ date: '2026-11-22', who: 'both', minutes: 30 }], care: [], weights: [] },
       'day.v1': { habits: [], days: { '2026-11-22': { intentions: [{ area: 'writing', text: 'Finish chapter 7', state: 'kept' }], done: [], well: 'Wrote early' } } },
+      'area.office': { days: {}, items: [{ id: 'a1', list: 'apps', text: 'Toast — Product Manager', date: '2026-11-03', link: 'https://careers.toast.com/pm', status: 'interview', body: 'Onsite, Friday' }, { id: 'w1', list: 'wins', text: 'Kind reply', date: '2026-11-04' }] },
     };
     const f = exportFiles(dump, '{"app":"austin-os"}', '2026-11-22');
     expect(f['backup/austin-os-backup.json']).toBe('{"app":"austin-os"}');
@@ -38,6 +39,8 @@ describe('plain-file export', () => {
     expect(f['memories/time-capsule.md']).toMatch(/still sealed/);
     expect(f['life/kennel-walks.csv']).toMatch(/2026-11-22,both,30/);
     expect(f['life/the-day.md']).toMatch(/## 2026-11-22\n\n- writing: Finish chapter 7 \(kept\)\n\nWent well: Wrote early/);
+    expect(f['life/office-lists.csv']).toBe('list,text,details,date,when,amount,done,progress,link,stage,kind,status\napps,Toast — Product Manager,"Onsite, Friday",2026-11-03,,,,,https://careers.toast.com/pm,,,interview\nwins,Kind reply,,2026-11-04,,,,,,,,\n');
+    expect(f['life/office-time.csv']).toBeUndefined();
     expect(Object.keys(f).some((k) => k.startsWith('publishing/'))).toBe(false);
   });
 });
