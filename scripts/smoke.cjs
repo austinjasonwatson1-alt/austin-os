@@ -14,7 +14,7 @@ const { chromium, devices } = require('playwright');
 const PORT = 4199;
 const U = `http://localhost:${PORT}/`;
 const ROUTES = [
-  '/home', '/day', '/keeper', '/settings',
+  '/home', '/day', '/schedule', '/keeper', '/settings',
   '/cabin', '/cabin/ledger', '/cabin/timer', '/cabin/lounge', '/cabin/shelf', '/cabin/scenes', '/cabin/manuscripts', '/cabin/ideas',
   '/cabin/queries', '/cabin/contests', '/cabin/editorial', '/cabin/marketing',
   '/chapel', '/office', '/observatory', '/forge', '/bank', '/hearth', '/kennel', '/money', '/memories',

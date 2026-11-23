@@ -192,3 +192,11 @@ describe('the Scene Library syncs', () => {
     expect(out['refs.v1'].scenes.map((s) => `${s.id}:${s.label}`).sort()).toEqual(['a:new', 'b:only here', 'c:only there']);
   });
 });
+
+describe('the schedule syncs', () => {
+  it('keeps the newest version of each day and every week task', () => {
+    const out = syncMerge({ 'schedule.v1': { settings: {}, days: { d: { labels: {}, done: [0], edited: '1' } }, weeks: {}, repeat: {} } }, { 'schedule.v1': { days: { d: { labels: {}, done: [0, 1], edited: '2' } }, weeks: { w: [{ id: 'x', text: 'X' }] } } }) as Record<string, { days: Record<string, { done: number[] }>; weeks: Record<string, unknown[]> }>;
+    expect(out['schedule.v1'].days.d.done).toEqual([0, 1]);
+    expect(out['schedule.v1'].weeks.w).toHaveLength(1);
+  });
+});

@@ -20,6 +20,7 @@ describe('plain-file export', () => {
       'drafts.v1': { drafts: { 'm/c': { text: 'The scream came first.' } } },
       'ideas.v1': { ideas: [{ kind: 'short', title: 'The Lighthouse Wife', spark: 'she keeps the light', stage: 'spark', tags: ['grief'] }] },
       'shelf.v1': { books: [{ title: 'Gone Girl', author: 'Flynn', status: 'read', rating: 5, craft: ['diary twist'] }] },
+      'schedule.v1': { days: { '2026-11-23': { labels: { '0': 'Plan the week' }, done: [0, 2] } }, weeks: { '2026-11-23': [{ id: 'a', text: 'Send the synopsis', done: true }, { id: 'b', text: 'Removed', gone: true }] } },
       'refs.v1': { scenes: [{ id: 's1', kind: 'interrogation', label: 'Silence does the work', source: 'Gone Girl · Flynn', where: 'p. 212', passage: 'She waited.', why: 'He fills the quiet', tags: ['police'] }] },
       'money.v1': { txns: [{ date: '2026-11-03', desc: 'KROGER', cents: -8412, category: 'groceries' }] },
       'memories.v1': { items: [{ id: 'p1', day: '2026-11-20', caption: 'Cooper, muddy', thumb: 'data:image/jpeg;base64,AQ==' }], capsules: [{ title: 'To future me', body: 'Hi', written: '2026-11-22' }] },
@@ -34,6 +35,8 @@ describe('plain-file export', () => {
     expect(f['writing/manuscripts/The-Life-I-Deserve/01-The-night-of-the-party.md']).toBe('# 1. The night of the party\n\nThe scream came first.\n');
     expect(f['writing/idea-vault.md']).toMatch(/### The Lighthouse Wife\n\nshe keeps the light/);
     expect(f['reading/reading-notes.md']).toMatch(/- diary twist/);
+    expect(f['life/schedule-blocks.csv']).toBe('date,block,what,done\n2026-11-23,1,Plan the week,yes\n2026-11-23,3,,yes\n');
+    expect(f['life/weekly-tasks.md']).toBe('# Weekly tasks\n\n## Week of 2026-11-23\n\n- [x] Send the synopsis\n');
     expect(f['reading/scene-library.md']).toBe('# The Scene Library\n\n## interrogation\n\n### Silence does the work\n\n*Gone Girl · Flynn, p. 212*\n\n> She waited.\n\n**Why it works:** He fills the quiet\n\n#police\n\n');
     expect(f['money/transactions.csv']).toMatch(/2026-11-03,KROGER,-84.12,groceries/);
     expect(f['memories/photos/2026-11-20-Cooper-muddy.jpg']).toEqual(new Uint8Array([1, 2, 3]));

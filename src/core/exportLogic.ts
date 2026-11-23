@@ -85,6 +85,19 @@ CSV files open in Excel, Numbers or Google Sheets. Markdown (.md) files are plai
     const noted = books.filter((b) => b.notes || arr(b.craft).length);
     if (noted.length) f['reading/reading-notes.md'] = `# Reading notes\n\n${noted.map((b) => `## ${str(b.title)} — ${str(b.author)}\n\n${b.notes ? `${str(b.notes)}\n\n` : ''}${arr<string>(b.craft).map((c) => `- ${c}`).join('\n')}\n`).join('\n')}`;
   }
+  if (has('schedule.v1')) {
+    const sc = obj(dump['schedule.v1']);
+    const days = obj(sc.days);
+    const rows = Object.keys(days).sort().flatMap((d) => {
+      const p = obj(days[d]); const labels = obj(p.labels); const done = arr<number>(p.done);
+      const idx = [...new Set([...Object.keys(labels).map(Number), ...done])].sort((a, b) => a - b);
+      return idx.map((i) => [d, i + 1, str(labels[String(i)]), done.includes(i) ? 'yes' : '']);
+    });
+    if (rows.length) f['life/schedule-blocks.csv'] = csv(['date', 'block', 'what', 'done'], rows);
+    const weeks = obj(sc.weeks);
+    const wk = Object.keys(weeks).sort().map((w) => [w, arr(weeks[w]).filter((t) => !t.gone)] as const).filter(([, ts]) => ts.length);
+    if (wk.length) f['life/weekly-tasks.md'] = `# Weekly tasks\n\n${wk.map(([w, ts]) => `## Week of ${w}\n\n${ts.map((t) => `- [${t.done ? 'x' : ' '}] ${str(t.text)}`).join('\n')}\n`).join('\n')}`;
+  }
   if (has('refs.v1')) {
     const scenes = arr(obj(dump['refs.v1']).scenes);
     if (scenes.length) {

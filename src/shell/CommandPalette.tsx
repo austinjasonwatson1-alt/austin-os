@@ -46,6 +46,7 @@ export function CommandPalette() {
       nav('/memories', 'Memories & the time capsule', 'photos pictures letter future self capsule on this day'),
       nav('/goals', 'Seasons of life', 'goals vision quarter milestones 10 year plan road'),
       nav('/day', 'The Day', 'today intentions habits morning evening close the day journal'),
+      nav('/schedule', 'The schedule', 'daily weekly blocks work pomodoro 50 minutes break plan week tasks check off'),
       nav('/film', 'The year as a film', 'video share wrapped recap movie year end'),
       nav('/library', 'Library of You', 'archive journal months memories'),
       nav('/records', 'Hall of Records', 'trophies achievements bests milestones records'),

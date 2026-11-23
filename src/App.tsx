@@ -40,6 +40,7 @@ const LibraryPage = lazy(() => import('./modules/review/LibraryPage'));
 const HallPage = lazy(() => import('./modules/records/HallPage'));
 const FilmPage = lazy(() => import('./modules/film/FilmPage'));
 const DayPage = lazy(() => import('./modules/day/DayPage'));
+const SchedulePage = lazy(() => import('./modules/schedule/SchedulePage'));
 const GoalsPage = lazy(() => import('./modules/goals/GoalsPage'));
 const MemoriesPage = lazy(() => import('./modules/memories/MemoriesPage'));
 const MoneyPage = lazy(() => import('./modules/money/MoneyPage'));
@@ -61,6 +62,7 @@ function Screen({ route }: { route: string }) {
   if (route === '/records') return <HallPage />;
   if (route === '/film') return <FilmPage />;
   if (route === '/day') return <DayPage />;
+  if (route === '/schedule') return <SchedulePage />;
   if (route === '/goals') return <GoalsPage />;
   if (route === '/memories') return <MemoriesPage />;
   if (route === '/money') return <MoneyPage />;

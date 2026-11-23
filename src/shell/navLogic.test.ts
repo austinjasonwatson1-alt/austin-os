@@ -36,6 +36,7 @@ describe('nav', () => {
     expect(railPath('/memories')).toBe('/hearth');
     expect(railPath('/cabin/timer')).toBe('/cabin');
     expect(railPath('/cabin/scenes')).toBe('/cabin/shelf');
+    expect(railPath('/schedule')).toBe('/day');
     expect(railPath('/chapel')).toBe('/chapel');
     expect(setOf('/cabin/contests')?.id).toBe('publication');
     expect(setOf('/chapel')).toBeNull();

@@ -37,3 +37,9 @@ describe('soundscape scenes', () => {
     expect(sceneFor('/cabin', wet).label).toMatch(/rain/);
   });
 });
+
+describe('the schedule', () => {
+  it('is a calm room', () => {
+    expect(sceneFor('/schedule', { weather: null, phase: 'day', season: 'summer' }).label).toBe('A calm room');
+  });
+});
