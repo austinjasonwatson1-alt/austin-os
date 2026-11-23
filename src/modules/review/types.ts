@@ -6,6 +6,8 @@ export interface Review {
   /** Did last week's intention happen? */
   keptLast?: boolean;
   sealedAt?: string;
+  /** The Keeper's letter about this week, kept with it. */
+  letter?: { text: string; at: string };
 }
 
 export interface ReviewData {

@@ -1,6 +1,7 @@
 /**
  * The gate before anything goes live: opens every room on a desktop and a phone, first with an
- * empty browser and then with a lived-in one, and fails if any page throws.
+ * empty browser and then with a lived-in one, and fails if any page throws, renders empty, or is
+ * wider than the screen.
  *
  *   npm run build && npm run smoke
  *
@@ -64,6 +65,12 @@ async function walk(browser, label, ctxOpts, seeded) {
     await p.waitForTimeout(700);
     const blank = await p.evaluate(() => (document.querySelector('#root')?.textContent ?? '').trim().length < 20);
     if (blank) errs.push(`${r}: the page rendered empty`);
+    // Layout: nothing may push the page wider than the screen (a phone would scroll sideways).
+    const over = await p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    if (over > 1) {
+      const who = await p.evaluate(() => [...document.querySelectorAll('body *')].filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1 && getComputedStyle(el).position !== 'fixed').slice(0, 3).map((el) => el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.split(' ')[0] : '')).join(', '));
+      errs.push(`${r}: the page is ${over}px wider than the screen (${who})`);
+    }
   }
   await ctx.close();
   console.log(`${errs.length ? '✗' : '✓'} ${label}: ${ROUTES.length} rooms${errs.length ? `, ${errs.length} problem(s)` : ''}`);

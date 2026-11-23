@@ -1,4 +1,3 @@
-import { strToU8, zipSync } from 'fflate';
 import { useEffect, useRef, useState } from 'react';
 import { useAutoBackup } from '../core/autoBackup';
 import { buildBackupPayload } from '../core/autoBackupLogic';
@@ -18,6 +17,8 @@ export async function downloadEverything() {
   const dump = await dumpAll();
   const backup = JSON.stringify(buildBackupPayload(dump, new Date()));
   const files = exportFiles(dump, backup, todayISO());
+  // The zip library only loads when it's needed.
+  const { strToU8, zipSync } = await import('fflate');
   const zip = zipSync(Object.fromEntries(Object.entries(files).map(([k, v]) => [`austin-os-${todayISO()}/${k}`, typeof v === 'string' ? strToU8(v) : v])), { level: 6 });
   const url = URL.createObjectURL(new Blob([new Uint8Array(zip)], { type: "application/zip" }));
   const a = document.createElement('a');

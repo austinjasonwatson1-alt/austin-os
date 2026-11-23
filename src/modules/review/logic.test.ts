@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeReview, reviewTime, reviewWeek, vsLast, weekSummary } from './logic';
+import { describeReview, letterDue, reviewTime, reviewWeek, vsLast, weekSummary } from './logic';
 
 const T = { elite: 180, good: 80, warn: 30 };
 const W = { elite: 700, good: 450, warn: 250 };
@@ -90,5 +90,18 @@ describe('the Library of You', () => {
     expect(a[0].reviews.map((r) => r.intention)).toEqual(['Finish ch 7']);
     expect(a[1]).toMatchObject({ minutes: 60, milestones: ['Seven Sisters'] });
     expect(a[1].answered[0].text).toBe('A new job');
+  });
+});
+
+describe('the Keeper\u2019s Sunday letter', () => {
+  const sun = new Date(2026, 10, 22, 10), satEve = new Date(2026, 10, 21, 18), satNoon = new Date(2026, 10, 21, 12), wed = new Date(2026, 10, 18, 10);
+  it('writes once, for this week, from Saturday evening through Sunday, if the Keeper is on', () => {
+    expect(letterDue(sun, '2026-11-16', '2026-11-16', false, true)).toBe(true);
+    expect(letterDue(satEve, '2026-11-16', '2026-11-16', false, true)).toBe(true);
+    expect(letterDue(satNoon, '2026-11-16', '2026-11-16', false, true)).toBe(false);
+    expect(letterDue(wed, '2026-11-16', '2026-11-16', false, true)).toBe(false);
+    expect(letterDue(sun, '2026-11-16', '2026-11-16', true, true)).toBe(false);
+    expect(letterDue(sun, '2026-11-16', '2026-11-16', false, false)).toBe(false);
+    expect(letterDue(sun, '2026-11-09', '2026-11-16', false, true)).toBe(false);
   });
 });

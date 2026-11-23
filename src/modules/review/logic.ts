@@ -86,6 +86,15 @@ export function reviewWeek(d: Date, mondayOfToday: string): string {
   return d.getDay() === 1 && d.getHours() < 12 ? addDays(mondayOfToday, -7) : mondayOfToday;
 }
 
+/**
+ * Whether the Keeper should write this week's letter by itself: only for the current week, only
+ * from Saturday evening through Sunday, only once, and only if the Keeper is on.
+ */
+export function letterDue(d: Date, week: string, mondayOfToday: string, has: boolean, enabled: boolean): boolean {
+  if (!enabled || has || week !== mondayOfToday) return false;
+  return d.getDay() === 0 || (d.getDay() === 6 && d.getHours() >= 17);
+}
+
 /** Percent change against last week, e.g. +12 or -30; null with nothing to compare. */
 export const vsLast = (now: number, prev: number): number | null => (prev > 0 ? Math.round(((now - prev) / prev) * 100) : null);
 

@@ -132,3 +132,16 @@
 .wl-ins { margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(232, 168, 75, .3); font-family: var(--display); font-size: 16px; }
 .wl-ins .mono { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--lamp); margin-bottom: 3px; }
 @media (max-width: 700px) { .wl-body { grid-template-columns: minmax(0, 1fr); justify-items: center; } .wl-list { width: 100%; } }
+
+/* ---------------- the Keeper's letter ---------------- */
+.kl { position: relative; margin: 14px 0 4px; padding: 22px 24px 18px; border-radius: 14px; color: #2a2118;
+  background: linear-gradient(180deg, #f3ead6, #e8dcc0); box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(120, 90, 40, .25), inset 0 0 60px rgba(150, 110, 50, .18); transform: rotate(-.4deg); }
+.kl > .mono { display: block; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #8a5d22; margin-bottom: 10px; }
+.kl-text p { margin: 0 0 10px; font-family: var(--serif); font-size: 16.5px; line-height: 1.6; }
+.kl-text p:last-child { font-style: italic; }
+.kl-again { color: #8a5d22; font-size: 11px; }
+.kl .dim { color: #6b5a44; }
+.kl-off { background: rgba(233, 228, 216, .03); color: var(--bone); box-shadow: none; border: 1px dashed var(--line-strong); transform: none; }
+.kl-off > .mono { color: var(--lamp); }
+.kl-off p { margin: 0 0 10px; font-size: 14px; color: var(--bone-dim); line-height: 1.5; }
+@media (max-width: 600px) { .kl { padding: 18px 16px 14px; transform: none; } .kl-text p { font-size: 15.5px; } }

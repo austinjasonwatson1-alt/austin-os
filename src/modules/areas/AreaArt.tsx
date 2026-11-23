@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { season as seasonOf, skyPhase, type Phase, type Season } from '../../core/skyLogic';
-import { daylight } from '../../shell/worldLogic';
+import { daylight, holiday as holidayOf, type Holiday } from '../../shell/worldLogic';
 import type { AreaKey } from './types';
 import '../../styles/areaart.css';
 
@@ -149,6 +149,15 @@ function seasonNow(): Season {
   return v === 'winter' || v === 'spring' || v === 'summer' || v === 'autumn' ? v : seasonOf(new Date());
 }
 
+/** The day being kept: the real date, or `?holiday=` to preview one (same as Home; `?holiday=none` for none). */
+function holidayNow(): Holiday {
+  if (typeof window === 'undefined') return holidayOf(new Date());
+  const q = new URLSearchParams(window.location.search);
+  if (!q.has('holiday')) return holidayOf(new Date());
+  const v = q.get('holiday');
+  return v === 'christmas' || v === 'halloween' ? v : null;
+}
+
 /* ---------------- the seasons: scattered once, drawn over every building ---------------- */
 const FLAKES = (() => { const r = rng(53); return Array.from({ length: 52 }, () => ({ x: r() * W, y: r() * H, r: 0.45 + r() * 1.05, dur: 8 + r() * 8, d: -r() * 16, dx: (r() - 0.5) * 22 })); })();
 const LEAF = 'M0 -3.2 C2.4 -1.6 2.3 1.6 0 3.2 C-2.3 1.6 -2.4 -1.6 0 -3.2 Z';
@@ -178,22 +187,203 @@ function SeasonLayer({ season, part }: { season: Season; part: 'ground' | 'fore'
   return <g className="aa-flies">{FLIES.map((f, i) => <circle key={i} cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r="1.6" style={{ animationDuration: `${f.dur.toFixed(1)}s`, animationDelay: `${f.d.toFixed(1)}s` } as CSSProperties} />)}</g>;
 }
 
+/* ---------------- dressing the buildings: snow on the roofs, and the days that call for it ---------------- */
+type Pt = readonly [number, number];
+const f1 = (n: number) => n.toFixed(1);
+/** A soft line through the points (quadratics through the midpoints), continuing from the first point. */
+const soft = (p: readonly Pt[]) => {
+  let d = '';
+  for (let i = 1; i < p.length - 1; i++) d += ` Q${f1(p[i][0])} ${f1(p[i][1])} ${f1((p[i][0] + p[i + 1][0]) / 2)} ${f1((p[i][1] + p[i + 1][1]) / 2)}`;
+  return `${d} L${f1(p[p.length - 1][0])} ${f1(p[p.length - 1][1])}`;
+};
+/** Evenly spaced points along a polyline. */
+function walk(pts: readonly Pt[], n: number): Pt[] {
+  const seg = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
+  const total = seg.reduce((a, b) => a + b, 0);
+  return Array.from({ length: n + 1 }, (_, k) => {
+    let d = (total * k) / n, i = 0;
+    while (i < seg.length - 1 && d > seg[i]) d -= seg[i++];
+    const t = seg[i] ? Math.min(1, d / seg[i]) : 0;
+    return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t] as const;
+  });
+}
+const lengthOf = (pts: readonly Pt[]) => pts.slice(1).reduce((a, p, i) => a + Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]), 0);
+
+/** Snow lying along a roof edge or ledge: a soft mound, thinning at the ends, its overhang lumpy underneath. */
+function Snow({ on, t, seed, lip = 0.5, ends = 'both' }: { on: readonly Pt[]; t: number; seed: number; lip?: number; /** Which ends thin out (one butting a chimney stays full). */ ends?: 'both' | 'start' | 'end' }) {
+  const r = rng(seed);
+  const pts = walk(on, Math.max(4, Math.round(lengthOf(on) / 3.2)));
+  const n = pts.length - 1;
+  const top = pts.map(([x, y], i) => {
+    const e = Math.min(1, ends === 'end' ? 1 : i / (n * 0.16), ends === 'start' ? 1 : (n - i) / (n * 0.16));
+    return [x, y - t * (0.18 + 0.82 * Math.sin((e * Math.PI) / 2)) * (0.84 + r() * 0.28)] as const;
+  });
+  const under = pts.map(([x, y], i) => [x, y + (i === 0 || i === n ? 0.2 : t * lip * (0.25 + r() * 0.55) + (r() < 0.16 ? t * 0.45 : 0))] as const);
+  const lit = top.slice(1, -1);
+  return (
+    <g className="aa-rsnow">
+      <path d={`M${f1(top[0][0])} ${f1(top[0][1])}${soft(top)} L${f1(under[n][0])} ${f1(under[n][1])}${soft([...under].reverse())} Z`} />
+      <path d={`M${f1(lit[0][0])} ${f1(lit[0][1])}${soft(lit)}`} className="lit" />
+    </g>
+  );
+}
+/** Icicles hanging from an edge, longer at random. */
+function Icicles({ from, to, n, len, seed }: { from: Pt; to: Pt; n: number; len: number; seed: number }) {
+  const r = rng(seed);
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const k = (i + 0.2 + r() * 0.6) / n, x = from[0] + (to[0] - from[0]) * k, y = from[1] + (to[1] - from[1]) * k - 0.3;
+    const l = len * (0.35 + r() * 0.9), w = 0.55 + r() * 0.5;
+    d += `M${f1(x - w)} ${f1(y)} Q${f1(x - w * 0.25)} ${f1(y + l * 0.55)} ${f1(x + 0.15)} ${f1(y + l)} Q${f1(x + w * 0.35)} ${f1(y + l * 0.5)} ${f1(x + w)} ${f1(y)} Z `;
+  }
+  return <path d={d} className="aa-icicles" />;
+}
+
+/** A string of warm lights swagged along a roofline: the wire sags between hooks, a bulb at each sag. */
+const BULBS = ['#ffd27a', '#fff0c4', '#ff8a5c', '#ffd27a', '#ff6b5e'];
+function Lights({ on, gap = 6.5, sag = 1.6, seed = 1 }: { on: readonly Pt[]; gap?: number; sag?: number; seed?: number }) {
+  const hooks = walk(on, Math.max(2, Math.round(lengthOf(on) / gap)));
+  let wire = `M${f1(hooks[0][0])} ${f1(hooks[0][1])}`;
+  const bulbs: Pt[] = [];
+  for (let i = 1; i < hooks.length; i++) {
+    const [ax, ay] = hooks[i - 1], [bx, by] = hooks[i], mx = (ax + bx) / 2, my = (ay + by) / 2;
+    wire += ` Q${f1(mx)} ${f1(my + sag * 2)} ${f1(bx)} ${f1(by)}`;
+    bulbs.push([mx, my + sag + 0.9]);
+  }
+  return (
+    <g className="aa-lights">
+      <path d={wire} className="wire" />
+      {bulbs.map(([x, y], i) => (
+        <g key={i} className="aa-bulb" style={{ animationDelay: `${(-((i * 7 + seed * 3) % 11) * 0.29).toFixed(2)}s` }}>
+          <circle cx={f1(x)} cy={f1(y)} r="3.2" fill="url(#aa-bulbglow)" className="halo" />
+          <circle cx={f1(x)} cy={f1(y)} r=".95" fill={BULBS[(i + seed) % BULBS.length]} />
+        </g>
+      ))}
+    </g>
+  );
+}
+
+/** An evergreen wreath with berries and a red bow. */
+function Wreath({ x, y, r, bow = true }: { x: number; y: number; r: number; bow?: boolean }) {
+  const berries = [0.3, 1.6, 2.5, 3.9, 5.0].map((a) => [x + Math.cos(a) * r, y + Math.sin(a) * r * 0.96] as const);
+  return (
+    <g className="aa-xwreath">
+      <circle cx={x} cy={y} r={r} className="ring" style={{ strokeWidth: r * 0.62 }} />
+      <circle cx={x} cy={y} r={r} className="needles" style={{ strokeWidth: r * 0.5 }} />
+      <circle cx={x} cy={y} r={r * 1.1} className="lit" style={{ strokeWidth: r * 0.16 }} />
+      {berries.map(([a, b], i) => <circle key={i} cx={f1(a)} cy={f1(b)} r={(r * 0.15).toFixed(2)} className="berry" />)}
+      {bow && <>
+        <path d={`M${x} ${y + r * 0.92} l${-r * 0.5} ${-r * 0.3} v${r * 0.6} z M${x} ${y + r * 0.92} l${r * 0.5} ${-r * 0.3} v${r * 0.6} z M${x - r * 0.06} ${y + r * 0.92} l${-r * 0.22} ${r * 0.62} M${x + r * 0.06} ${y + r * 0.92} l${r * 0.24} ${r * 0.6}`} className="bow" style={{ strokeWidth: r * 0.13 }} />
+        <circle cx={x} cy={y + r * 0.92} r={r * 0.14} className="knot" />
+      </>}
+    </g>
+  );
+}
+
+/** A pumpkin on a step: carved and candle-lit at Halloween, plain the rest of autumn (as on Home). */
+function Pumpkin({ x, y, s = 1, lit }: { x: number; y: number; s?: number; lit: boolean }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`} className={lit ? 'aa-jack lit' : 'aa-jack'}>
+      <ellipse cx=".6" cy=".2" rx="7" ry="1.3" fill="url(#aa-shadow)" />
+      {lit && <circle cy="-4" r="14" fill="url(#aa-jackglow)" className="glow" />}
+      <ellipse cy="-3.7" rx="5.2" ry="3.8" className="skin a" />
+      <ellipse cy="-3.7" rx="3.3" ry="3.8" className="skin b" />
+      <ellipse cy="-3.8" rx="1.3" ry="3.6" className="skin c" />
+      <path d="M-3.4 -6.4 Q-2.6 -7.2 -1.4 -7.1" className="shine" />
+      <path d="M-.2 -7.3 Q.1 -9.4 1.6 -10" className="stem" />
+      {lit && <path d="M-3.5 -4.2 L-2.2 -6.3 L-.8 -4.2 Z M.8 -4.2 L2.2 -6.3 L3.5 -4.2 Z M-.5 -3.3 L0 -4.1 L.5 -3.3 Z M-3.9 -2.9 Q0 -.5 3.9 -2.9 Q3.4 -.9 2.9 -.8 L2.4 -1.8 L1.4 -.5 L.5 -1.6 L-.5 -.4 L-1.4 -1.6 L-2.4 -.6 L-2.9 -1.5 Q-3.5 -1.4 -3.9 -2.9 Z" className="face" />}
+    </g>
+  );
+}
+
+/** A bat crossing the sky, wings beating. */
+const BAT = 'M0 -1.2 L-.7 -2.5 L-1.05 -1.1 Q-3.2 -2.3 -5 -3.7 Q-7 -4.7 -8.8 -3.7 Q-7.7 -2.6 -7.5 -.9 Q-6.2 -1.8 -5 -.5 Q-4.2 -1.4 -2.8 .3 Q-1.6 -.1 -.8 1.7 L0 2.5 L.8 1.7 Q1.6 -.1 2.8 .3 Q4.2 -1.4 5 -.5 Q6.2 -1.8 7.5 -.9 Q7.7 -2.6 8.8 -3.7 Q7 -4.7 5 -3.7 Q3.2 -2.3 1.05 -1.1 L.7 -2.5 Z';
+function Bats({ at }: { at: Pt }) {
+  return (
+    <g className="aa-bats">
+      {([[-30, 20, 0.72, 0], [16, 12, 0.95, -0.4], [-8, -6, 0.58, -0.8]] as const).map(([dx, dy, s, d], i) => (
+        <g key={i} transform={`translate(${at[0] + dx} ${at[1] + dy}) scale(${s})`}>
+          <g className="aa-bat" style={{ animationDelay: `${d - i * 1.3}s` }}><path d={BAT} className="wing" style={{ animationDelay: `${d}s` }} /></g>
+        </g>
+      ))}
+    </g>
+  );
+}
+
+/** A small lit tree by the door, dressed in the same lights. */
+function XmasTree({ x, y, s }: { x: number; y: number; s: number }) {
+  const spots: Pt[] = [[-5, -14], [6, -22], [-3, -36], [9, -9], [-13, -6], [2, -48], [-8, -26], [12, -2], [3, -12], [-1, -60]];
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`} className="aa-xtree">
+      <circle cy="-40" r="56" fill="url(#aa-glow)" className="glow" />
+      <ellipse cx="3" cy="3" rx="30" ry="4.5" fill="url(#aa-shadow)" />
+      <path d="M-2.6 8 L-2 -4 H2 L2.6 8 Z" fill="#1a120c" />
+      <path d={PINE} className="boughs" />
+      <path d={PINE_LIT} className="frost" />
+      {spots.map(([a, b], i) => (
+        <g key={i} className="aa-bulb" style={{ animationDelay: `${(-i * 0.37).toFixed(2)}s` }}>
+          <circle cx={a} cy={b} r="7" fill="url(#aa-bulbglow)" className="halo" />
+          <circle cx={a} cy={b} r="2.4" fill={BULBS[(i + 2) % BULBS.length]} />
+        </g>
+      ))}
+      <path d="M0 -104 l2.6 5.4 l5.8 .7 l-4.3 4 l1.1 5.8 l-5.2 -2.8 l-5.2 2.8 l1.1 -5.8 l-4.3 -4 l5.8 -.7 z" className="star" />
+    </g>
+  );
+}
+
+/** Points round an arc (angles in degrees from straight up, clockwise), for snow on domes and arches. */
+const arc = (cx: number, cy: number, r: number, a0: number, a1: number, n = 12): Pt[] =>
+  Array.from({ length: n + 1 }, (_, i) => {
+    const a = ((a0 + ((a1 - a0) * i) / n) * Math.PI) / 180;
+    return [cx + r * Math.sin(a), cy - r * Math.cos(a)] as const;
+  });
+
+/** A red ribbon bow. */
+function Bow({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`} className="aa-bow">
+      <path d="M0 0 L-3 -1.7 Q-3.6 0 -3 1.7 Z M0 0 L3 -1.7 Q3.6 0 3 1.7 Z" />
+      <path d="M-.3 .4 L-1.6 4 M.3 .4 L1.8 3.8" className="tail" />
+      <circle r=".75" />
+    </g>
+  );
+}
+/** Greenery wound up a lamp post, a bow under the lamp. */
+function Garland({ at: [x, y] }: { at: Pt }) {
+  let d = '';
+  for (let k = 0; k < 6; k++) { const yy = y + 4 + k * 7.2; d += `M${x - 1.8} ${f1(yy + 2.6)} Q${x} ${f1(yy + 2.2)} ${x + 1.8} ${f1(yy)} `; }
+  return <g><path d={d} className="aa-garland wrap" /><Bow x={x} y={y + 1} s={0.9} /></g>;
+}
+
 /** Gradient stops whose colours come from CSS, so each light of day repaints them. */
 const Stops = ({ list }: { list: [number, string][] }) => <>{list.map(([o, c]) => <stop key={o} offset={o} className={c} />)}</>;
 
-interface Scene { moon?: [number, number]; pines: [number, number, number][]; rich?: boolean; sky?: ReactNode; body: ReactNode }
+interface Scene {
+  moon?: [number, number]; pines: [number, number, number][]; rich?: boolean; sky?: ReactNode; body: ReactNode;
+  /** Winter: snow on this building's roof, ledges and sills, and icicles. */
+  snow: ReactNode;
+  /** Christmas: lights along the rooflines, a wreath, and so on. */
+  xmas: ReactNode;
+  /** Christmas things standing out in the yard, in front of the far pines. */
+  xmasYard?: ReactNode;
+  /** Where pumpkins sit ([x, y, scale]): the first all autumn, all of them carved and lit at Halloween. */
+  jacks: [number, number, number][];
+  /** Where the Halloween bats cross (defaults to near the moon). */
+  bats?: [number, number];
+}
 
 export function AreaArt({ id, heat }: { id: AreaKey; heat: number }) {
   const [tex] = useState(grain);
   const [phase] = useState(phaseNow);
   const [season] = useState(seasonNow);
+  const [hol] = useState(holidayNow);
   const light = daylight(phase);
   const h = Math.max(0, Math.min(1, heat));
   const scene = SCENES[id](h);
   const stars = scene.rich ? STARS_RICH : STARS;
 
   return (
-    <svg className={`area-art aa-${id}`} viewBox={`0 0 ${W} ${H}`} aria-hidden data-phase={phase} data-season={season}
+    <svg className={`area-art aa-${id}`} viewBox={`0 0 ${W} ${H}`} aria-hidden data-phase={phase} data-season={season} data-holiday={hol ?? undefined}
       style={{ '--heat': h, '--wall': light.wall, '--glow': light.glow } as CSSProperties}>
       <defs>
         {/* ---- sky and land, coloured by the light of day ---- */}
@@ -251,6 +441,11 @@ export function AreaArt({ id, heat }: { id: AreaKey; heat: number }) {
         <radialGradient id="aa-starglow"><stop offset="0" stopColor="#e8eeff" stopOpacity=".7" /><stop offset="1" stopColor="#c9d4ff" stopOpacity="0" /></radialGradient>
         <radialGradient id="aa-shadow"><stop offset="0" stopColor="#000" stopOpacity=".6" /><stop offset=".6" stopColor="#000" stopOpacity=".22" /><stop offset="1" stopColor="#000" stopOpacity="0" /></radialGradient>
         <radialGradient id="aa-vignette" cx=".5" cy=".46" r=".72"><stop offset=".55" stopColor="#03040a" stopOpacity="0" /><stop offset="1" stopColor="#03040a" stopOpacity=".62" /></radialGradient>
+        {/* ---- dressing: roof snow and ice in the snow's own colour, warm bulbs, a candle in a pumpkin ---- */}
+        <linearGradient id="aa-rsnow-g" x1="0" y1="0" x2="0" y2="1"><Stops list={[[0, 'aa-s-rsnow-a'], [0.7, 'aa-s-rsnow-m'], [1, 'aa-s-rsnow-b']]} /></linearGradient>
+        <linearGradient id="aa-ice-g" x1="0" y1="0" x2="0" y2="1"><Stops list={[[0, 'aa-s-ice-a'], [1, 'aa-s-ice-b']]} /></linearGradient>
+        <radialGradient id="aa-bulbglow"><stop offset="0" stopColor="#fff2c8" stopOpacity=".9" /><stop offset=".3" stopColor="#ffc46a" stopOpacity=".42" /><stop offset="1" stopColor="#ff9c4a" stopOpacity="0" /></radialGradient>
+        <radialGradient id="aa-jackglow" cy=".55"><stop offset="0" stopColor="#ffc56a" stopOpacity=".75" /><stop offset=".35" stopColor="#f08a2a" stopOpacity=".28" /><stop offset="1" stopColor="#d0601c" stopOpacity="0" /></radialGradient>
         {tex && <pattern id="aa-grain" width="128" height="128" patternUnits="userSpaceOnUse"><image href={tex} width="128" height="128" /></pattern>}
         <clipPath id="aa-clip"><rect width={W} height={H} rx="18" /></clipPath>
 
@@ -299,10 +494,17 @@ export function AreaArt({ id, heat }: { id: AreaKey; heat: number }) {
         <SeasonLayer season={season} part="ground" />
 
         {/* ================= the building, drawn a little larger than life ================= */}
-        <g transform="translate(150 186) scale(1.1) translate(-150 -186)">{scene.body}</g>
+        {hol === 'halloween' && <Bats at={scene.bats ?? [(scene.moon?.[0] ?? 230) - 6, (scene.moon?.[1] ?? 40) + 4]} />}
+        <g transform="translate(150 186) scale(1.1) translate(-150 -186)">
+          {scene.body}
+          {season === 'winter' && <g className="aa-roofsnow">{scene.snow}</g>}
+          {hol === 'christmas' && <g className="aa-xmas">{scene.xmas}</g>}
+          {(hol === 'halloween' ? scene.jacks : season === 'autumn' ? scene.jacks.slice(0, 1) : []).map(([x, y, s]) => <Pumpkin key={x} x={x} y={y} s={s} lit={hol === 'halloween'} />)}
+        </g>
 
         {/* ================= the foreground: pines framing the view, grass at your feet ================= */}
         {scene.pines.map(([x, y, s]) => <use key={`${x}${y}`} href="#aa-pine" transform={`translate(${x} ${y}) scale(${s})`} />)}
+        {hol === 'christmas' && scene.xmasYard && <g transform="translate(150 186) scale(1.1) translate(-150 -186)" className="aa-xmas">{scene.xmasYard}</g>}
         <path d={FORE} fill="url(#aa-fg)" />
         <path d={TUFTS.dark} className="aa-tufts" />
         <path d={TUFTS.lit} className="aa-tufts-lit" />
@@ -415,6 +617,33 @@ function Office(heat: number): Scene {
         <g className={heat > 0 ? 'aa-flag up' : 'aa-flag'}><path d="M236.6 168 V158" /><rect x="236.6" y="157.6" width="6" height="3.8" /></g>
       </g>
     ),
+    snow: (
+      <>
+        <Snow on={[[110.6, 89.6], [150, 67.8], [189.4, 89.6]]} t={3} seed={3} />
+        <Snow on={[[85.2, 88.2], [113, 88.2]]} t={2.4} seed={5} />
+        <Snow on={[[187, 88.2], [214.8, 88.2]]} t={2.4} seed={7} />
+        <Icicles from={[87, 95]} to={[213, 95]} n={20} len={4.4} seed={9} />
+        {wins.map((x, i) => <Snow key={x} on={[[x - 3.4, 120.6], [x + 21.4, 120.6]]} t={1.6} seed={11 + i} />)}
+        <Snow on={[[94.6, 171.6], [163.4, 171.6]]} t={1.8} seed={17} />
+        <Snow on={[[165.4, 129.8], [169.4, 129], [194.6, 129], [198.6, 129.8]]} t={2.6} seed={19} />
+        <Icicles from={[166, 133.5]} to={[198, 133.5]} n={7} len={3.6} seed={21} />
+        <Snow on={[[166.6, 182.1], [172.4, 182.1]]} t={1.4} seed={23} />
+        <Snow on={[[191.6, 182.1], [197.4, 182.1]]} t={1.4} seed={25} />
+        <Snow on={[[163.6, 184.7], [168.6, 184.7]]} t={1.3} seed={27} />
+        <Snow on={[[195.4, 184.7], [200.4, 184.7]]} t={1.3} seed={29} />
+        <Snow on={[[59.8, 130.3], [66, 125.3], [72.2, 130.3]]} t={1.7} seed={31} lip={0.3} />
+        <Snow on={[[217.6, 164.2], [219.6, 160.8], [223, 159.3], [227, 158.9], [231, 159.3], [234.4, 160.8], [236.4, 164.2]]} t={2.4} seed={33} lip={0.3} />
+      </>
+    ),
+    xmas: (
+      <>
+        <Lights on={[[113.4, 89.4], [150, 69.8], [186.6, 89.4]]} gap={6} sag={1.1} seed={0} />
+        <Lights on={[[87.5, 95.8], [212.5, 95.8]]} gap={8.4} sag={2.1} seed={2} />
+        <Wreath x={182} y={152} r={4.6} />
+        <Garland at={[66, 146.5]} />
+      </>
+    ),
+    jacks: [[168.4, 184.8, 1], [159.6, 189, 0.7]],
   };
 }
 
@@ -490,6 +719,26 @@ function Observatory(_heat: number): Scene {
         <path d="M240 145 V182" className="aa-rim soft" />
       </g>
     ),
+    snow: (
+      <>
+        <Snow on={arc(137, 129, 41.2, -56, 23)} t={3.4} seed={41} />
+        <Snow on={arc(137, 129, 41.2, 45, 57)} t={2.2} seed={43} />
+        <Icicles from={[97, 134]} to={[177, 134]} n={13} len={3.8} seed={45} />
+        <Snow on={[[169.4, 135.9], [248.6, 147]]} t={3} seed={47} />
+        <Icicles from={[171, 141.7]} to={[247.6, 152.5]} n={12} len={4.4} seed={49} />
+        <Snow on={[[180.4, 173.7], [235.6, 173.7]]} t={1.6} seed={51} />
+        <Snow on={arc(137, 162, 10.6, -62, 62, 7)} t={1.5} seed={53} lip={0.3} />
+      </>
+    ),
+    xmas: (
+      <>
+        <Lights on={[[95.4, 134.6], [178.6, 134.6]]} gap={7.4} sag={1.9} seed={3} />
+        <Lights on={[[171.4, 142.6], [247.6, 153.2]]} gap={6.6} sag={1.4} seed={1} />
+        <Wreath x={137} y={168} r={4.2} />
+      </>
+    ),
+    jacks: [[120, 183.4, 1], [153.6, 183.6, 0.7]],
+    bats: [246, 52],
   };
 }
 
@@ -568,6 +817,24 @@ function Forge(_heat: number): Scene {
         <path d="M240.2 177.4 Q240 171.4 244 171" className="aa-firerim" />
       </g>
     ),
+    snow: (
+      <>
+        <Snow on={[[172.4, 70.2], [197.6, 70.2]]} t={2} seed={61} lip={0.35} />
+        <Snow on={[[74.6, 130.4], [146, 83.8], [176.4, 103.8]]} t={3.2} seed={65} ends="start" />
+        <path d="M162 95.2 Q171 99 176.6 98.6 L176.6 104 Z" className="aa-drift" />
+        <Snow on={[[193.6, 115.4], [217.4, 130.6]]} t={2.8} seed={67} />
+        <Icicles from={[84, 132.4]} to={[103, 120]} n={4} len={4.2} seed={69} />
+        <Icicles from={[189, 120]} to={[208, 132.4]} n={4} len={4.2} seed={71} />
+        <Snow on={[[61.4, 166.4], [70, 165.4], [78.6, 166.4]]} t={2.8} seed={73} lip={0.25} />
+      </>
+    ),
+    xmas: (
+      <>
+        <Lights on={[[83.6, 133.6], [146, 93], [208.4, 133.6]]} gap={6.6} sag={1.4} seed={4} />
+        <Wreath x={146} y={112} r={6.9} />
+      </>
+    ),
+    jacks: [[70, 166.6, 0.82], [102, 184.4, 1]],
   };
 }
 
@@ -643,6 +910,28 @@ function Bank(_heat: number): Scene {
         <path d="M137 176 L163 176 L170 185 L130 185 Z" fill="url(#aa-spill)" className="aa-spill" />
       </g>
     ),
+    snow: (
+      <>
+        <Snow on={[[82.6, 104.8], [150, 73.4], [217.4, 104.8]]} t={3.2} seed={81} />
+        {([[89, 96.5, 2], [111.5, 118.5, 1], [133.5, 166.5, 6], [181.5, 188.5, 1], [203.5, 211, 2]] as const).map(([a, b, n]) => <Icicles key={a} from={[a, 113]} to={[b, 113]} n={n} len={3.8} seed={83 + a} />)}
+        <Snow on={[[89.6, 172.1], [133, 172.1]]} t={1.8} seed={85} />
+        <Snow on={[[167, 172.1], [210.4, 172.1]]} t={1.8} seed={87} />
+        <Snow on={[[83.6, 176.3], [129, 176.3]]} t={1.6} seed={89} />
+        <Snow on={[[171, 176.3], [216.4, 176.3]]} t={1.6} seed={91} />
+        <Snow on={[[77.6, 180.5], [125, 180.5]]} t={1.6} seed={93} />
+        <Snow on={[[175, 180.5], [222.4, 180.5]]} t={1.6} seed={95} />
+        {[78, 222].map((x) => <Snow key={x} on={[[x - 4.9, 146.3], [x, 142.3], [x + 4.9, 146.3]]} t={1.6} seed={x} lip={0.3} />)}
+      </>
+    ),
+    xmas: (
+      <>
+        <Lights on={[[86.4, 104.6], [150, 75.6], [213.6, 104.6]]} gap={6.4} sag={1.2} seed={6} />
+        {([[104, 126], [174, 196]] as const).map(([a, b]) => <path key={a} d={`M${a + 5} 117.4 Q${(a + b) / 2} 124.6 ${b - 5} 117.4`} className="aa-garland" />)}
+        {cols.map((x) => <Bow key={x} x={x} y={117.4} s={0.9} />)}
+        <Wreath x={150} y={93} r={8.8} bow={false} />
+      </>
+    ),
+    jacks: [[115, 176.4, 0.96], [185, 176.4, 0.96]],
   };
 }
 
@@ -733,6 +1022,30 @@ function Hearth(heat: number): Scene {
         ))}
       </g>
     ),
+    snow: (
+      <>
+        <Snow on={[[80.4, 142.4], [104.2, 125.6]]} t={3} seed={101} ends="start" />
+        <path d="M121.4 109.2 Q127 109.4 133 106 L121.4 113.8 Z" className="aa-drift" />
+        <Snow on={[[121.8, 113.4], [152, 91.8], [223.6, 142.4]]} t={3.4} seed={103} ends="end" />
+        <Snow on={[[100.4, 80.2], [125.6, 80.2]]} t={2} seed={105} lip={0.35} />
+        <Icicles from={[92, 144.6]} to={[106, 134.6]} n={4} len={4.4} seed={109} />
+        <Icicles from={[198, 134.6]} to={[212, 144.6]} n={4} len={4.4} seed={111} />
+        {[102, 178].map((x) => <Snow key={x} on={[[x - 2.6, 168.7], [x + 26.6, 168.7]]} t={2.4} seed={x} />)}
+        <Snow on={arc(152, 157, 12.2, -70, 70, 8)} t={1.7} seed={113} lip={0.3} />
+        <Snow on={[[165.2, 156.1], [170.8, 156.1]]} t={1.2} seed={115} lip={0.2} />
+        {[[22, 96], [208, 284]].map(([a, b]) => Array.from({ length: Math.floor((b - a) / 7) + 1 }, (_, k) => a + k * 7).map((x) => (
+          <path key={x} d={`M${x - 2.3} 184.5 Q${x - 2.2} 181.6 ${x} 180.4 Q${x + 2.2} 181.6 ${x + 2.3} 184.5 Q${x + 1} 183.6 ${x} 184.2 Q${x - 1} 183.5 ${x - 2.3} 184.5 Z`} className="aa-drift" />
+        )))}
+      </>
+    ),
+    xmas: (
+      <>
+        <Lights on={[[91.6, 145.6], [152, 101.9], [212.4, 145.6]]} gap={6.6} sag={1.4} seed={8} />
+        <Wreath x={147} y={164} r={4.4} />
+      </>
+    ),
+    xmasYard: <XmasTree x={229} y={204} s={0.46} />,
+    jacks: [[163.4, 182.3, 0.78], [102, 185.4, 0.84]],
   };
 }
 

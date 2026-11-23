@@ -8,7 +8,7 @@ import { fmtMins, GRADE_LABEL } from '../ledger/logic';
 import { useLedger } from '../ledger/store';
 import { useManuscripts } from '../manuscripts/store';
 import { useShelf } from '../shelf/store';
-import { reviewWeek, vsLast, weekSummary } from './logic';
+import { letterDue, reviewWeek, vsLast, weekSummary } from './logic';
 import { useReview } from './store';
 import { useKeeper } from '../keeper/store';
 import { useLifeInput } from '../life/useLifeInput';
@@ -129,7 +129,7 @@ export default function ReviewPage() {
         <Prompt label="What worked this week?" value={r.worked} onSave={(v) => rv.patch(monday, { worked: v })} placeholder="The 6am sessions. Writing before checking the phone…" disabled={Boolean(r.sealedAt)} />
         <Prompt label="What got in the way?" value={r.didnt} onSave={(v) => rv.patch(monday, { didnt: v })} placeholder="Late nights. Saying yes to too much…" disabled={Boolean(r.sealedAt)} />
         <Prompt label="One intention for next week" value={r.intention} onSave={(v) => rv.patch(monday, { intention: v })} placeholder="Finish chapter 7 by Thursday." disabled={Boolean(r.sealedAt)} />
-        <KeeperWeek />
+        <KeeperLetter monday={monday} today={today} />
         <div className="seal-row">
           {r.sealedAt ? (
             <>
@@ -181,20 +181,49 @@ function Prompt({ label, value, onSave, placeholder, disabled }: { label: string
   );
 }
 
-/** If the Keeper is on: a read of the last few weeks, to help with the three questions. */
-function KeeperWeek() {
+/**
+ * The Keeper's letter about the week, kept with the review. Written by itself once from Saturday
+ * evening (if the Keeper is on), or on request; without a key, a note on how to turn it on.
+ */
+function KeeperLetter({ monday, today }: { monday: string; today: string }) {
   const k = useKeeper();
+  const rv = useReview();
   useEffect(() => { void k.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const [text, setText] = useState('');
+  const letter = rv.reviews[monday]?.letter;
   const [busy, setBusy] = useState(false);
-  if (!k.enabled) return null;
+  const [err, setErr] = useState('');
+  const tried = useRef('');
+  const write = async () => {
+    setBusy(true); setErr('');
+    try { const text = await k.ask('letter'); if (text) rv.patch(monday, { letter: { text, at: new Date().toISOString() } }); } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+  };
+  useEffect(() => {
+    if (!k.loaded || !rv.loaded || tried.current === monday) return;
+    if (letterDue(new Date(), monday, mondayOf(today), Boolean(letter), k.enabled)) { tried.current = monday; void write(); }
+  }, [k.loaded, k.enabled, rv.loaded, monday, letter]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!k.loaded) return null;
+  if (letter) return (
+    <article className="kl">
+      <span className="mono">A letter from the Keeper · {new Date(letter.at).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</span>
+      <div className="kl-text">{letter.text.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>)}</div>
+      {k.enabled && <button className="linkish kl-again" disabled={busy} onClick={() => void write()}>{busy ? 'Writing it again…' : 'Write it again'}</button>}
+      {err && <p className="dim">{err}</p>}
+    </article>
+  );
+  if (!k.enabled) {
+    return (
+      <div className="kl kl-off">
+        <span className="mono">A letter from the Keeper</span>
+        <p>Each Sunday the Keeper can write you a letter about the week: the book, the job search, faith, the dogs and the people you love, from your real numbers. It needs an Anthropic API key.</p>
+        <button className="linkish" onClick={() => go('/settings')}>Turn the Keeper on in Settings →</button>
+      </div>
+    );
+  }
   return (
-    <div className="keeper-week">
-      {text ? <p className="keeper-week-t"><span className="mono">The Keeper</span>{text}</p> : (
-        <button className="btn sm" disabled={busy} onClick={async () => { setBusy(true); try { setText(await k.ask('week')); } catch (e) { setText(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); } }}>
-          {busy ? 'The Keeper is reading…' : 'Ask the Keeper what it sees in your weeks'}
-        </button>
-      )}
+    <div className="kl kl-off">
+      <span className="mono">A letter from the Keeper</span>
+      {err ? <p className="dim">{err}</p> : <p>{busy ? 'The Keeper is writing…' : 'It writes itself on Sunday. Or ask for it now.'}</p>}
+      <button className="btn sm" disabled={busy} onClick={() => void write()}>{busy ? 'Writing…' : 'Write this week’s letter'}</button>
     </div>
   );
 }
