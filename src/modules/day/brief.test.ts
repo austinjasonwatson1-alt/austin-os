@@ -22,4 +22,11 @@ describe('the morning brief', () => {
     expect(morningBrief({ ...base, deadline: { n: 'Far', left: 40 } })[0].line).not.toContain('Far');
     expect(morningBrief({ ...base, jobDaysLeft: 0 })[1].line).toContain('March 1 is here');
   });
+
+  it('puts an interview this week right under the page', () => {
+    const rows = morningBrief({ ...base, interview: { text: 'Toast — PM screen', in: 1, prepped: 2, of: 5 } });
+    expect(rows[1]).toMatchObject({ title: 'The interview', line: 'Toast — PM screen · tomorrow · 2 of 5 prepped', done: false, path: '/office' });
+    expect(morningBrief({ ...base, interview: { text: 'Far', in: 12, prepped: 0, of: 5 } })).toHaveLength(4);
+    expect(morningBrief({ ...base, interview: { text: 'Now', in: 0, prepped: 5, of: 5 } })[1]).toMatchObject({ title: 'Interview today', done: true });
+  });
 });

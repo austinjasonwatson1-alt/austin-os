@@ -4,7 +4,7 @@ import { SETUP_SQL } from '../core/cloudCrypto';
 import { useSky } from '../core/skyStore';
 import { CATS } from '../modules/ledger/types';
 import { useCloud } from './cloud';
-import { logLink } from './deepLink';
+import { logLink, moveLink, togetherLink, walkLink } from './deepLink';
 import { rise } from './lamp';
 import { SkyPanel } from './SkyPanel';
 import { DataSafety } from './DataSafety';
@@ -55,12 +55,12 @@ function Reminders() {
       <label className="switch">
         <input type="checkbox" checked={on} disabled={perm === 'unsupported' || perm === 'denied'} onChange={(e) => (e.target.checked ? void turnOn() : s.setReminders(false))} />
         <span className="switch-ui" aria-hidden />
-        <span><b>Gentle reminders</b><small>From 8pm if the streak’s at risk or the candle’s unlit; the Sunday review; query follow-ups; contest deadlines in three days. Each one at most once a day.</small></span>
+        <span><b>Gentle reminders</b><small>A morning note with the day ahead (days to March 1, moves made, a birthday coming up); from 8pm, one nudge if nothing’s been tended, or a reminder to close the day; the Sunday review; query follow-ups; contest deadlines in three days. Each one at most once a day.</small></span>
       </label>
       <p className="set-note">
         {perm === 'unsupported' ? 'This browser can’t show notifications.'
           : perm === 'denied' ? 'Notifications are blocked for this site. Allow them in the browser’s site settings, then come back.'
-            : 'They arrive while Austin OS is open or installed and running in the background. Browsers can’t wake a closed web app on their own, so with the app fully closed they wait until you open it.'}
+            : 'They arrive while Austin OS is open or installed and running in the background. Browsers can’t wake a closed web app on their own, so with the app fully closed they wait until you open it. For a morning nudge that always arrives, use the Shortcuts automation under One-tap links below.'}
       </p>
     </section>
   );
@@ -68,35 +68,58 @@ function Reminders() {
 
 function QuickLinks() {
   const base = window.location.href;
+  const root = base.replace(/#.*$/, '');
   const [copied, setCopied] = useState('');
-  const links = [
-    { label: '30 minutes of writing', href: logLink(base, 30, 'writing') },
-    { label: '15 minutes of reading', href: logLink(base, 15, 'reading') },
-    { label: '30 minutes of editing', href: logLink(base, 30, 'editing') },
-    { label: '10 minutes of prayer', href: logLink(base, 10, 'prayer') },
-    { label: 'Start lamp mode', href: `${base.replace(/#.*$/, '')}#/lamp` },
+  const groups = [
+    { title: 'The page', links: [
+      { label: '30 minutes of writing', href: logLink(base, 30, 'writing') },
+      { label: '15 minutes of reading', href: logLink(base, 15, 'reading') },
+      { label: '30 minutes of editing', href: logLink(base, 30, 'editing') },
+      { label: 'Start lamp mode', href: `${root}#/lamp` },
+    ] },
+    { title: 'The job search', links: [
+      { label: 'Read the recruiter’s brief', href: moveLink(base, 'brief') },
+      { label: 'Sent an application', href: moveLink(base, 'apply') },
+      { label: 'Sent a follow-up', href: moveLink(base, 'followup') },
+      { label: 'Asked for a referral', href: moveLink(base, 'referral') },
+    ] },
+    { title: 'Faith, the dogs and family', links: [
+      { label: '10 minutes of prayer', href: logLink(base, 10, 'prayer') },
+      { label: 'Walked Cooper and Shadow, 30 minutes', href: walkLink(base, 30) },
+      { label: 'An hour together', href: togetherLink(base, 60) },
+    ] },
+    { title: 'Open a page', links: [
+      { label: 'Today at a glance', href: `${root}#/day` },
+    ] },
   ];
   const copy = async (h: string) => { try { await navigator.clipboard.writeText(h); setCopied(h); setTimeout(() => setCopied(''), 2000); } catch { /* fine */ } };
   return (
     <section id="set-siri" className="panel rise" style={rise(2)}>
-      <div className="panel-h"><p className="panel-t">Quick-log links · Siri &amp; Apple Watch</p></div>
-      <p className="set-note" style={{ marginTop: 0 }}>Opening one of these links logs the minutes and heads Home. To say “Hey Siri, log thirty minutes”:</p>
+      <div className="panel-h"><p className="panel-t">One-tap links · Siri, Home Screen &amp; Apple Watch</p></div>
+      <p className="set-note" style={{ marginTop: 0 }}>Each link does one thing and says so: logs the minutes, ticks the move, counts the walk. To make one a button or a phrase:</p>
       <ol className="set-steps">
         <li>Copy a link below.</li>
         <li>On your iPhone, open <b>Shortcuts</b> → <b>+</b> → <b>Add Action</b> → <b>Open URLs</b>, and paste the link.</li>
-        <li>Name the shortcut the phrase you’ll say, like “Log thirty minutes”. It also shows up on your Apple Watch.</li>
+        <li>Name it the phrase you’ll say (“Sent an application”). It works with Siri and shows on your Apple Watch.</li>
+        <li>For a Home Screen button: in the shortcut, tap <b>ⓘ</b> → <b>Add to Home Screen</b>.</li>
       </ol>
-      <ul className="set-links">
-        {links.map((l) => (
-          <li key={l.href}>
-            <span>{l.label}</span>
-            <code className="mono">{l.href.replace(/^https?:\/\//, '')}</code>
-            <button className="btn sm" onClick={() => void copy(l.href)}>{copied === l.href ? 'Copied ✓' : 'Copy'}</button>
-          </li>
-        ))}
-      </ul>
-      <p className="set-note"><b>“Hey Siri, new idea”:</b> in Shortcuts make a shortcut called <b>New idea</b> with <b>Dictate Text</b>, then <b>URL Encode</b> it, then <b>Open URLs</b> with <code className="mono">{base.replace(/#.*$/, '')}#/idea?t=</code> followed by the encoded text. Say “short story” or “novel” first and it lands in the right drawer of the Idea Vault.</p>
-      <p className="set-note">Make your own: change <code className="mono">m=</code> to any number of minutes and <code className="mono">c=</code> to {CATS.map((c) => c.k).join(', ')}, prayer or scripture.</p>
+      {groups.map((g) => (
+        <div key={g.title} className="set-linkgroup">
+          <p className="mono set-linkgroup-t">{g.title}</p>
+          <ul className="set-links">
+            {g.links.map((l) => (
+              <li key={l.href}>
+                <span>{l.label}</span>
+                <code className="mono">{l.href.replace(/^https?:\/\//, '')}</code>
+                <button className="btn sm" onClick={() => void copy(l.href)}>{copied === l.href ? 'Copied ✓' : 'Copy'}</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <p className="set-note"><b>Your morning, on its own:</b> in Shortcuts, open <b>Automation</b> → <b>+</b> → <b>Time of Day</b>, pick 7:00 AM, choose <b>Run Immediately</b>, and add <b>Open URLs</b> with the “Today at a glance” link. Do the same at 8:30 PM to be reminded to close the day.</p>
+      <p className="set-note"><b>“Hey Siri, new idea”:</b> in Shortcuts make a shortcut called <b>New idea</b> with <b>Dictate Text</b>, then <b>URL Encode</b> it, then <b>Open URLs</b> with <code className="mono">{root}#/idea?t=</code> followed by the encoded text. Say “short story” or “novel” first and it lands in the right drawer of the Idea Vault.</p>
+      <p className="set-note">Make your own: change <code className="mono">m=</code> to any number of minutes and <code className="mono">c=</code> to {CATS.map((c) => c.k).join(', ')}, prayer or scripture; add <code className="mono">n=3</code> to a move to count three at once.</p>
     </section>
   );
 }

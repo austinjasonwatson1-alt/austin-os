@@ -18,7 +18,7 @@ const ROUTES = [
   '/cabin/queries', '/cabin/contests', '/cabin/editorial', '/cabin/marketing',
   '/chapel', '/office', '/observatory', '/forge', '/bank', '/hearth', '/kennel', '/money', '/memories',
   '/life', '/goals', '/review', '/year', '/library', '/records', '/film',
-  '/log?m=15&c=writing', '/idea?t=short%3A%20Smoke%20test',
+  '/log?m=15&c=writing', '/idea?t=short%3A%20Smoke%20test', '/move?k=apply', '/walk?m=30', '/together?m=60',
 ];
 
 /** A lived-in homestead: two months of days across the buildings, dogs, money, projects. */

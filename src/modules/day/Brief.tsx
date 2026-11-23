@@ -2,7 +2,7 @@ import { useEffect, type CSSProperties } from 'react';
 import { CountUp } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
 import { go } from '../../shell/router';
-import { jobClock, movesOn } from '../areas/jobLogic';
+import { jobClock, movesOn, PREP, upcomingInterviews } from '../areas/jobLogic';
 import { areaMinutes } from '../areas/logic';
 import { AREA_STORES } from '../areas/store';
 import { chapelMinutes } from '../chapel/logic';
@@ -33,6 +33,7 @@ export function MorningBrief({ today }: { today: string }) {
     deadline: dl ? { n: dl.n, left: dl.left } : null,
     jobMoves: moves, jobDaysLeft: jobClock(today).left,
     prayerMins: chapelMinutes(chapel.days[today]), openPrayers: chapel.prayers.filter((p) => !p.answeredOn).length,
+    interview: (() => { const iv = upcomingInterviews(office.items, today)[0]; return iv ? { text: iv.text, in: iv.in, prepped: iv.prepped, of: PREP.length } : null; })(),
     walkMins: input.walks?.[today] ?? 0, workoutMins: areaMinutes(forge.days[today]), steps: feeds.days[today]?.steps,
   });
   const streak = lifeStreak(input, today);

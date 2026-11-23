@@ -13,12 +13,16 @@ export interface AreaItem {
   done?: boolean;
   /** Dollars, for money lists (whether it's in or out is decided by the list). */
   amount?: number;
+  /** Interview prep steps done (keys of PREP in jobLogic). */
+  checks?: string[];
   /** A date it's about (a birthday, a race), for dated lists. */
   when?: string;
   /** Projects: where it lives, how far along, and what kind of thing it is. */
   link?: string;
   stage?: 'idea' | 'building' | 'shipped';
   kind?: string;
+  /** Job applications (Office list `apps`): where it stands in the pipeline. */
+  status?: 'saved' | 'applied' | 'screen' | 'interview' | 'offer' | 'closed';
 }
 
 export interface AreaData {

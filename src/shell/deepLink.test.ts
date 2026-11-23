@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { logLink, parseDeepLink } from './deepLink';
+import { logLink, moveLink, parseDeepLink, togetherLink, walkLink } from './deepLink';
 
 describe('deep links', () => {
   it('logs minutes from a link', () => {
@@ -29,5 +29,21 @@ describe('idea links', () => {
   it('carry the idea text', () => {
     expect(parseDeepLink('/idea?t=' + encodeURIComponent('short: The Lighthouse Wife'), '2026-11-22')).toEqual({ kind: 'idea', text: 'short: The Lighthouse Wife' });
     expect(parseDeepLink('/idea?t=', '2026-11-22')!.kind).toBe('bad');
+  });
+});
+
+describe('job moves, dog walks and time together', () => {
+  it('reads the new one-tap links', () => {
+    expect(parseDeepLink('/move?k=apply')).toEqual({ kind: 'move', move: 'apply', n: 1 });
+    expect(parseDeepLink('/move?k=Follow-up&n=3')).toEqual({ kind: 'move', move: 'followup', n: 3 });
+    expect(parseDeepLink('/move?k=dance')?.kind).toBe('bad');
+    expect(parseDeepLink('/move?k=referral&n=900')).toEqual({ kind: 'move', move: 'referral', n: 1 });
+    expect(parseDeepLink('/walk?m=30')).toEqual({ kind: 'walk', mins: 30, who: 'both' });
+    expect(parseDeepLink('/walk?m=20&who=Cooper')).toEqual({ kind: 'walk', mins: 20, who: 'cooper' });
+    expect(parseDeepLink('/walk')?.kind).toBe('bad');
+    expect(parseDeepLink('/together?m=60')).toEqual({ kind: 'together', mins: 60 });
+    expect(moveLink('https://x.io/app/#/settings', 'apply')).toBe('https://x.io/app/#/move?k=apply');
+    expect(walkLink('https://x.io/', 30)).toBe('https://x.io/#/walk?m=30&who=both');
+    expect(togetherLink('https://x.io/', 60)).toBe('https://x.io/#/together?m=60');
   });
 });

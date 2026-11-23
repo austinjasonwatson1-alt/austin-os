@@ -10,7 +10,16 @@ import { dayTotal, fmtMins } from '../modules/ledger/logic';
 import { useLedger } from '../modules/ledger/store';
 import { CATS } from '../modules/ledger/types';
 import { useTimer } from '../modules/timer/store';
-import type { DeepLink } from './deepLink';
+import type { DeepLink, Move } from './deepLink';
+import { useKennel } from '../modules/kennel/store';
+import { jobClock, movesOn } from '../modules/areas/jobLogic';
+
+const MOVE_DONE: Record<Move, (n: number) => string> = {
+  brief: () => 'Brief read.',
+  apply: (n) => (n > 1 ? `${n} applications out today.` : 'Application out.'),
+  followup: (n) => (n > 1 ? `${n} follow-ups sent today.` : 'Follow-up sent.'),
+  referral: (n) => (n > 1 ? `${n} referral asks today.` : 'Referral asked.'),
+};
 import { go } from './router';
 
 /**
@@ -26,7 +35,10 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
   const done = useRef(false);
   const [msg, setMsg] = useState<{ big: string; small: string; bad?: boolean } | null>(null);
 
-  useEffect(() => { void ledger.load(); void chapel.load(); void useTimer.getState().load(); void feeds.load(); void forge.load(); void ideas.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const office = AREA_STORES.office();
+  const hearth = AREA_STORES.hearth();
+  const kennel = useKennel();
+  useEffect(() => { void ledger.load(); void chapel.load(); void useTimer.getState().load(); void feeds.load(); void forge.load(); void ideas.load(); void office.load(); void hearth.load(); void kennel.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (done.current) return;
@@ -61,6 +73,26 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
       }
       return;
     }
+    if (link.kind === 'move' || link.kind === 'walk' || link.kind === 'together') {
+      const office = AREA_STORES.office.getState(), hearth = AREA_STORES.hearth.getState(), kennel = useKennel.getState();
+      if (!office.loaded || !hearth.loaded || !kennel.loaded) return;
+      done.current = true;
+      const day = todayISO();
+      if (link.kind === 'move') {
+        const cur = office.days[day]?.[link.move] ?? 0;
+        office.setMinutes(day, link.move, cur + link.n);
+        const made = movesOn(AREA_STORES.office.getState().days, day);
+        setMsg({ big: MOVE_DONE[link.move](cur + link.n), small: `${made} of 4 moves today · ${Math.max(0, jobClock(day).left)} days to March 1.` });
+      } else if (link.kind === 'walk') {
+        kennel.addWalk({ date: day, who: link.who, minutes: link.mins });
+        setMsg({ big: `+${fmtMins(link.mins)} walking ${link.who === 'both' ? 'Cooper and Shadow' : link.who === 'cooper' ? 'Cooper' : 'Shadow'}`, small: 'Counted for the body too.' });
+      } else {
+        const cur = hearth.days[day]?.together ?? 0;
+        hearth.setMinutes(day, 'together', cur + link.mins);
+        setMsg({ big: `+${fmtMins(link.mins)} together`, small: 'Kept at the Hearth.' });
+      }
+      return;
+    }
     if (!ledger.loaded || !chapel.loaded) return;
     done.current = true;
     const day = todayISO();
@@ -74,7 +106,7 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
       chapel.setMinutes(day, link.what, cur + link.mins);
       setMsg({ big: `+${fmtMins(link.mins)} in the Chapel`, small: link.what === 'prayer' ? 'Prayer, kept apart from the writing.' : 'Scripture, kept apart from the writing.' });
     }
-  }, [link, ledger, chapel, feeds, forge, ideas]);
+  }, [link, ledger, chapel, feeds, forge, ideas, office, hearth, kennel]);
 
   useEffect(() => {
     if (!msg || msg.bad) return;

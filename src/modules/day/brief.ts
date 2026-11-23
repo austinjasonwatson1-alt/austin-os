@@ -13,6 +13,8 @@ export interface BriefInput {
   walkMins: number;
   workoutMins: number;
   steps?: number;
+  /** The next interview, if one is within a week. */
+  interview?: { text: string; in: number; prepped: number; of: number } | null;
 }
 
 export interface BriefRow { area: LifeArea; title: string; line: string; done: boolean; path: string }
@@ -39,5 +41,13 @@ export function morningBrief(b: BriefInput): BriefRow[] {
     area: 'body', title: 'Cooper, Shadow and you', path: '/kennel', done: moved > 0,
     line: (b.walkMins > 0 ? `Walked ${b.walkMins}m` : 'The dogs haven’t been out yet') + (b.workoutMins > 0 ? ` · ${b.workoutMins}m of training` : '') + (b.steps ? ` · ${b.steps.toLocaleString('en-US')} steps` : ''),
   };
-  return [write, job, faith, body];
+  const rows = [write, job, faith, body];
+  const iv = b.interview;
+  if (iv && iv.in <= 7) {
+    rows.splice(1, 0, {
+      area: 'work', title: iv.in === 0 ? 'Interview today' : 'The interview', path: '/office', done: iv.prepped >= iv.of,
+      line: `${iv.text} · ${iv.in === 0 ? 'today' : iv.in === 1 ? 'tomorrow' : `in ${iv.in} days`} · ${iv.prepped} of ${iv.of} prepped`,
+    });
+  }
+  return rows;
 }

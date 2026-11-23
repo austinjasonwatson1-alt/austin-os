@@ -6,6 +6,9 @@
  *   #/health?steps=8412&sleep=7.4&workout=35&kind=cardio   Apple Health, nightly
  *   #/cal?d=2026-11-23&e=09:00-10:00 Standup%0A…            today's calendar
  *   #/idea?t=short: The Lighthouse Wife — she keeps the light   an idea, into the vault
+ *   #/move?k=apply             a job-search move (brief, apply, followup, referral); n=2 for two
+ *   #/walk?m=30&who=both       walked the dogs (who = both, cooper or shadow)
+ *   #/together?m=60            time together, at the Hearth
  * Pure parsing only.
  */
 import { CATS, type CatKey } from '../modules/ledger/types';
@@ -18,10 +21,32 @@ export type DeepLink =
   | { kind: 'health'; h: HealthLink }
   | { kind: 'cal'; day: string; events: CalEvent[] }
   | { kind: 'idea'; text: string }
+  | { kind: 'move'; move: Move; n: number }
+  | { kind: 'walk'; mins: number; who: 'both' | 'cooper' | 'shadow' }
+  | { kind: 'together'; mins: number }
   | { kind: 'bad'; reason: string };
+
+export type Move = 'brief' | 'apply' | 'followup' | 'referral';
+const MOVE_WORDS: Record<string, Move> = { brief: 'brief', apply: 'apply', application: 'apply', applied: 'apply', followup: 'followup', 'follow-up': 'followup', follow: 'followup', referral: 'referral', refer: 'referral', ask: 'referral' };
+const minutesIn = (q: URLSearchParams) => Math.round(Number(q.get('m') ?? q.get('min') ?? q.get('minutes')));
 
 export function parseDeepLink(route: string, today = ''): DeepLink | null {
   const [path, query = ''] = route.split('?');
+  if (path === '/move') {
+    const q = new URLSearchParams(query);
+    const move = MOVE_WORDS[(q.get('k') ?? q.get('move') ?? '').toLowerCase()];
+    const n = Math.round(Number(q.get('n') ?? 1));
+    if (!move) return { kind: 'bad', reason: 'The link needs a move: k=brief, apply, followup or referral.' };
+    return { kind: 'move', move, n: n >= 1 && n <= 50 ? n : 1 };
+  }
+  if (path === '/walk' || path === '/together') {
+    const q = new URLSearchParams(query);
+    const mins = minutesIn(q);
+    if (!mins || mins < 1 || mins > 24 * 60) return { kind: 'bad', reason: 'The link needs a number of minutes, like m=30.' };
+    if (path === '/together') return { kind: 'together', mins };
+    const w = (q.get('who') ?? 'both').toLowerCase();
+    return { kind: 'walk', mins, who: w === 'cooper' || w === 'shadow' ? w : 'both' };
+  }
   if (path === '/lamp') return { kind: 'lamp' };
   if (path === '/health') {
     const h = parseHealth(query, today);
@@ -53,4 +78,7 @@ export const logLink = (base: string, mins: number, cat: string) => `${base.repl
 /** The nightly Apple Health link, with the Shortcut's variables written in brackets. */
 export const healthLink = (base: string) => `${base.replace(/#.*$/, '')}#/health?steps=[Steps]&sleep=[Sleep]&workout=[Workout minutes]`;
 export const calLink = (base: string) => `${base.replace(/#.*$/, '')}#/cal?e=[Events]`;
+export const moveLink = (base: string, k: Move) => `${base.replace(/#.*$/, '')}#/move?k=${k}`;
+export const walkLink = (base: string, m: number) => `${base.replace(/#.*$/, '')}#/walk?m=${m}&who=both`;
+export const togetherLink = (base: string, m: number) => `${base.replace(/#.*$/, '')}#/together?m=${m}`;
 export const ideaLink = (base: string) => `${base.replace(/#.*$/, '')}#/idea?t=[Dictated Text]`;
