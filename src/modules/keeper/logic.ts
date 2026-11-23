@@ -120,3 +120,23 @@ export function askPrompt(kind: Ask, extra: { chapterTitle?: string; chapterText
     default: return extra.question ?? '';
   }
 }
+
+/** Whether a 400 was about the refusal-fallback setting (then the request is sent again without it). */
+export const fallbackRejected = (message: string) => /fallback|anthropic-beta|beta header/i.test(message);
+
+/**
+ * What to tell Austin when the Keeper can't answer: the real cause in plain words, and what to do.
+ * `status` is the HTTP status (0 for "couldn't connect"), `type`/`message` from the API's error body.
+ */
+export function keeperError(status: number, type: string, message: string): string {
+  const m = message.trim();
+  if (status === 0) return 'Couldn’t reach Anthropic. Check the connection and try again.';
+  if (/credit balance|billing|payment/i.test(m) || status === 402 || type === 'billing_error') return 'The Anthropic account has no credit left. Add some at console.anthropic.com → Settings → Billing, then try again.';
+  if (status === 401 || type === 'authentication_error') return 'That API key wasn’t accepted. Paste a fresh key from console.anthropic.com in Settings → The Keeper.';
+  if (status === 403 || type === 'permission_error') return `This API key isn’t allowed to do that${m ? ` (${m})` : ''}. Check the key’s workspace in the Anthropic console.`;
+  if (status === 404 || type === 'not_found_error') return `Anthropic didn’t recognise the request${m ? `: ${m}` : ''}. The key’s organization may not have this model yet.`;
+  if (status === 429) return /spend|limit/i.test(m) && /month/i.test(m) ? 'The account’s monthly spend limit is reached. Raise it in the Anthropic console.' : 'Too many requests right now; try again in a minute.';
+  if (status === 529 || type === 'overloaded_error') return 'Anthropic is busy right now; try again in a minute.';
+  if (status >= 500) return 'Anthropic had a problem on its side; try again in a minute.';
+  return `The Keeper couldn’t answer${m ? `: ${m}` : '.'}`;
+}

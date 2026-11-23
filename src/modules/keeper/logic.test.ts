@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { askPrompt, briefing, DEFAULT_ALLOW } from './logic';
+import { askPrompt, briefing, DEFAULT_ALLOW, fallbackRejected, keeperError } from './logic';
 import { DEFAULT_PUB } from '../pub/types';
 
 const data = {
@@ -56,5 +56,21 @@ describe('the Keeper reads the Scene Library', () => {
       scenes: [{ kind: 'interrogation', label: 'Silence does the work', source: 'Gone Girl', where: 'p. 212', why: 'he fills the quiet' }] }, DEFAULT_ALLOW);
     expect(b).toContain('SCENE LIBRARY');
     expect(b).toContain('[interrogation] Silence does the work — Gone Girl, p. 212 (why it works: he fills the quiet)');
+  });
+});
+
+describe('when the Keeper can’t answer', () => {
+  it('names the real cause in plain words', () => {
+    expect(keeperError(400, 'invalid_request_error', 'Your credit balance is too low to access the Anthropic API.')).toMatch(/no credit left/);
+    expect(keeperError(401, 'authentication_error', 'invalid x-api-key')).toMatch(/wasn’t accepted/);
+    expect(keeperError(404, 'not_found_error', 'model: claude-opus-5-5')).toMatch(/model: claude-opus-5-5/);
+    expect(keeperError(529, 'overloaded_error', 'Overloaded')).toMatch(/busy/);
+    expect(keeperError(0, '', '')).toMatch(/Couldn’t reach/);
+    expect(keeperError(400, 'invalid_request_error', 'max_tokens: too large')).toBe('The Keeper couldn’t answer: max_tokens: too large');
+  });
+  it('spots a rejected fallback setting, so the request can go again without it', () => {
+    expect(fallbackRejected('fallbacks: Extra inputs are not permitted')).toBe(true);
+    expect(fallbackRejected('Unexpected value(s) `server-side-fallback-2026-07-01` for the `anthropic-beta` header')).toBe(true);
+    expect(fallbackRejected('Your credit balance is too low')).toBe(false);
   });
 });

@@ -5,6 +5,7 @@
  * Anthropic, carrying only the areas allowed.
  */
 import { create } from 'zustand';
+import type SDK from '@anthropic-ai/sdk';
 import { todayISO } from '../../core/dates';
 import { kvDel, kvGet, kvSet, SYS_PREFIX } from '../../core/storage';
 import { useChapel } from '../chapel/store';
@@ -14,7 +15,7 @@ import { usePub } from '../pub/store';
 import { useReview } from '../review/store';
 import { useShelf } from '../shelf/store';
 import { useRefs } from '../refs/store';
-import { askPrompt, briefing, DEFAULT_ALLOW, KEEPER_SYSTEM, type Allow, type Ask, type KeeperData } from './logic';
+import { askPrompt, briefing, DEFAULT_ALLOW, fallbackRejected, keeperError, KEEPER_SYSTEM, type Allow, type Ask, type KeeperData } from './logic';
 import { AREA_STORES } from '../areas/store';
 import { areaMinutes } from '../areas/logic';
 import { useFeeds } from '../feeds/store';
@@ -93,25 +94,35 @@ export const useKeeper = create<KeeperState>((set, get) => ({
     // The SDK is only loaded when the Keeper is actually used.
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
     const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+    const system: SDK.TextBlockParam[] = [{ type: 'text', text: KEEPER_SYSTEM, cache_control: { type: 'ephemeral' } }];
+    const messages: SDK.MessageParam[] = [{ role: 'user', content: `Here is what's in the homestead right now:\n\n${brief}\n\n${askPrompt(kind, { ...extra, chapterText: get().allow.chapterText ? extra.chapterText : undefined })}` }];
+    const effort = kind === 'morning' ? 'low' : 'medium';
+    const textOf = (content: { type: string; text?: string }[]) => content.flatMap((b) => (b.type === 'text' && b.text ? [b.text] : [])).join('\n').trim();
     try {
-      const res = await client.beta.messages.create({
-        model: MODEL,
-        max_tokens: 16000,
-        output_config: { effort: kind === 'morning' ? 'low' : 'medium' },
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
-        system: [{ type: 'text', text: KEEPER_SYSTEM, cache_control: { type: 'ephemeral' } }],
-        messages: [{ role: 'user', content: `Here is what's in the homestead right now:\n\n${brief}\n\n${askPrompt(kind, { ...extra, chapterText: get().allow.chapterText ? extra.chapterText : undefined })}` }],
-      });
+      let res: { stop_reason: string | null; content: { type: string; text?: string }[] };
+      try {
+        // With refusal fallbacks on: a declined request is re-run on another model inside the same call.
+        res = await client.beta.messages.create({
+          model: MODEL, max_tokens: 16000, output_config: { effort },
+          betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+          system, messages,
+        });
+      } catch (e) {
+        // If this account doesn't take the fallback setting, ask again plainly rather than fail.
+        if (!(e instanceof Anthropic.BadRequestError && fallbackRejected(e.message))) throw e;
+        res = await client.messages.create({ model: MODEL, max_tokens: 16000, output_config: { effort }, system, messages });
+      }
       if (res.stop_reason === 'refusal') throw new Error('The Keeper couldn’t answer that one.');
-      const text = res.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('\n').trim();
+      const text = textOf(res.content);
+      if (!text) throw new Error('The Keeper went quiet; try asking again.');
       set({ error: null });
       return text;
     } catch (e) {
-      const msg = e instanceof Anthropic.AuthenticationError ? 'That API key wasn’t accepted. Check it in Settings.'
-        : e instanceof Anthropic.RateLimitError ? 'Too many requests right now; try again in a minute.'
-          : e instanceof Anthropic.APIConnectionError ? 'Couldn’t reach Anthropic. Are you online?'
-            : e instanceof Error ? e.message : String(e);
+      const body = e instanceof Anthropic.APIError ? (e.error as { error?: { type?: string; message?: string } } | undefined)?.error : undefined;
+      const msg = e instanceof Anthropic.APIConnectionError ? keeperError(0, '', '')
+        : e instanceof Anthropic.APIError ? keeperError(e.status ?? 0, body?.type ?? '', body?.message ?? e.message)
+          : e instanceof Error ? e.message : String(e);
+      console.error('The Keeper:', e);
       set({ error: msg });
       throw new Error(msg);
     }
