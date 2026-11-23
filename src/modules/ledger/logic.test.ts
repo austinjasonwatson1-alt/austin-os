@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compareDays, describeLedger, currentStreak, dayTotal, gradeOf, mergeDays, monthStats, parseCsvRows, parseLedgerCsv, weekTotal } from './logic';
+import { compareDays, describeLedger, currentStreak, dayTotal, gradeOf, loggedMonths, mergeDays, monthLog, monthStats, monthTotals, parseCsvRows, parseLedgerCsv, rolling7, weekPace, weekTotal, yearByCat, yearWeeks } from './logic';
 import { DEFAULT_DATA } from './types';
 
 const T = DEFAULT_DATA.thresholds;
@@ -221,5 +221,33 @@ describe('monthDays', () => {
     const d = monthDays({ '2026-11-02': { writing: 40 } }, 2026, 10, '2026-11-03');
     expect(d.length).toBe(30);
     expect(d.slice(0, 4)).toEqual([0, 40, 0, null]);
+  });
+});
+
+describe('the whole ledger', () => {
+  const T = { elite: 180, good: 80, warn: 30 };
+  const W = { elite: 700, good: 450, warn: 250 };
+  const days = { '2026-11-16': { writing: 120 }, '2026-11-17': { writing: 60, editing: 30, note: 'Good' }, '2026-11-23': { reading: 45 }, '2026-10-05': { querying: 200 } };
+  it('paces the week against the weekly targets', () => {
+    expect(weekPace(days, '2026-11-16', '2026-11-18', W)).toEqual({ total: 210, grade: 'bad', through: 3 / 7, projected: 490, toElite: 490 });
+  });
+  it('draws every week of the year so far, the 7-day average, months and categories', () => {
+    const wk = yearWeeks(days, 2026, '2026-11-23', W);
+    expect(wk[0].monday).toBe('2025-12-29');
+    expect(wk.at(-1)).toEqual({ monday: '2026-11-23', mins: 45, grade: 'bad', now: true });
+    expect(wk.find((w) => w.monday === '2026-11-16')!.mins).toBe(210);
+    const r = rolling7(days, 2026, '2026-11-23');
+    expect(r.at(-1)).toEqual({ date: '2026-11-23', avg: Math.round((90 + 45) / 7) }); // the 17th to the 23rd
+    expect(monthTotals(days, 2026)[10]).toBe(255);
+    expect(monthTotals(days, 2026)[9]).toBe(200);
+    expect(yearByCat(days, 2026).slice(0, 2)).toEqual([{ k: 'querying', mins: 200 }, { k: 'writing', mins: 180 }]);
+    void T;
+  });
+  it('lists a month’s days newest first, zero days too, and which months to offer', () => {
+    const log = monthLog(days, '2026-11', '2026-11-23');
+    expect(log).toHaveLength(23);
+    expect(log[0]).toEqual({ date: '2026-11-23', e: { reading: 45 }, total: 45 });
+    expect(log.find((d) => d.date === '2026-11-17')!.total).toBe(90);
+    expect(loggedMonths(days, '2026-12-02')).toEqual(['2026-12', '2026-11', '2026-10']);
   });
 });

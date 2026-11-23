@@ -321,3 +321,67 @@ export function monthDays(days: DayMap, y: number, m: number, today: string): (n
     return key > today ? null : dayTotal(days[key]);
   });
 }
+
+/* ---------------- the whole ledger, like the original: week pace, year of weeks, trend, totals, log ---------------- */
+
+/** This week against the weekly targets: total, grade, the share of the week gone, and where the pace points. */
+export function weekPace(days: DayMap, monday: string, today: string, weekly: Thresholds): { total: number; grade: GradeKey; through: number; projected: number; toElite: number } {
+  const total = weekTotal(days, monday);
+  const elapsed = Math.max(1, Math.min(7, Math.round((Date.parse(`${today}T12:00:00`) - Date.parse(`${monday}T12:00:00`)) / 86_400_000) + 1));
+  return { total, grade: gradeOf(total, weekly), through: elapsed / 7, projected: Math.round((total / elapsed) * 7), toElite: Math.max(0, weekly.elite - total) };
+}
+
+/** Every week that touches `year`, up to the week holding `today`, with its total and its weekly grade. */
+export function yearWeeks(days: DayMap, year: number, today: string, weekly: Thresholds): { monday: string; mins: number; grade: GradeKey; now: boolean }[] {
+  const out: { monday: string; mins: number; grade: GradeKey; now: boolean }[] = [];
+  const last = mondayOf(today);
+  for (let m = mondayOf(`${year}-01-01`); m <= `${year}-12-31` && m <= last; m = addDays(m, 7)) {
+    const mins = weekTotal(days, m);
+    out.push({ monday: m, mins, grade: gradeOf(mins, weekly), now: m === last });
+  }
+  return out;
+}
+
+/** The 7-day rolling average (minutes a day) for each day of `year` up to `today`. */
+export function rolling7(days: DayMap, year: number, today: string): { date: string; avg: number }[] {
+  const keys = daysOfYear(year).filter((d) => d <= today);
+  return keys.map((date) => {
+    let t = 0;
+    for (let i = 0; i < 7; i++) t += dayTotal(days[addDays(date, -i)]);
+    return { date, avg: Math.round(t / 7) };
+  });
+}
+
+/** Minutes per month of `year`. */
+export function monthTotals(days: DayMap, year: number): number[] {
+  const out = Array.from({ length: 12 }, () => 0);
+  for (const [d, e] of Object.entries(days)) if (d.startsWith(`${year}-`)) out[Number(d.slice(5, 7)) - 1] += dayTotal(e);
+  return out;
+}
+
+/** Where the year went: minutes per category, biggest first (every category listed). */
+export function yearByCat(days: DayMap, year: number): { k: CatKey; mins: number }[] {
+  const tot = Object.fromEntries(CATS.map((c) => [c.k, 0])) as Record<CatKey, number>;
+  for (const [d, e] of Object.entries(days)) if (d.startsWith(`${year}-`)) for (const c of CATS) tot[c.k] += Number(e[c.k]) || 0;
+  return CATS.map((c) => ({ k: c.k, mins: tot[c.k] })).sort((a, b) => b.mins - a.mins);
+}
+
+/** The log for one month ('YYYY-MM'): every day up to `today`, newest first, zero days included (they count too). */
+export function monthLog(days: DayMap, ym: string, today: string): { date: string; e: DayEntry; total: number }[] {
+  const [y, m] = ym.split('-').map(Number);
+  const dim = new Date(y, m, 0).getDate();
+  const out: { date: string; e: DayEntry; total: number }[] = [];
+  for (let d = dim; d >= 1; d--) {
+    const date = `${ym}-${pad(d)}`;
+    if (date > today) continue;
+    out.push({ date, e: days[date] ?? {}, total: dayTotal(days[date]) });
+  }
+  return out;
+}
+
+/** The months that have anything logged, newest first (for the log's month picker), always including this month. */
+export function loggedMonths(days: DayMap, today: string): string[] {
+  const set = new Set(Object.keys(days).filter((d) => hasEntry(days[d]) || days[d]?.note).map((d) => d.slice(0, 7)));
+  set.add(today.slice(0, 7));
+  return [...set].sort().reverse();
+}

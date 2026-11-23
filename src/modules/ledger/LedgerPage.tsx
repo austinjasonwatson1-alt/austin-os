@@ -1,3 +1,4 @@
+import { LogWhole, SessionBar, TrendWhole, WeekWhole, WhereWhole } from './Whole';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { CountUp, tilt } from '../../shell/fx';
 import { rise } from '../../shell/lamp';
@@ -48,16 +49,23 @@ export default function LedgerPage() {
         </div>
       </section>
 
+      <div className="rise" style={rise(1)}><SessionBar /></div>
+
       <div className="ledger-top">
         <div className="rise" style={rise(1)}><TodayPanel date={cursor} setDate={setCursor} /></div>
         <WeekSky date={cursor} selected={cursor} onPick={setCursor} />
       </div>
 
+      <div className="rise" style={rise(2)}><WeekWhole year={year} onPick={setCursor} /></div>
+
       <div className="rise" style={{ ...rise(3), marginTop: 16 }}>
         <YearWall year={year} setYear={setYear} selected={cursor} onPick={setCursor} />
       </div>
 
+      <div className="rise" style={rise(4)}><TrendWhole year={year} /></div>
       <div className="rise" style={{ ...rise(4), marginTop: 16 }}><MonthsPanel year={year} onPick={setCursor} /></div>
+      <div className="rise" style={rise(5)}><WhereWhole year={year} /></div>
+      <div className="rise" style={rise(5)}><LogWhole onPick={setCursor} selected={cursor} /></div>
 
       <div className="ledger-lower rise" style={rise(5)}>
         <DeadlinesPanel />
