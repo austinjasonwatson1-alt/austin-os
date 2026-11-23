@@ -46,6 +46,8 @@ export interface KeeperData {
   events?: { day: string; start?: string; end?: string; title: string; allDay?: boolean }[];
   /** This month and last, by category, in dollars. */
   money?: { month: string; income: number; spent: number; byCategory: { name: string; dollars: number }[] }[];
+  /** The Scene Library: scenes he marked while reading, to learn from. */
+  scenes?: { kind: string; label: string; source: string; where?: string; why?: string }[];
 }
 
 export function briefing(d: KeeperData, allow: Allow): string {
@@ -73,6 +75,7 @@ export function briefing(d: KeeperData, allow: Allow): string {
   if (allow.shelf) {
     const read = d.books.filter((b) => b.status === 'read' || b.status === 'reading').slice(0, 12);
     if (read.length) out.push(`SHELF: ${read.map((b) => `"${b.title}" by ${b.author} (${b.status}${b.rating ? `, ${b.rating}/5` : ''}${b.craft.length ? `; craft notes: ${b.craft.join(' / ')}` : ''})`).join('; ')}.`);
+    if (d.scenes?.length) out.push(`SCENE LIBRARY (scenes he marked to learn from): ${d.scenes.slice(0, 40).map((x) => `[${x.kind}] ${x.label} — ${x.source}${x.where ? `, ${x.where}` : ''}${x.why ? ` (why it works: ${x.why})` : ''}`).join('; ')}.`);
   }
   if (allow.publishing) {
     const s = queryStats(d.pub.queries, d.today);
@@ -111,7 +114,7 @@ export function askPrompt(kind: Ask, extra: { chapterTitle?: string; chapterText
   switch (kind) {
     case 'morning': return 'Write this morning\'s note: two or three sentences on where he stands and the one thing most worth doing today. If last week\'s intention exists, connect to it.';
     case 'week': return 'Look across the last few weeks: what patterns do you see in when and how he writes best, what keeps getting in the way, and one concrete intention for next week. Under 150 words.';
-    case 'craft': return `Give craft help on the chapter "${extra.chapterTitle ?? ''}". ${extra.chapterText ? `Here is the chapter text:\n\n${extra.chapterText}\n\n` : 'You have only its title, status and word count, not its text. '}Draw on the craft notes from books on his shelf where they genuinely apply. Three specific suggestions at most.`;
+    case 'craft': return `Give craft help on the chapter "${extra.chapterTitle ?? ''}". ${extra.chapterText ? `Here is the chapter text:\n\n${extra.chapterText}\n\n` : 'You have only its title, status and word count, not its text. '}Draw on the craft notes from books on his shelf, and on scenes in his Scene Library of the same kind, where they genuinely apply (name the book and the move). Three specific suggestions at most.`;
     case 'query': return `Critique this query letter for a debut domestic thriller, as an experienced agent would read it: hook, stakes, voice, comps, length, and what to cut. Then offer a tightened opening paragraph.\n\n${extra.query ?? ''}`;
     case 'letter': return 'Write this week\'s letter from the Keeper about the whole life, not just the writing: how the week went across the book, faith, the job search, the things he is building, the body, the dogs and the people he loves; what one part gave to another; what was left out in the cold; and one gentle, concrete invitation for the week ahead. Warm, honest, specific to the numbers, under 220 words, signed "— the Keeper".';
     default: return extra.question ?? '';

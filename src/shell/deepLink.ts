@@ -9,6 +9,7 @@
  *   #/move?k=apply             a job-search move (brief, apply, followup, referral); n=2 for two
  *   #/walk?m=30&who=both       walked the dogs (who = both, cooper or shadow)
  *   #/together?m=60            time together, at the Hearth
+ *   #/scene?t=interrogation: Gone Girl p. 212 — the silence does the work   a scene, into the Scene Library
  * Pure parsing only.
  */
 import { CATS, type CatKey } from '../modules/ledger/types';
@@ -24,6 +25,7 @@ export type DeepLink =
   | { kind: 'move'; move: Move; n: number }
   | { kind: 'walk'; mins: number; who: 'both' | 'cooper' | 'shadow' }
   | { kind: 'together'; mins: number }
+  | { kind: 'scene'; text: string }
   | { kind: 'bad'; reason: string };
 
 export type Move = 'brief' | 'apply' | 'followup' | 'referral';
@@ -51,6 +53,10 @@ export function parseDeepLink(route: string, today = ''): DeepLink | null {
   if (path === '/health') {
     const h = parseHealth(query, today);
     return h ? { kind: 'health', h } : { kind: 'bad', reason: 'The link needs steps, sleep or workout, like steps=8000.' };
+  }
+  if (path === '/scene') {
+    const t = (new URLSearchParams(query).get('t') ?? '').trim();
+    return t ? { kind: 'scene', text: t } : { kind: 'bad', reason: 'The link needs the scene, like t=interrogation: Gone Girl p. 212.' };
   }
   if (path === '/idea') {
     const t = (new URLSearchParams(query).get('t') ?? '').trim();
@@ -81,4 +87,5 @@ export const calLink = (base: string) => `${base.replace(/#.*$/, '')}#/cal?e=[Ev
 export const moveLink = (base: string, k: Move) => `${base.replace(/#.*$/, '')}#/move?k=${k}`;
 export const walkLink = (base: string, m: number) => `${base.replace(/#.*$/, '')}#/walk?m=${m}&who=both`;
 export const togetherLink = (base: string, m: number) => `${base.replace(/#.*$/, '')}#/together?m=${m}`;
+export const sceneLink = (base: string) => `${base.replace(/#.*$/, '')}#/scene?t=[Dictated Text]`;
 export const ideaLink = (base: string) => `${base.replace(/#.*$/, '')}#/idea?t=[Dictated Text]`;

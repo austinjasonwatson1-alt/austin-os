@@ -49,3 +49,12 @@ describe('the whole life in the briefing', () => {
     expect(b(d, { ...A, life: false, calendar: false })).not.toMatch(/REST OF LIFE|CALENDAR/);
   });
 });
+
+describe('the Keeper reads the Scene Library', () => {
+  it('lists marked scenes with the shelf, so craft help can name the move', () => {
+    const b = briefing({ today: '2026-11-23', days: {}, manuscripts: [], reviews: {}, books: [{ id: 'b', title: 'Gone Girl', author: 'Flynn', genre: '', status: 'read', rating: 5, craft: [], addedAt: '' }], pub: { queries: [], contests: [], feedback: [], outreach: [], road: {} }, chapel: { days: {}, prayers: [], verses: [] } as never,
+      scenes: [{ kind: 'interrogation', label: 'Silence does the work', source: 'Gone Girl', where: 'p. 212', why: 'he fills the quiet' }] }, DEFAULT_ALLOW);
+    expect(b).toContain('SCENE LIBRARY');
+    expect(b).toContain('[interrogation] Silence does the work — Gone Girl, p. 212 (why it works: he fills the quiet)');
+  });
+});

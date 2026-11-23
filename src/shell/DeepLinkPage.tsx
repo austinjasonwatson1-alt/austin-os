@@ -12,6 +12,9 @@ import { CATS } from '../modules/ledger/types';
 import { useTimer } from '../modules/timer/store';
 import type { DeepLink, Move } from './deepLink';
 import { useKennel } from '../modules/kennel/store';
+import { useRefs } from '../modules/refs/store';
+import { useShelf } from '../modules/shelf/store';
+import { kindOf, parseSceneCapture } from '../modules/refs/logic';
 import { jobClock, movesOn } from '../modules/areas/jobLogic';
 
 const MOVE_DONE: Record<Move, (n: number) => string> = {
@@ -38,7 +41,9 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
   const office = AREA_STORES.office();
   const hearth = AREA_STORES.hearth();
   const kennel = useKennel();
-  useEffect(() => { void ledger.load(); void chapel.load(); void useTimer.getState().load(); void feeds.load(); void forge.load(); void ideas.load(); void office.load(); void hearth.load(); void kennel.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const refs = useRefs();
+  const shelf = useShelf();
+  useEffect(() => { void ledger.load(); void chapel.load(); void useTimer.getState().load(); void feeds.load(); void forge.load(); void ideas.load(); void office.load(); void hearth.load(); void kennel.load(); void refs.load(); void shelf.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (done.current) return;
@@ -48,6 +53,16 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
       const t = useTimer.getState();
       if (!t.running) t.start(t.lastCat, t.lastGoal);
       go('/cabin/timer');
+      return;
+    }
+    if (link.kind === 'scene') {
+      const refs = useRefs.getState(), shelf = useShelf.getState();
+      if (!refs.loaded || !shelf.loaded) return;
+      done.current = true;
+      const draft = parseSceneCapture(link.text, shelf.books);
+      if (!draft) { setMsg({ big: 'That link didn’t work.', small: 'Say the kind, then the book: “interrogation, Gone Girl page 212, the silence does the work”.', bad: true }); return; }
+      const s = refs.save(draft);
+      setMsg({ big: `Filed under ${kindOf(s.kind).label}.`, small: `${s.label} · ${s.source}${s.where ? `, ${s.where}` : ''}` });
       return;
     }
     if (link.kind === 'idea') {
@@ -106,7 +121,7 @@ export function DeepLinkPage({ link }: { link: DeepLink }) {
       chapel.setMinutes(day, link.what, cur + link.mins);
       setMsg({ big: `+${fmtMins(link.mins)} in the Chapel`, small: link.what === 'prayer' ? 'Prayer, kept apart from the writing.' : 'Scripture, kept apart from the writing.' });
     }
-  }, [link, ledger, chapel, feeds, forge, ideas, office, hearth, kennel]);
+  }, [link, ledger, chapel, feeds, forge, ideas, office, hearth, kennel, refs, shelf]);
 
   useEffect(() => {
     if (!msg || msg.bad) return;

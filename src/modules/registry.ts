@@ -92,6 +92,10 @@ export const MODULES: ModuleDef[] = [
     component: lazy(() => import('./shelf/ShelfPage')),
   },
   {
+    id: 'scenes', path: '/cabin/scenes', name: 'The Scene Library', glyph: '❝', section: 'cabin', blurb: 'Scenes worth learning from, filed by kind: interrogations, openings, reveals. Mark them reading; pull them writing.',
+    component: lazy(() => import('./refs/Scenes')),
+  },
+  {
     id: 'manuscripts', path: '/cabin/manuscripts', name: 'Manuscripts', glyph: '❡', section: 'cabin', blurb: 'The Life I Deserve and Silence Speaks — chapter boards and word counts.',
     component: lazy(() => import('./manuscripts/ManuscriptsPage')),
   },

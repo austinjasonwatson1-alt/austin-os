@@ -117,6 +117,7 @@ const MERGERS: Record<string, (l: Obj, r: Obj) => Obj> = {
   'goals.v1': (l, r) => ({ ...l, goals: unionById(arr<WithId>(l.goals), arr<WithId>(r.goals)), milestones: unionById(arr<WithId>(l.milestones), arr<WithId>(r.milestones)) }),
   'ideas.v1': (l, r) => ({ ...l, ideas: unionById(arr<WithId & { updated?: string }>(l.ideas), arr<WithId & { updated?: string }>(r.ideas), (a, b) => (String(b.updated ?? '') > String(a.updated ?? '') ? b : a)) }),
   'day.v1': (l, r) => mergeDayData(l as Partial<DayData>, r as Partial<DayData>) as unknown as Obj,
+  'refs.v1': (l, r) => ({ ...l, scenes: unionById(arr<WithId>(l.scenes), arr<WithId>(r.scenes), newerEdit) }),
   'review.v1': (l, r) => {
     const reviews: Obj = { ...(isObj(r.reviews) ? r.reviews : {}) };
     for (const [w, v] of Object.entries(isObj(l.reviews) ? l.reviews : {})) reviews[w] = fill(v as Obj, isObj(reviews[w]) ? (reviews[w] as Obj) : {});

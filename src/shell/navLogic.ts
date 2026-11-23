@@ -18,6 +18,9 @@ export const ROOM_SETS: RoomSet[] = [
     { path: '/cabin/queries', label: 'Queries', glyph: '✉' }, { path: '/cabin/contests', label: 'Contests', glyph: '✧' },
     { path: '/cabin/editorial', label: 'Editorial Vault', glyph: '✎' }, { path: '/cabin/marketing', label: 'Outreach', glyph: '◎' },
   ] },
+  { id: 'shelf', label: 'The Shelf', tabs: [
+    { path: '/cabin/shelf', label: 'Books', glyph: '▥' }, { path: '/cabin/scenes', label: 'The Scene Library', glyph: '❝' },
+  ] },
   { id: 'ledger', label: 'The Ledger', tabs: [
     { path: '/cabin/ledger', label: 'Minutes', glyph: '▤' }, { path: '/cabin/lounge', label: 'The Lounge', glyph: '✦' },
   ] },

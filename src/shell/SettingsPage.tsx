@@ -118,6 +118,7 @@ function QuickLinks() {
         </div>
       ))}
       <p className="set-note"><b>Your morning, on its own:</b> in Shortcuts, open <b>Automation</b> → <b>+</b> → <b>Time of Day</b>, pick 7:00 AM, choose <b>Run Immediately</b>, and add <b>Open URLs</b> with the “Today at a glance” link. Do the same at 8:30 PM to be reminded to close the day.</p>
+      <p className="set-note"><b>“Hey Siri, mark a scene”</b> (while reading a paper book): make a shortcut called <b>Mark a scene</b> with <b>Dictate Text</b>, <b>URL Encode</b>, then <b>Open URLs</b> with <code className="mono">{root}#/scene?t=</code> and the encoded text. Say the kind first, then the book and page, then why: “interrogation: Gone Girl page 212, the silence does the work”. It lands in the Scene Library.</p>
       <p className="set-note"><b>“Hey Siri, new idea”:</b> in Shortcuts make a shortcut called <b>New idea</b> with <b>Dictate Text</b>, then <b>URL Encode</b> it, then <b>Open URLs</b> with <code className="mono">{root}#/idea?t=</code> followed by the encoded text. Say “short story” or “novel” first and it lands in the right drawer of the Idea Vault.</p>
       <p className="set-note">Make your own: change <code className="mono">m=</code> to any number of minutes and <code className="mono">c=</code> to {CATS.map((c) => c.k).join(', ')}, prayer or scripture; add <code className="mono">n=3</code> to a move to count three at once.</p>
     </section>

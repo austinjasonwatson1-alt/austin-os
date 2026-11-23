@@ -5,6 +5,10 @@ import { rise } from '../../shell/lamp';
 import { parseCsvRows } from '../ledger/logic';
 import { coverSearchUrl, finishMilestone, goalPace, isGoodreads, parseGoodreads, readingStats, readingYears, type Milestone, csvToObjects, filterBooks, genres, parseCoverResults, parseShelfJson, previewImport, readingYear, readWall, shelfOrder, spine, type CoverHit } from './logic';
 import { useShelf } from './store';
+import { useRefs } from '../refs/store';
+import { kindOf } from '../refs/logic';
+import { go } from '../../shell/router';
+import '../../styles/scenes.css';
 import { STATUS_LABEL, type Book, type BookStatus } from './types';
 import '../../styles/cabin.css';
 import '../../styles/ledger.css';
@@ -152,6 +156,20 @@ const starList = (r: number) => [...Array(Math.floor(r)).fill('★'), ...(r % 1 
 
 /* ---------------- the book sheet: view and edit ---------------- */
 
+/** Scenes marked from this book in the Scene Library, and a way to mark another. */
+function BookScenes({ book, onLeave }: { book: Book; onLeave: () => void }) {
+  const r = useRefs();
+  useEffect(() => { void r.load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const mine = r.scenes.filter((s) => s.bookId === book.id);
+  return (
+    <div className="sc-from-book">
+      <span className="mono">Scenes marked{mine.length ? ` · ${mine.length}` : ''}</span>
+      {mine.slice(0, 4).map((s) => <p key={s.id} className="dim" style={{ margin: 0, fontSize: 13.5 }}><b style={{ color: 'var(--bone)' }}>{kindOf(s.kind).label}</b> · {s.label}{s.where ? ` (${s.where})` : ''}</p>)}
+      <button className="btn sm" style={{ justifySelf: 'start' }} onClick={() => { r.setStartFrom(book.id); onLeave(); go('/cabin/scenes'); }}>❝ Mark a scene from this book</button>
+    </div>
+  );
+}
+
 function BookSheet({ book, onClose, onFinished }: { book: Book | null; onClose: () => void; onFinished: (b: Book, from: DOMRect | null) => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const all = useShelf((s) => s.books);
@@ -226,6 +244,7 @@ function BookSheet({ book, onClose, onFinished }: { book: Book | null; onClose: 
               <button className="btn sm" disabled={!line.trim()}>Add</button>
             </form>
           </div>
+          {book && <BookScenes book={book} onLeave={close} />}
         </div>
       </div>
       <div className="sheet-actions">

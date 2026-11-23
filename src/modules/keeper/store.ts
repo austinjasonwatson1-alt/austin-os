@@ -13,6 +13,7 @@ import { useManuscripts } from '../manuscripts/store';
 import { usePub } from '../pub/store';
 import { useReview } from '../review/store';
 import { useShelf } from '../shelf/store';
+import { useRefs } from '../refs/store';
 import { askPrompt, briefing, DEFAULT_ALLOW, KEEPER_SYSTEM, type Allow, type Ask, type KeeperData } from './logic';
 import { AREA_STORES } from '../areas/store';
 import { areaMinutes } from '../areas/logic';
@@ -81,12 +82,12 @@ export const useKeeper = create<KeeperState>((set, get) => ({
 
   async ask(kind, extra = {}) {
     if (!apiKey) throw new Error('The Keeper is off. Add an Anthropic API key in Settings.');
-    await Promise.all([useLedger.getState().load(), useManuscripts.getState().load(), useReview.getState().load(), useShelf.getState().load(), usePub.getState().load(), useChapel.getState().load()]);
+    await Promise.all([useLedger.getState().load(), useManuscripts.getState().load(), useReview.getState().load(), useShelf.getState().load(), usePub.getState().load(), useChapel.getState().load(), useRefs.getState().load()]);
     const l = useLedger.getState();
     const allow = get().allow;
     const brief = briefing({
       today: todayISO(), days: l.days, manuscripts: useManuscripts.getState().manuscripts, reviews: useReview.getState().reviews,
-      books: useShelf.getState().books, pub: usePub.getState(), chapel: useChapel.getState(),
+      books: useShelf.getState().books, pub: usePub.getState(), chapel: useChapel.getState(), scenes: useRefs.getState().scenes,
       ...(await lifeContext(allow)),
     }, allow);
     // The SDK is only loaded when the Keeper is actually used.

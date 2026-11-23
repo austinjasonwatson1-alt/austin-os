@@ -183,3 +183,12 @@ describe('building lists keep the newest edit', () => {
     expect((syncMerge(r, l) as typeof out)['area.office']).toBeUndefined(); // already newest here: nothing to write
   });
 });
+
+describe('the Scene Library syncs', () => {
+  it('keeps scenes from both devices and the newest edit of each', () => {
+    const l = { 'refs.v1': { scenes: [{ id: 'a', label: 'old', edited: '2026-11-20T00:00:00Z' }, { id: 'b', label: 'only here' }] } };
+    const r = { 'refs.v1': { scenes: [{ id: 'a', label: 'new', edited: '2026-11-22T00:00:00Z' }, { id: 'c', label: 'only there' }] } };
+    const out = syncMerge(l, r) as Record<string, { scenes: { id: string; label: string }[] }>;
+    expect(out['refs.v1'].scenes.map((s) => `${s.id}:${s.label}`).sort()).toEqual(['a:new', 'b:only here', 'c:only there']);
+  });
+});

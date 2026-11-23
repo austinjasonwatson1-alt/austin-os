@@ -1,3 +1,5 @@
+import { SceneBrowser } from '../refs/Scenes';
+import { kindOf, suggestKinds } from '../refs/logic';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { chime, setAmbient } from '../../core/ambient';
 import { useSky } from '../../core/skyStore';
@@ -50,6 +52,7 @@ export default function WritePage() {
   const [saving, setSaving] = useState<'saved' | 'typing'>('saved');
   const [focus, setFocus] = useState(true);
   const [showNotes, setShowNotes] = useState(false);
+  const [showScenes, setShowScenes] = useState(false);
   // A word sprint: when it started, how long, and the word count it started from.
   const [sprint, setSprint] = useState<{ start: number; planned: number; from: number } | null>(null);
   const [pickSprint, setPickSprint] = useState(false);
@@ -193,7 +196,8 @@ export default function WritePage() {
             Notes{openNotes ? <b>{openNotes}</b> : null}
           </button>
           <button className="btn ghost sm" onClick={() => setFocus(!focus)} aria-pressed={focus}>{focus ? 'Show more' : 'Focus'}</button>
-          <button className="btn ghost sm" onClick={() => { setShowVersions(!showVersions); setShowNotes(false); }} aria-expanded={showVersions}>Versions</button>
+          <button className="btn ghost sm" onClick={() => { setShowVersions(!showVersions); setShowNotes(false); setShowScenes(false); }} aria-expanded={showVersions}>Versions</button>
+          <button className="btn ghost sm" onClick={() => { setShowScenes(!showScenes); setShowNotes(false); setShowVersions(false); }} aria-expanded={showScenes} title="The Scene Library: scenes like this one, from what you've read">❝ Scenes</button>
         </div>
       </header>
 
@@ -216,6 +220,15 @@ export default function WritePage() {
       {sprint && <div className="sprint-bar" aria-hidden><i style={{ width: `${(1 - sprintLeft / (sprint.planned * 60_000)) * 100}%` }} /></div>}
       {result && <SprintCard r={result} onClose={() => setResult(null)} onAgain={() => startSprint(result.s.planned)} />}
       {showNotes && <RevisionDesk notes={notes} chId={chId} chapterTitle={ch.title} onClose={() => setShowNotes(false)} />}
+      {showScenes && (
+        <aside className="sc-desk" aria-label="The Scene Library">
+          <div className="sc-desk-h">
+            <div><h2>The Scene Library</h2><p>{suggestKinds(ch.title).length ? `Opened on ${suggestKinds(ch.title).map((k) => kindOf(k).label.toLowerCase()).join(' and ')}, from this chapter's title.` : 'Scenes you marked while reading.'}</p></div>
+            <button className="btn ghost sm" onClick={() => setShowScenes(false)}>Close</button>
+          </div>
+          <SceneBrowser compact initialKinds={suggestKinds(ch.title)} />
+        </aside>
+      )}
       {showVersions && <Versions ms={msId} ch={chId} onClose={() => setShowVersions(false)} onRestored={(t) => { setText(t); startWords.current = countWords(t); }} />}
     </div>
   );

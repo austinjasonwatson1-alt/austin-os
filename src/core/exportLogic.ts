@@ -85,6 +85,13 @@ CSV files open in Excel, Numbers or Google Sheets. Markdown (.md) files are plai
     const noted = books.filter((b) => b.notes || arr(b.craft).length);
     if (noted.length) f['reading/reading-notes.md'] = `# Reading notes\n\n${noted.map((b) => `## ${str(b.title)} — ${str(b.author)}\n\n${b.notes ? `${str(b.notes)}\n\n` : ''}${arr<string>(b.craft).map((c) => `- ${c}`).join('\n')}\n`).join('\n')}`;
   }
+  if (has('refs.v1')) {
+    const scenes = arr(obj(dump['refs.v1']).scenes);
+    if (scenes.length) {
+      const kinds = [...new Set(scenes.map((x) => str(x.kind)))];
+      f['reading/scene-library.md'] = `# The Scene Library\n\n${kinds.map((k) => `## ${k}\n\n${scenes.filter((x) => str(x.kind) === k).map((x) => `### ${str(x.label)}\n\n*${str(x.source)}${x.where ? `, ${str(x.where)}` : ''}*\n\n${x.passage ? `> ${str(x.passage).replace(/\n/g, '\n> ')}\n\n` : ''}${x.why ? `**Why it works:** ${str(x.why)}\n\n` : ''}${arr<string>(x.tags).length ? `${arr<string>(x.tags).map((t) => `#${t}`).join(' ')}\n\n` : ''}`).join('')}`).join('')}`;
+    }
+  }
   if (has('pub.v1')) {
     const p = obj(dump['pub.v1']);
     f['publishing/queries.csv'] = csv(['agent', 'agency', 'status', 'sent', 'responded', 'materials', 'notes'], arr(p.queries).map((q) => [q.agent, q.agency ?? '', q.status, q.sentOn ?? '', q.respondedOn ?? '', q.materials ?? '', q.notes ?? '']));

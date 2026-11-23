@@ -35,6 +35,7 @@ describe('nav', () => {
     expect(railPath('/money?m=2026-11')).toBe('/bank');
     expect(railPath('/memories')).toBe('/hearth');
     expect(railPath('/cabin/timer')).toBe('/cabin');
+    expect(railPath('/cabin/scenes')).toBe('/cabin/shelf');
     expect(railPath('/chapel')).toBe('/chapel');
     expect(setOf('/cabin/contests')?.id).toBe('publication');
     expect(setOf('/chapel')).toBeNull();

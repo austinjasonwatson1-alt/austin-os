@@ -42,6 +42,8 @@ describe('job moves, dog walks and time together', () => {
     expect(parseDeepLink('/walk?m=20&who=Cooper')).toEqual({ kind: 'walk', mins: 20, who: 'cooper' });
     expect(parseDeepLink('/walk')?.kind).toBe('bad');
     expect(parseDeepLink('/together?m=60')).toEqual({ kind: 'together', mins: 60 });
+    expect(parseDeepLink('/scene?t=interrogation%3A%20Gone%20Girl%20p.%20212')).toEqual({ kind: 'scene', text: 'interrogation: Gone Girl p. 212' });
+    expect(parseDeepLink('/scene')?.kind).toBe('bad');
     expect(moveLink('https://x.io/app/#/settings', 'apply')).toBe('https://x.io/app/#/move?k=apply');
     expect(walkLink('https://x.io/', 30)).toBe('https://x.io/#/walk?m=30&who=both');
     expect(togetherLink('https://x.io/', 60)).toBe('https://x.io/#/together?m=60');
